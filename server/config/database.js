@@ -23,25 +23,46 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Initialize database tables
 function initializeDatabase() {
-  // Shows table
+  // Shows table - Main show information
   db.run(`
     CREATE TABLE IF NOT EXISTS shows (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       description TEXT,
-      filename TEXT NOT NULL,
-      duration REAL DEFAULT 0,
-      upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-      file_size INTEGER,
+      created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
       is_active BOOLEAN DEFAULT 1,
-      play_count INTEGER DEFAULT 0,
-      last_played DATETIME
+      total_duration REAL DEFAULT 0,
+      total_tracks INTEGER DEFAULT 0
     )
   `, (err) => {
     if (err) {
       console.error('Error creating shows table:', err.message);
     } else {
       console.log('✅ Shows table ready');
+    }
+  });
+
+  // Show tracks table - Individual MP3s within each show
+  db.run(`
+    CREATE TABLE IF NOT EXISTS show_tracks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      show_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      duration REAL DEFAULT 0,
+      file_size INTEGER,
+      track_order INTEGER DEFAULT 0,
+      upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      is_active BOOLEAN DEFAULT 1,
+      play_count INTEGER DEFAULT 0,
+      last_played DATETIME,
+      FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating show_tracks table:', err.message);
+    } else {
+      console.log('✅ Show tracks table ready');
     }
   });
 
@@ -95,6 +116,18 @@ function initializeDatabase() {
       console.error('Error creating playlist_items table:', err.message);
     } else {
       console.log('✅ Playlist items table ready');
+    }
+  });
+
+  // Create indexes for better performance
+  db.run(`
+    CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id 
+    ON show_tracks(show_id)
+  `, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    } else {
+      console.log('✅ Database indexes ready');
     }
   });
 }

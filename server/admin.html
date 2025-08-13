@@ -103,7 +103,8 @@
         }
 
         .form-group input[type="text"],
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
@@ -163,6 +164,48 @@
             background: #f8f9fa;
         }
 
+        .show-row {
+            cursor: pointer;
+        }
+
+        .show-row.expanded {
+            background: #f0f8ff;
+        }
+
+        .tracks-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .tracks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tracks-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .tracks-table th,
+        .tracks-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+
+        .tracks-table th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -198,9 +241,20 @@
             font-size: 12px;
         }
 
+        .btn-add-track {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
         .btn-edit:hover { background: #e0a800; }
         .btn-delete:hover { background: #c82333; }
         .btn-toggle:hover { background: #5a6268; }
+        .btn-add-track:hover { background: #138496; }
 
         .status-active {
             color: #28a745;
@@ -230,7 +284,7 @@
             padding: 30px;
             border-radius: 10px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             position: relative;
         }
 
@@ -319,18 +373,28 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .expand-icon {
+            transition: transform 0.3s;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .expanded .expand-icon {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <div class="admin-header">
             <h1>🎵 Glue Factory Radio Admin</h1>
-            <p>Manage your shows, episodes, and music library</p>
+            <p>Manage your shows and their individual tracks</p>
         </div>
 
         <div class="admin-nav">
             <ul class="nav-tabs">
-                <li class="nav-tab active" data-tab="upload">📤 Upload New Show</li>
+                <li class="nav-tab active" data-tab="upload">📤 Create New Show</li>
                 <li class="nav-tab" data-tab="manage">📋 Manage Shows</li>
                 <li class="nav-tab" data-tab="stats">📊 Statistics</li>
             </ul>
@@ -339,7 +403,7 @@
         <!-- Upload Tab -->
         <div id="upload" class="tab-content active">
             <div class="upload-section">
-                <h2>Upload New Show/Episode</h2>
+                <h2>Create New Show</h2>
                 <form id="uploadForm">
                     <div class="form-group">
                         <label for="title">Show Title *</label>
@@ -347,18 +411,18 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="description">Description</label>
+                        <label for="description">Show Description</label>
                         <textarea id="description" name="description" placeholder="Enter show description"></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label for="audio">Audio File *</label>
+                        <label for="audio">First Track Audio File *</label>
                         <input type="file" id="audio" name="audio" accept="audio/*" required>
-                        <small>Supported formats: MP3, WAV, OGG, AAC, FLAC (Max: 100MB)</small>
+                        <small>This will be the first track in your show. You can add more tracks later.</small>
                     </div>
                     
                     <button type="submit" class="upload-button" id="uploadBtn">
-                        Upload Show
+                        Create Show
                     </button>
                 </form>
             </div>
@@ -366,7 +430,7 @@
 
         <!-- Manage Tab -->
         <div id="manage" class="tab-content">
-            <h2>Manage Shows & Episodes</h2>
+            <h2>Manage Shows & Tracks</h2>
             <div id="showsTableContainer">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -390,7 +454,7 @@
     <!-- Status Messages -->
     <div id="statusMessage" class="status-message"></div>
 
-    <!-- Edit Modal -->
+    <!-- Edit Show Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -398,16 +462,39 @@
             <form id="editForm">
                 <input type="hidden" id="editShowId">
                 <div class="form-group">
-                    <label for="editTitle">Title</label>
+                    <label for="editTitle">Show Title</label>
                     <input type="text" id="editTitle" required>
                 </div>
                 <div class="form-group">
-                    <label for="editDescription">Description</label>
+                    <label for="editDescription">Show Description</label>
                     <textarea id="editDescription"></textarea>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="btn-confirm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Track Modal -->
+    <div id="addTrackModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add Track to Show</h3>
+            <form id="addTrackForm">
+                <input type="hidden" id="addTrackShowId">
+                <div class="form-group">
+                    <label for="trackTitle">Track Title *</label>
+                    <input type="text" id="trackTitle" required placeholder="Enter track title">
+                </div>
+                <div class="form-group">
+                    <label for="trackAudio">Audio File *</label>
+                    <input type="file" id="trackAudio" accept="audio/*" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="closeAddTrackModal()">Cancel</button>
+                    <button type="submit" class="btn-confirm">Add Track</button>
                 </div>
             </form>
         </div>
@@ -419,7 +506,7 @@
             <span class="close">&times;</span>
             <h3>Confirm Delete</h3>
             <p>Are you sure you want to delete "<span id="deleteShowTitle"></span>"?</p>
-            <p><strong>This action cannot be undone!</strong></p>
+            <p><strong>This will also delete all associated tracks!</strong></p>
             <div class="modal-buttons">
                 <button type="button" class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
                 <button type="button" class="btn-confirm" onclick="confirmDelete()">Delete Show</button>

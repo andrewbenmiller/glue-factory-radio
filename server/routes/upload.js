@@ -1,163 +1,245 @@
 const express = require('express');
+const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const router = express.Router();
 const db = require('../config/database');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads');
-    
-    // Create uploads directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    const uploadsDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
     }
-    
-    cb(null, uploadDir);
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     // Generate unique filename with timestamp
     const timestamp = Date.now();
-    const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const originalName = file.originalname.replace(/\s+/g, '_');
     const filename = `${timestamp}_${originalName}`;
     cb(null, filename);
   }
 });
 
-// File filter for audio files
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    'audio/mpeg',
-    'audio/mp3',
-    'audio/wav',
-    'audio/ogg',
-    'audio/aac',
-    'audio/flac'
-  ];
-  
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only audio files are allowed!'), false);
-  }
-};
-
-// Configure multer
 const upload = multer({
   storage: storage,
-  fileFilter: fileFilter,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB limit
-    files: 1 // Only one file at a time
+  },
+  fileFilter: (req, file, cb) => {
+    // Check if file is audio
+    const allowedTypes = /audio\/(mp3|wav|ogg|aac|flac|m4a)/;
+    if (allowedTypes.test(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed!'), false);
+    }
   }
 });
 
-// POST upload single audio file
-router.post('/audio', upload.single('audio'), async (req, res) => {
+// Upload audio track to existing show
+router.post('/track', upload.single('audio'), async (req, res) => {
   try {
-    console.log('📤 Upload request received:', { body: req.body, file: req.file });
+    console.log('📤 Track upload request received:', { body: req.body, file: req.file });
     
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+    const { showId, title } = req.body;
+    const audioFile = req.file;
+
+    if (!showId || !title || !audioFile) {
+      return res.status(400).json({ error: 'Show ID, title, and audio file are required' });
     }
 
-    const { title, description } = req.body;
-    const { filename, originalname, size, path: filePath } = req.file;
-    
-    console.log('📁 File details:', { filename, originalname, size, filePath });
-
-    if (!title) {
-      // Delete uploaded file if no title provided
-      fs.unlinkSync(filePath);
-      return res.status(400).json({ error: 'Title is required' });
-    }
-
-    // Get audio duration (you can enhance this later with audio metadata libraries)
-    let duration = 0;
-    
-    // For now, we'll set a default duration
-    // Later you can use libraries like 'get-audio-duration' or 'ffprobe' to get actual duration
-    
-    // Create show record in database
-    const query = `
-      INSERT INTO shows (title, description, filename, file_size, duration)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    
-    console.log('🗄️ Database query:', query);
-    console.log('🗄️ Database values:', [title, description, filename, size, duration]);
-    
-    db.run(query, [title, description, filename, size, duration], function(err) {
+    // Check if show exists
+    db.get('SELECT * FROM shows WHERE id = ?', [showId], (err, show) => {
       if (err) {
-        console.error('Error saving show to database:', err);
-        // Delete uploaded file if database save fails
-        fs.unlinkSync(filePath);
-        return res.status(500).json({ error: 'Failed to save show information' });
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
       }
       
-      // Get the created show
-      db.get('SELECT * FROM shows WHERE id = ?', [this.lastID], (err, row) => {
+      if (!show) {
+        return res.status(404).json({ error: 'Show not found' });
+      }
+
+      // Get next track order for this show
+      db.get('SELECT MAX(track_order) as max_order FROM show_tracks WHERE show_id = ?', [showId], (err, result) => {
         if (err) {
-          return res.status(500).json({ error: 'Show created but failed to retrieve' });
+          console.error('Database error:', err);
+          return res.status(500).json({ error: 'Database error' });
         }
+
+        const nextOrder = (result.max_order || 0) + 1;
+        const filename = audioFile.filename;
+        const size = audioFile.size;
+        const duration = 0; // Will be updated when audio is processed
+
+        // Insert track
+        const query = `
+          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order)
+          VALUES (?, ?, ?, ?, ?)
+        `;
         
-        const show = {
-          ...row,
-          url: `/uploads/${row.filename}`,
-          duration: row.duration || 0
-        };
-        
-        res.status(201).json({
-          message: 'File uploaded successfully',
-          show: show,
-          file: {
-            filename: filename,
-            originalName: originalname,
-            size: size,
-            url: `/uploads/${filename}`
+        console.log('🗄️ Database query:', query);
+        console.log('🗄️ Database values:', [showId, title, filename, size, nextOrder]);
+
+        db.run(query, [showId, title, filename, size, nextOrder], function(err) {
+          if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to save track to database' });
           }
+
+          const trackId = this.lastID;
+
+          // Update show totals
+          db.run(`
+            UPDATE shows 
+            SET total_tracks = total_tracks + 1,
+                total_duration = (
+                  SELECT COALESCE(SUM(duration), 0) 
+                  FROM show_tracks 
+                  WHERE show_id = ? AND is_active = 1
+                )
+            WHERE id = ?
+          `, [showId, showId], (err) => {
+            if (err) {
+              console.error('Error updating show totals:', err);
+            }
+          });
+
+          // Get the created track
+          db.get('SELECT * FROM show_tracks WHERE id = ?', [trackId], (err, track) => {
+            if (err) {
+              return res.status(500).json({ error: 'Track created but failed to retrieve' });
+            }
+
+            res.json({
+              message: 'Track uploaded successfully',
+              track: {
+                ...track,
+                url: `/uploads/${track.filename}`
+              }
+            });
+          });
         });
       });
     });
-    
+
   } catch (error) {
     console.error('Upload error:', error);
-    
-    // Clean up uploaded file if there's an error
-    if (req.file && req.file.path) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (unlinkError) {
-        console.error('Error deleting file after upload error:', unlinkError);
-      }
-    }
-    
-    res.status(500).json({ error: 'Upload failed', message: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// GET list of uploaded files
-router.get('/files', (req, res) => {
-  const uploadDir = path.join(__dirname, '../uploads');
-  
-  if (!fs.existsSync(uploadDir)) {
-    return res.json([]);
-  }
-  
-  fs.readdir(uploadDir, (err, files) => {
-    if (err) {
-      console.error('Error reading uploads directory:', err);
-      return res.status(500).json({ error: 'Failed to read uploads directory' });
-    }
+// Create new show with first track
+router.post('/show', upload.single('audio'), async (req, res) => {
+  try {
+    console.log('📤 Show creation request received:', { body: req.body, file: req.file });
     
+    const { title, description } = req.body;
+    const audioFile = req.file;
+
+    if (!title || !audioFile) {
+      return res.status(400).json({ error: 'Title and audio file are required' });
+    }
+
+    // Start transaction
+    db.serialize(() => {
+      // Create the show first
+      db.run(`
+        INSERT INTO shows (title, description)
+        VALUES (?, ?)
+      `, [title, description], function(err) {
+        if (err) {
+          console.error('Error creating show:', err);
+          return res.status(500).json({ error: 'Failed to create show' });
+        }
+
+        const showId = this.lastID;
+        const filename = audioFile.filename;
+        const size = audioFile.size;
+        const duration = 0; // Will be updated when audio is processed
+
+        // Create first track
+        db.run(`
+          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order)
+          VALUES (?, ?, ?, ?, ?)
+        `, [showId, title, filename, size, 1], function(err) {
+          if (err) {
+            console.error('Error creating track:', err);
+            return res.status(500).json({ error: 'Show created but track failed' });
+          }
+
+          // Update show totals
+          db.run(`
+            UPDATE shows 
+            SET total_tracks = 1,
+                total_duration = 0
+            WHERE id = ?
+          `, [showId], (err) => {
+            if (err) {
+              console.error('Error updating show totals:', err);
+            }
+          });
+
+          // Get the created show with track
+          db.get(`
+            SELECT s.*, st.* 
+            FROM shows s 
+            LEFT JOIN show_tracks st ON s.id = st.show_id 
+            WHERE s.id = ?
+          `, [showId], (err, result) => {
+            if (err) {
+              return res.status(500).json({ error: 'Show created but failed to retrieve' });
+            }
+
+            res.json({
+              message: 'Show created successfully',
+              show: {
+                id: result.id,
+                title: result.title,
+                description: result.description,
+                created_date: result.created_date,
+                is_active: result.is_active,
+                total_duration: result.total_duration,
+                total_tracks: result.total_tracks,
+                tracks: [{
+                  id: result.id,
+                  title: result.title,
+                  filename: result.filename,
+                  url: `/uploads/${result.filename}`,
+                  duration: result.duration,
+                  file_size: result.file_size,
+                  track_order: result.track_order
+                }]
+              }
+            });
+          });
+        });
+      });
+    });
+
+  } catch (error) {
+    console.error('Show creation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all uploaded files
+router.get('/files', (req, res) => {
+  const uploadsDir = path.join(__dirname, '../uploads');
+  
+  try {
+    if (!fs.existsSync(uploadsDir)) {
+      return res.json([]);
+    }
+
+    const files = fs.readdirSync(uploadsDir);
     const fileList = files
-      .filter(file => !file.startsWith('.')) // Exclude hidden files
+      .filter(file => !file.startsWith('.') && file !== '.gitkeep')
       .map(file => {
-        const filePath = path.join(uploadDir, file);
+        const filePath = path.join(uploadsDir, file);
         const stats = fs.statSync(filePath);
-        
         return {
           filename: file,
           size: stats.size,
@@ -167,59 +249,10 @@ router.get('/files', (req, res) => {
       });
     
     res.json(fileList);
-  });
-});
-
-// DELETE uploaded file
-router.delete('/files/:filename', (req, res) => {
-  const { filename } = req.params;
-  const filePath = path.join(__dirname, '../uploads', filename);
-  
-  // Check if file exists
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'File not found' });
-  }
-  
-  try {
-    // Delete file from filesystem
-    fs.unlinkSync(filePath);
-    
-    // Remove from database (soft delete)
-    db.run('UPDATE shows SET is_active = 0 WHERE filename = ?', [filename], function(err) {
-      if (err) {
-        console.error('Error updating database:', err);
-        // File deleted but database update failed
-        return res.status(500).json({ 
-          warning: 'File deleted but database update failed',
-          error: err.message 
-        });
-      }
-      
-      res.json({ message: 'File deleted successfully' });
-    });
-    
   } catch (error) {
-    console.error('Error deleting file:', error);
-    res.status(500).json({ error: 'Failed to delete file', message: error.message });
+    console.error('Error reading uploads directory:', error);
+    res.status(500).json({ error: 'Cannot read uploads directory' });
   }
-});
-
-// Error handling for multer
-router.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File too large. Maximum size is 100MB.' });
-    }
-    if (error.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({ error: 'Too many files. Only one file allowed.' });
-    }
-  }
-  
-  if (error.message === 'Only audio files are allowed!') {
-    return res.status(400).json({ error: error.message });
-  }
-  
-  next(error);
 });
 
 module.exports = router;

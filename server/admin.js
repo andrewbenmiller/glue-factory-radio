@@ -4,12 +4,14 @@ const API_BASE_URL = 'https://glue-factory-radio-production.up.railway.app';
 // Global variables
 let shows = [];
 let currentDeleteId = null;
+let expandedShows = new Set();
 
 // Initialize admin portal
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎵 Admin portal loaded');
     setupTabNavigation();
     setupUploadForm();
+    setupAddTrackForm();
     loadShows();
     loadStats();
 });
@@ -45,7 +47,7 @@ function setupTabNavigation() {
     });
 }
 
-// Upload Form
+// Upload Form - Create New Show
 function setupUploadForm() {
     const form = document.getElementById('uploadForm');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -59,7 +61,7 @@ function setupUploadForm() {
         const audioFile = formData.get('audio');
 
         if (!title.trim()) {
-            showStatus('Please enter a title', 'error');
+            showStatus('Please enter a show title', 'error');
             return;
         }
 
@@ -70,21 +72,21 @@ function setupUploadForm() {
 
         // Disable upload button and show loading
         uploadBtn.disabled = true;
-        uploadBtn.textContent = 'Uploading...';
+        uploadBtn.textContent = 'Creating Show...';
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/upload/audio`, {
+            const response = await fetch(`${API_BASE_URL}/api/upload/show`, {
                 method: 'POST',
                 body: formData
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || `Upload failed: ${response.status}`);
+                throw new Error(errorData.error || `Show creation failed: ${response.status}`);
             }
 
             const result = await response.json();
-            showStatus(`✅ Successfully uploaded: ${result.show.title}`, 'success');
+            showStatus(`✅ Successfully created show: ${result.show.title}`, 'success');
             
             // Reset form
             form.reset();
@@ -94,11 +96,62 @@ function setupUploadForm() {
             loadStats();
             
         } catch (error) {
-            console.error('Upload error:', error);
-            showStatus(`❌ Upload failed: ${error.message}`, 'error');
+            console.error('Show creation error:', error);
+            showStatus(`❌ Show creation failed: ${error.message}`, 'error');
         } finally {
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Upload Show';
+            uploadBtn.textContent = 'Create Show';
+        }
+    });
+}
+
+// Add Track Form
+function setupAddTrackForm() {
+    const form = document.getElementById('addTrackForm');
+    
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const showId = formData.get('showId');
+        const title = formData.get('title');
+        const audioFile = formData.get('audio');
+
+        if (!title.trim()) {
+            showStatus('Please enter a track title', 'error');
+            return;
+        }
+
+        if (!audioFile || audioFile.size === 0) {
+            showStatus('Please select an audio file', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/upload/track`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Track upload failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            showStatus(`✅ Successfully added track: ${result.track.title}`, 'success');
+            
+            // Reset form and close modal
+            form.reset();
+            closeAddTrackModal();
+            
+            // Refresh shows list
+            loadShows();
+            loadStats();
+            
+        } catch (error) {
+            console.error('Track upload error:', error);
+            showStatus(`❌ Track upload failed: ${error.message}`, 'error');
         }
     });
 }
@@ -142,7 +195,7 @@ function renderShowsTable() {
         container.innerHTML = `
             <div class="no-shows">
                 <h3>No Shows Yet</h3>
-                <p>Upload your first show/episode to get started!</p>
+                <p>Create your first show to get started!</p>
             </div>
         `;
         return;
@@ -152,30 +205,34 @@ function renderShowsTable() {
         <table class="shows-table">
             <thead>
                 <tr>
-                    <th>Title</th>
+                    <th>Show Title</th>
                     <th>Description</th>
-                    <th>Duration</th>
-                    <th>File Size</th>
-                    <th>Upload Date</th>
+                    <th>Tracks</th>
+                    <th>Total Duration</th>
+                    <th>Created Date</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 ${shows.map(show => `
-                    <tr>
-                        <td><strong>${escapeHtml(show.title)}</strong></td>
+                    <tr class="show-row ${expandedShows.has(show.id) ? 'expanded' : ''}" 
+                        onclick="toggleShowExpansion(${show.id})">
+                        <td>
+                            <span class="expand-icon">▶</span>
+                            <strong>${escapeHtml(show.title)}</strong>
+                        </td>
                         <td>${escapeHtml(show.description || 'No description')}</td>
-                        <td>${formatDuration(show.duration)}</td>
-                        <td>${formatFileSize(show.file_size)}</td>
-                        <td>${formatDate(show.upload_date)}</td>
+                        <td>${show.track_count || 0}</td>
+                        <td>${formatDuration(show.total_duration)}</td>
+                        <td>${formatDate(show.created_date)}</td>
                         <td>
                             <span class="status-${show.is_active ? 'active' : 'inactive'}">
                                 ${show.is_active ? 'Active' : 'Inactive'}
                             </span>
                         </td>
                         <td>
-                            <div class="action-buttons">
+                            <div class="action-buttons" onclick="event.stopPropagation()">
                                 <button class="btn-edit" onclick="editShow(${show.id})">
                                     ✏️ Edit
                                 </button>
@@ -188,12 +245,132 @@ function renderShowsTable() {
                             </div>
                         </td>
                     </tr>
+                    ${expandedShows.has(show.id) ? renderTracksSection(show.id) : ''}
                 `).join('')}
             </tbody>
         </table>
     `;
     
     container.innerHTML = table;
+}
+
+// Render Tracks Section
+function renderTracksSection(showId) {
+    const show = shows.find(s => s.id === showId);
+    if (!show) return '';
+
+    return `
+        <tr>
+            <td colspan="7">
+                <div class="tracks-section">
+                    <div class="tracks-header">
+                        <h4>🎵 Tracks in this Show</h4>
+                        <button class="btn-add-track" onclick="addTrackToShow(${showId})">
+                            ➕ Add Track
+                        </button>
+                    </div>
+                    <div id="tracks-${showId}">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading tracks...</p>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+// Toggle Show Expansion
+async function toggleShowExpansion(showId) {
+    if (expandedShows.has(showId)) {
+        expandedShows.delete(showId);
+    } else {
+        expandedShows.add(showId);
+        // Load tracks for this show
+        await loadShowTracks(showId);
+    }
+    renderShowsTable();
+}
+
+// Load Show Tracks
+async function loadShowTracks(showId) {
+    const container = document.getElementById(`tracks-${showId}`);
+    if (!container) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/shows/${showId}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch tracks: ${response.status}`);
+        }
+
+        const showData = await response.json();
+        const tracks = showData.tracks || [];
+
+        if (tracks.length === 0) {
+            container.innerHTML = `
+                <p style="text-align: center; color: #666; padding: 20px;">
+                    No tracks yet. Add your first track!
+                </p>
+            `;
+            return;
+        }
+
+        const tracksTable = `
+            <table class="tracks-table">
+                <thead>
+                    <tr>
+                        <th>Track</th>
+                        <th>Title</th>
+                        <th>Duration</th>
+                        <th>File Size</th>
+                        <th>Upload Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tracks.map(track => `
+                        <tr>
+                            <td>${track.track_order}</td>
+                            <td><strong>${escapeHtml(track.title)}</strong></td>
+                            <td>${formatDuration(track.duration)}</td>
+                            <td>${formatFileSize(track.file_size)}</td>
+                            <td>${formatDate(track.upload_date)}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-delete" onclick="deleteTrack(${showId}, ${track.id}, '${escapeHtml(track.title)}')">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        
+        container.innerHTML = tracksTable;
+        
+    } catch (error) {
+        console.error('Error loading tracks:', error);
+        container.innerHTML = `
+            <div class="error-state">
+                <p>Error loading tracks: ${error.message}</p>
+                <button onclick="loadShowTracks(${showId})">Retry</button>
+            </div>
+        `;
+    }
+}
+
+// Add Track to Show
+function addTrackToShow(showId) {
+    document.getElementById('addTrackShowId').value = showId;
+    document.getElementById('addTrackModal').style.display = 'block';
+}
+
+// Close Add Track Modal
+function closeAddTrackModal() {
+    document.getElementById('addTrackModal').style.display = 'none';
 }
 
 // Edit Show
@@ -292,6 +469,7 @@ async function confirmDelete() {
 
         showStatus('✅ Show deleted successfully', 'success');
         closeDeleteModal();
+        expandedShows.delete(currentDeleteId);
         loadShows();
         loadStats();
         
@@ -315,8 +493,8 @@ async function loadStats() {
         
         const totalShows = showsData.length;
         const activeShows = showsData.filter(s => s.is_active).length;
-        const totalDuration = showsData.reduce((sum, s) => sum + (s.duration || 0), 0);
-        const totalSize = showsData.reduce((sum, s) => sum + (s.file_size || 0), 0);
+        const totalTracks = showsData.reduce((sum, s) => sum + (s.track_count || 0), 0);
+        const totalDuration = showsData.reduce((sum, s) => sum + (s.total_duration || 0), 0);
         
         container.innerHTML = `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
@@ -329,12 +507,12 @@ async function loadStats() {
                     <p>Active Shows</p>
                 </div>
                 <div style="background: #fff3e0; padding: 20px; border-radius: 10px; text-align: center;">
-                    <h3 style="color: #f57c00; font-size: 2rem;">${formatDuration(totalDuration)}</h3>
-                    <p>Total Duration</p>
+                    <h3 style="color: #f57c00; font-size: 2rem;">${totalTracks}</h3>
+                    <p>Total Tracks</p>
                 </div>
                 <div style="background: #fce4ec; padding: 20px; border-radius: 10px; text-align: center;">
-                    <h3 style="color: #c2185b; font-size: 2rem;">${formatFileSize(totalSize)}</h3>
-                    <p>Total Size</p>
+                    <h3 style="color: #c2185b; font-size: 2rem;">${formatDuration(totalDuration)}</h3>
+                    <p>Total Duration</p>
                 </div>
             </div>
         `;
@@ -391,12 +569,16 @@ function escapeHtml(text) {
 window.onclick = function(event) {
     const editModal = document.getElementById('editModal');
     const deleteModal = document.getElementById('deleteModal');
+    const addTrackModal = document.getElementById('addTrackModal');
     
     if (event.target === editModal) {
         closeEditModal();
     }
     if (event.target === deleteModal) {
         closeDeleteModal();
+    }
+    if (event.target === addTrackModal) {
+        closeAddTrackModal();
     }
 }
 
@@ -405,5 +587,6 @@ document.querySelectorAll('.close').forEach(closeBtn => {
     closeBtn.onclick = function() {
         closeEditModal();
         closeDeleteModal();
+        closeAddTrackModal();
     }
 });
