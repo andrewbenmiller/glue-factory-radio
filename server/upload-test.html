@@ -61,10 +61,26 @@
             border: 1px solid #f5c6cb;
             color: #721c24;
         }
+        .debug {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <h1>🎵 Audio Upload Test</h1>
+    
+    <div class="debug">
+        <h3>🔍 Debug Info</h3>
+        <p><strong>Page Loaded:</strong> <span id="pageLoadTime"></span></p>
+        <p><strong>JavaScript Status:</strong> <span id="jsStatus">Checking...</span></p>
+        <p><strong>Upload Endpoint:</strong> <span id="endpointStatus">Checking...</span></p>
+    </div>
+    
     <div class="upload-form">
         <form id="uploadForm">
             <div class="form-group">
@@ -90,13 +106,43 @@
     </div>
 
     <script>
+        // Debug info
+        document.getElementById('pageLoadTime').textContent = new Date().toLocaleString();
+        document.getElementById('jsStatus').textContent = '✅ JavaScript is running';
+        
+        // Test upload endpoint
+        fetch('/api/upload/audio', { method: 'POST' })
+            .then(response => {
+                document.getElementById('endpointStatus').textContent = '✅ Endpoint accessible';
+            })
+            .catch(error => {
+                document.getElementById('endpointStatus').textContent = '❌ Endpoint error: ' + error.message;
+            });
+        
+        // Upload functionality
         document.getElementById('uploadBtn').addEventListener('click', async () => {
             console.log('Upload button clicked!');
             
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const audioFile = document.getElementById('audio').files[0];
+            
+            if (!title) {
+                alert('Please enter a title');
+                return;
+            }
+            
+            if (!audioFile) {
+                alert('Please select an audio file');
+                return;
+            }
+            
+            console.log('Form data:', { title, description, audioFile });
+            
             const formData = new FormData();
-            formData.append('title', document.getElementById('title').value);
-            formData.append('description', document.getElementById('description').value);
-            formData.append('audio', document.getElementById('audio').files[0]);
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('audio', audioFile);
             
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
@@ -104,12 +150,15 @@
             resultDiv.innerHTML = 'Uploading...';
             
             try {
+                console.log('Sending request to /api/upload/audio');
                 const response = await fetch('/api/upload/audio', {
                     method: 'POST',
                     body: formData
                 });
                 
+                console.log('Response received:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (response.ok) {
                     resultDiv.className = 'result success';
@@ -125,10 +174,13 @@
                     resultDiv.innerHTML = `<h3>❌ Upload Failed</h3><p>${data.error}</p>`;
                 }
             } catch (error) {
+                console.error('Upload error:', error);
                 resultDiv.className = 'result error';
                 resultDiv.innerHTML = `<h3>❌ Upload Error</h3><p>${error.message}</p>`;
             }
         });
+        
+        console.log('Upload test page loaded successfully');
     </script>
 </body>
 </html>
