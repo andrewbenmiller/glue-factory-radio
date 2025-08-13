@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupTabNavigation();
     setupUploadForm();
     setupAddTrackForm();
+    setupEventDelegation();
     loadShows();
     loadStats();
 });
@@ -201,55 +202,55 @@ function renderShowsTable() {
         return;
     }
 
-    const table = `
-        <table class="shows-table">
-            <thead>
-                <tr>
-                    <th>Show Title</th>
-                    <th>Description</th>
-                    <th>Tracks</th>
-                    <th>Total Duration</th>
-                    <th>Created Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${shows.map(show => `
-                    <tr class="show-row ${expandedShows.has(show.id) ? 'expanded' : ''}" 
-                        onclick="toggleShowExpansion(${show.id})">
-                        <td>
-                            <span class="expand-icon">▶</span>
-                            <strong>${escapeHtml(show.title)}</strong>
-                        </td>
-                        <td>${escapeHtml(show.description || 'No description')}</td>
-                        <td>${show.track_count || 0}</td>
-                        <td>${formatDuration(show.total_duration)}</td>
-                        <td>${formatDate(show.created_date)}</td>
-                        <td>
-                            <span class="status-${show.is_active ? 'active' : 'inactive'}">
-                                ${show.is_active ? 'Active' : 'Inactive'}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons" onclick="event.stopPropagation()">
-                                <button class="btn-edit" onclick="editShow(${show.id})">
-                                    ✏️ Edit
-                                </button>
-                                <button class="btn-toggle" onclick="toggleShowStatus(${show.id}, ${show.is_active})">
-                                    ${show.is_active ? '⏸️ Pause' : '▶️ Activate'}
-                                </button>
-                                <button class="btn-delete" onclick="deleteShow(${show.id}, '${escapeHtml(show.title)}')">
-                                    🗑️ Delete
-                                </button>
-                            </div>
-                        </td>
+            const table = `
+            <table class="shows-table">
+                <thead>
+                    <tr>
+                        <th>Show Title</th>
+                        <th>Description</th>
+                        <th>Tracks</th>
+                        <th>Total Duration</th>
+                        <th>Created Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                    ${expandedShows.has(show.id) ? renderTracksSection(show.id) : ''}
-                `).join('')}
-            </tbody>
-        </table>
-    `;
+                </thead>
+                <tbody>
+                    ${shows.map(show => `
+                        <tr class="show-row ${expandedShows.has(show.id) ? 'expanded' : ''}" 
+                            data-show-id="${show.id}">
+                            <td>
+                                <span class="expand-icon">▶</span>
+                                <strong>${escapeHtml(show.title)}</strong>
+                            </td>
+                            <td>${escapeHtml(show.description || 'No description')}</td>
+                            <td>${show.track_count || 0}</td>
+                            <td>${formatDuration(show.total_duration)}</td>
+                            <td>${formatDate(show.created_date)}</td>
+                            <td>
+                                <span class="status-${show.is_active ? 'active' : 'inactive'}">
+                                    ${show.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons" data-show-id="${show.id}" data-show-title="${escapeHtml(show.title)}" data-show-status="${show.is_active}">
+                                    <button class="btn-edit" data-action="edit">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn-toggle" data-action="toggle">
+                                        ${show.is_active ? '⏸️ Pause' : '▶️ Activate'}
+                                    </button>
+                                    <button class="btn-delete" data-action="delete">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        ${expandedShows.has(show.id) ? renderTracksSection(show.id) : ''}
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
     
     container.innerHTML = table;
 }
@@ -259,26 +260,26 @@ function renderTracksSection(showId) {
     const show = shows.find(s => s.id === showId);
     if (!show) return '';
 
-    return `
-        <tr>
-            <td colspan="7">
-                <div class="tracks-section">
-                    <div class="tracks-header">
-                        <h4>🎵 Tracks in this Show</h4>
-                        <button class="btn-add-track" onclick="addTrackToShow(${showId})">
-                            ➕ Add Track
-                        </button>
-                    </div>
-                    <div id="tracks-${showId}">
-                        <div class="loading">
-                            <div class="spinner"></div>
-                            <p>Loading tracks...</p>
+            return `
+            <tr>
+                <td colspan="7">
+                    <div class="tracks-section">
+                        <div class="tracks-header">
+                            <h4>🎵 Tracks in this Show</h4>
+                            <button class="btn-add-track" data-action="add-track" data-show-id="${showId}">
+                                ➕ Add Track
+                            </button>
+                        </div>
+                        <div id="tracks-${showId}">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Loading tracks...</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </td>
-        </tr>
-    `;
+                </td>
+            </tr>
+        `;
 }
 
 // Toggle Show Expansion
@@ -337,8 +338,8 @@ async function loadShowTracks(showId) {
                             <td>${formatFileSize(track.file_size)}</td>
                             <td>${formatDate(track.upload_date)}</td>
                             <td>
-                                <div class="action-buttons">
-                                    <button class="btn-delete" onclick="deleteTrack(${showId}, ${track.id}, '${escapeHtml(track.title)}')">
+                                <div class="action-buttons" data-show-id="${showId}" data-track-id="${track.id}" data-track-title="${escapeHtml(track.title)}">
+                                    <button class="btn-delete" data-action="delete-track">
                                         🗑️
                                     </button>
                                 </div>
@@ -362,6 +363,52 @@ async function loadShowTracks(showId) {
     }
 }
 
+// Setup Event Delegation
+function setupEventDelegation() {
+    // Handle show row clicks for expansion
+    document.addEventListener('click', function(e) {
+        const showRow = e.target.closest('.show-row');
+        if (showRow && !e.target.closest('.action-buttons')) {
+            const showId = parseInt(showRow.dataset.showId);
+            toggleShowExpansion(showId);
+        }
+    });
+
+    // Handle action button clicks
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        const actionButtons = button.closest('.action-buttons');
+        if (!actionButtons) return;
+
+        const action = button.dataset.action;
+        const showId = parseInt(actionButtons.dataset.showId);
+
+        switch (action) {
+            case 'edit':
+                editShow(showId);
+                break;
+            case 'toggle':
+                const currentStatus = actionButtons.dataset.showStatus === 'true';
+                toggleShowStatus(showId, currentStatus);
+                break;
+            case 'delete':
+                const showTitle = actionButtons.dataset.showTitle;
+                deleteShow(showId, showTitle);
+                break;
+            case 'add-track':
+                addTrackToShow(showId);
+                break;
+            case 'delete-track':
+                const trackId = parseInt(actionButtons.dataset.trackId);
+                const trackTitle = actionButtons.dataset.trackTitle;
+                deleteTrack(showId, trackId, trackTitle);
+                break;
+        }
+    });
+}
+
 // Add Track to Show
 function addTrackToShow(showId) {
     document.getElementById('addTrackShowId').value = showId;
@@ -371,6 +418,29 @@ function addTrackToShow(showId) {
 // Close Add Track Modal
 function closeAddTrackModal() {
     document.getElementById('addTrackModal').style.display = 'none';
+}
+
+// Delete Track
+async function deleteTrack(showId, trackId, trackTitle) {
+    if (confirm(`Are you sure you want to delete track "${trackTitle}"?`)) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/shows/${showId}/tracks/${trackId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Delete failed: ${response.status}`);
+            }
+
+            showStatus('✅ Track deleted successfully', 'success');
+            loadShows();
+            loadStats();
+            
+        } catch (error) {
+            console.error('Delete track error:', error);
+            showStatus(`❌ Track delete failed: ${error.message}`, 'error');
+        }
+    }
 }
 
 // Edit Show
