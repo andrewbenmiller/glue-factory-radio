@@ -110,17 +110,24 @@
         document.getElementById('pageLoadTime').textContent = new Date().toLocaleString();
         document.getElementById('jsStatus').textContent = '✅ JavaScript is running';
         
-        // Test upload endpoint
-        fetch('/api/upload/audio', { method: 'POST' })
+        // Test upload endpoint with a simple GET request to avoid POST errors
+        fetch('/api/upload/files')
             .then(response => {
-                document.getElementById('endpointStatus').textContent = '✅ Endpoint accessible';
+                if (response.ok) {
+                    document.getElementById('endpointStatus').textContent = '✅ Upload API accessible';
+                } else {
+                    document.getElementById('endpointStatus').textContent = '⚠️ Upload API status: ' + response.status;
+                }
             })
             .catch(error => {
-                document.getElementById('endpointStatus').textContent = '❌ Endpoint error: ' + error.message;
+                document.getElementById('endpointStatus').textContent = '❌ Upload API error: ' + error.message;
             });
         
         // Upload functionality
-        document.getElementById('uploadBtn').addEventListener('click', async () => {
+        const uploadBtn = document.getElementById('uploadBtn');
+        console.log('Upload button found:', uploadBtn);
+        
+        uploadBtn.addEventListener('click', async () => {
             console.log('Upload button clicked!');
             
             const title = document.getElementById('title').value;
@@ -181,6 +188,18 @@
         });
         
         console.log('Upload test page loaded successfully');
+        
+        // Test button functionality
+        setTimeout(() => {
+            console.log('Testing button functionality...');
+            const testBtn = document.getElementById('uploadBtn');
+            if (testBtn) {
+                console.log('✅ Upload button is present and ready');
+                testBtn.style.border = '2px solid green';
+            } else {
+                console.log('❌ Upload button not found');
+            }
+        }, 1000);
     </script>
 </body>
 </html>
