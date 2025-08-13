@@ -112,15 +112,14 @@
     
     <!-- Test buttons to verify JavaScript is working -->
     <div style="margin-top: 20px; text-align: center;">
-        <button class="test-button" onclick="alert('JavaScript Alert Test!')">Test Alert (Inline)</button>
-        <button class="test-button" onclick="document.getElementById('buttonTest').textContent='Inline onclick working!'">Test Inline (Inline)</button>
-        <button class="test-button" id="testBtn">Test Event Listener</button>
+        <button class="test-button" id="testAlertBtn">Test JavaScript Alert</button>
+        <button class="test-button" id="testConsoleBtn">Test Console Log</button>
+        <button class="test-button" id="testButtonBtn">Test Upload Button</button>
     </div>
 
     <script>
         // Immediate execution test
         console.log('Script starting...');
-        alert('Script loaded!');
         
         // Simple function test
         function simpleTest() {
@@ -141,12 +140,33 @@
             document.getElementById('pageLoadTime').textContent = new Date().toLocaleString();
             document.getElementById('jsStatus').textContent = '✅ JavaScript is running';
             
-            // Test button event listener
-            const testBtn = document.getElementById('testBtn');
-            if (testBtn) {
-                testBtn.addEventListener('click', function() {
-                    alert('Event listener working!');
-                    document.getElementById('buttonTest').textContent = '✅ Event listener working!';
+            // Setup test button event listeners
+            const testAlertBtn = document.getElementById('testAlertBtn');
+            if (testAlertBtn) {
+                testAlertBtn.addEventListener('click', function() {
+                    alert('JavaScript Alert Test!');
+                });
+            }
+            
+            const testConsoleBtn = document.getElementById('testConsoleBtn');
+            if (testConsoleBtn) {
+                testConsoleBtn.addEventListener('click', function() {
+                    console.log('Console log is working!');
+                    document.getElementById('buttonTest').textContent = '✅ Console working - ' + new Date().toLocaleTimeString();
+                });
+            }
+            
+            const testButtonBtn = document.getElementById('testButtonBtn');
+            if (testButtonBtn) {
+                testButtonBtn.addEventListener('click', function() {
+                    const btn = document.getElementById('uploadBtn');
+                    if (btn) {
+                        btn.style.background = '#28a745';
+                        btn.textContent = 'Button Found!';
+                        document.getElementById('buttonTest').textContent = '✅ Button found and modified';
+                    } else {
+                        document.getElementById('buttonTest').textContent = '❌ Button not found';
+                    }
                 });
             }
             
