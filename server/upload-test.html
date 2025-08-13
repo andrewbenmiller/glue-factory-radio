@@ -41,6 +41,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            margin: 5px;
         }
         button:hover {
             background: #0056b3;
@@ -71,7 +72,6 @@
         }
         .test-button {
             background: #28a745;
-            margin: 10px 5px;
         }
     </style>
 </head>
@@ -112,38 +112,43 @@
     
     <!-- Test buttons to verify JavaScript is working -->
     <div style="margin-top: 20px; text-align: center;">
-        <button class="test-button" onclick="testAlert()">Test JavaScript Alert</button>
-        <button class="test-button" onclick="testConsole()">Test Console Log</button>
-        <button class="test-button" onclick="testButton()">Test Upload Button</button>
+        <button class="test-button" onclick="alert('JavaScript Alert Test!')">Test Alert (Inline)</button>
+        <button class="test-button" onclick="document.getElementById('buttonTest').textContent='Inline onclick working!'">Test Inline (Inline)</button>
+        <button class="test-button" id="testBtn">Test Event Listener</button>
     </div>
 
     <script>
-        // Simple test functions
-        function testAlert() {
-            alert('JavaScript is working!');
+        // Immediate execution test
+        console.log('Script starting...');
+        alert('Script loaded!');
+        
+        // Simple function test
+        function simpleTest() {
+            alert('Simple function called!');
         }
         
-        function testConsole() {
-            console.log('Console log is working!');
-            document.getElementById('buttonTest').textContent = '✅ Console working - ' + new Date().toLocaleTimeString();
+        // DOM ready test
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPage);
+        } else {
+            initPage();
         }
         
-        function testButton() {
-            const btn = document.getElementById('uploadBtn');
-            if (btn) {
-                btn.style.background = '#28a745';
-                btn.textContent = 'Button Found!';
-                document.getElementById('buttonTest').textContent = '✅ Button found and modified';
-            } else {
-                document.getElementById('buttonTest').textContent = '❌ Button not found';
-            }
-        }
-        
-        // Page load debugging
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded');
+        function initPage() {
+            console.log('Page initialized');
+            
+            // Update debug info
             document.getElementById('pageLoadTime').textContent = new Date().toLocaleString();
             document.getElementById('jsStatus').textContent = '✅ JavaScript is running';
+            
+            // Test button event listener
+            const testBtn = document.getElementById('testBtn');
+            if (testBtn) {
+                testBtn.addEventListener('click', function() {
+                    alert('Event listener working!');
+                    document.getElementById('buttonTest').textContent = '✅ Event listener working!';
+                });
+            }
             
             // Test upload endpoint
             fetch('/api/upload/files')
@@ -158,18 +163,15 @@
                     document.getElementById('endpointStatus').textContent = '❌ Upload API error: ' + error.message;
                 });
             
-            // Test button functionality
+            // Setup upload button
             const uploadBtn = document.getElementById('uploadBtn');
             if (uploadBtn) {
                 document.getElementById('buttonTest').textContent = '✅ Upload button found';
                 uploadBtn.style.border = '3px solid green';
                 
-                // Add click event
                 uploadBtn.addEventListener('click', function() {
-                    console.log('Upload button clicked!');
-                    alert('Upload button is working! Now let\'s test the actual upload...');
+                    alert('Upload button clicked!');
                     
-                    // Get form data
                     const title = document.getElementById('title').value;
                     const description = document.getElementById('description').value;
                     const audioFile = document.getElementById('audio').files[0];
@@ -226,9 +228,9 @@
             } else {
                 document.getElementById('buttonTest').textContent = '❌ Upload button not found';
             }
-        });
+        }
         
-        console.log('Script loaded');
+        console.log('Script finished loading');
     </script>
 </body>
 </html>
