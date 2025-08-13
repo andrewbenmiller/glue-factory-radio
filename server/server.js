@@ -21,7 +21,18 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve uploads directory with better path handling
+const uploadsPath = path.join(__dirname, "uploads");
+console.log(`📁 Uploads directory path: ${uploadsPath}`);
+
+// Create uploads directory if it doesn't exist
+const fs = require('fs');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+  console.log(`📁 Created uploads directory: ${uploadsPath}`);
+}
+
+app.use("/uploads", express.static(uploadsPath));
 
 // Serve the upload test page
 app.get("/upload-test", (req, res) => {

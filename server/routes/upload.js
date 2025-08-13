@@ -57,12 +57,16 @@ const upload = multer({
 // POST upload single audio file
 router.post('/audio', upload.single('audio'), async (req, res) => {
   try {
+    console.log('📤 Upload request received:', { body: req.body, file: req.file });
+    
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const { title, description } = req.body;
     const { filename, originalname, size, path: filePath } = req.file;
+    
+    console.log('📁 File details:', { filename, originalname, size, filePath });
 
     if (!title) {
       // Delete uploaded file if no title provided
@@ -81,6 +85,9 @@ router.post('/audio', upload.single('audio'), async (req, res) => {
       INSERT INTO shows (title, description, filename, file_size, duration)
       VALUES (?, ?, ?, ?, ?)
     `;
+    
+    console.log('🗄️ Database query:', query);
+    console.log('🗄️ Database values:', [title, description, filename, size, duration]);
     
     db.run(query, [title, description, filename, size, duration], function(err) {
       if (err) {
