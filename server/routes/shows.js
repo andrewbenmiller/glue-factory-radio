@@ -2,7 +2,31 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
-// GET all shows
+// GET all shows (admin endpoint - includes inactive)
+router.get('/admin', (req, res) => {
+  const query = `
+    SELECT * FROM shows 
+    ORDER BY upload_date DESC
+  `;
+  
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching shows:', err);
+      return res.status(500).json({ error: 'Failed to fetch shows' });
+    }
+    
+    // Add full URL to each show
+    const shows = rows.map(show => ({
+      ...show,
+      url: `/uploads/${show.filename}`,
+      duration: show.duration || 0
+    }));
+    
+    res.json(shows);
+  });
+});
+
+// GET all shows (public endpoint - only active)
 router.get('/', (req, res) => {
   const query = `
     SELECT * FROM shows 
@@ -161,6 +185,38 @@ router.post('/:id/play', (req, res) => {
     }
     
     res.json({ message: 'Play count updated' });
+  });
+});
+
+// PUT toggle show status (active/inactive)
+router.put('/:id/toggle', (req, res) => {
+  const { id } = req.params;
+  
+  // First get current status
+  db.get('SELECT is_active FROM shows WHERE id = ?', [id], (err, row) => {
+    if (err) {
+      console.error('Error fetching show status:', err);
+      return res.status(500).json({ error: 'Failed to fetch show status' });
+    }
+    
+    if (!row) {
+      return res.status(404).json({ error: 'Show not found' });
+    }
+    
+    // Toggle the status
+    const newStatus = row.is_active ? 0 : 1;
+    
+    db.run('UPDATE shows SET is_active = ? WHERE id = ?', [newStatus, id], function(err) {
+      if (err) {
+        console.error('Error toggling show status:', err);
+        return res.status(500).json({ error: 'Failed to toggle show status' });
+      }
+      
+      res.json({ 
+        message: 'Show status toggled successfully',
+        is_active: newStatus === 1
+      });
+    });
   });
 });
 

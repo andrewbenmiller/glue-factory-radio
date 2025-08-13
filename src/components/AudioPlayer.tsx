@@ -1,13 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import './AudioPlayer.css';
-
-interface Show {
-  id: string;
-  title: string;
-  url: string;
-  duration: number;
-}
+import { Show } from '../services/api';
 
 interface AudioPlayerProps {
   shows: Show[];
@@ -134,7 +128,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <div className="player-main">
         <ReactPlayer
           ref={playerRef}
-          src={currentShow.url}
+          src={`https://glue-factory-radio-production.up.railway.app${currentShow.url}`}
           playing={isPlaying}
           volume={isMuted ? 0 : volume}
           onPlay={handlePlay}

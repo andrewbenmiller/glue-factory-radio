@@ -21,16 +21,27 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve the upload test page
-app.get("/upload-test", (req, res) => {
-  res.sendFile(path.join(__dirname, "upload-test.html"));
-});
+        // Serve the upload test page
+        app.get("/upload-test", (req, res) => {
+          res.sendFile(path.join(__dirname, "upload-test.html"));
+        });
 
-// Serve the upload test JavaScript file with correct MIME type
-app.get("/upload-test.js", (req, res) => {
-  res.setHeader('Content-Type', 'application/javascript');
-  res.sendFile(path.join(__dirname, "upload-test.js"));
-});
+        // Serve the upload test JavaScript file with correct MIME type
+        app.get("/upload-test.js", (req, res) => {
+          res.setHeader('Content-Type', 'application/javascript');
+          res.sendFile(path.join(__dirname, "upload-test.js"));
+        });
+
+        // Serve the admin portal
+        app.get("/admin", (req, res) => {
+          res.sendFile(path.join(__dirname, "admin.html"));
+        });
+
+        // Serve the admin JavaScript file with correct MIME type
+        app.get("/admin.js", (req, res) => {
+          res.setHeader('Content-Type', 'application/javascript');
+          res.sendFile(path.join(__dirname, "admin.js"));
+        });
 
 // API routes
 app.use("/api/shows", require("./routes/shows"));

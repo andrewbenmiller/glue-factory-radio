@@ -1,14 +1,6 @@
 import React from 'react';
 import './ShowList.css';
-
-interface Show {
-  id: string;
-  title: string;
-  url: string;
-  duration: number;
-  description?: string;
-  uploadDate?: string;
-}
+import { Show } from '../services/api';
 
 interface ShowListProps {
   shows: Show[];
@@ -46,7 +38,7 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
               <p className="show-item-description">{show.description}</p>
             )}
             <div className="show-item-meta">
-              <span className="show-item-date">{formatDate(show.uploadDate)}</span>
+              <span className="show-item-date">{formatDate(show.upload_date)}</span>
               <span className="show-item-number">#{index + 1}</span>
             </div>
           </div>
