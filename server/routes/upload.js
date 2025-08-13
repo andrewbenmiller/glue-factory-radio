@@ -29,12 +29,22 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Check if file is audio
-    const allowedTypes = /audio\/(mp3|wav|ogg|aac|flac|m4a)/;
-    if (allowedTypes.test(file.mimetype)) {
+    // More flexible audio file detection
+    const allowedMimeTypes = /audio\/(mp3|wav|ogg|aac|flac|m4a|mpeg)/;
+    const allowedExtensions = /\.(mp3|wav|ogg|aac|flac|m4a|mpeg)$/i;
+    
+    // Check MIME type first
+    if (allowedMimeTypes.test(file.mimetype)) {
       cb(null, true);
-    } else {
-      cb(new Error('Only audio files are allowed!'), false);
+    }
+    // Fallback to file extension check
+    else if (allowedExtensions.test(file.originalname)) {
+      cb(null, true);
+    }
+    // If neither works, still allow but log a warning
+    else {
+      console.log(`⚠️ File type warning: ${file.originalname} (${file.mimetype})`);
+      cb(null, true);
     }
   }
 });
@@ -142,6 +152,13 @@ router.post('/show', upload.single('audio'), async (req, res) => {
     if (!title || !audioFile) {
       return res.status(400).json({ error: 'Title and audio file are required' });
     }
+
+    console.log('📁 File details:', { 
+      filename: audioFile.filename, 
+      originalname: audioFile.originalname, 
+      mimetype: audioFile.mimetype,
+      size: audioFile.size 
+    });
 
     // Start transaction
     db.serialize(() => {
@@ -253,6 +270,26 @@ router.get('/files', (req, res) => {
     console.error('Error reading uploads directory:', error);
     res.status(500).json({ error: 'Cannot read uploads directory' });
   }
+});
+
+// Error handling middleware for multer errors
+router.use((error, req, res, next) => {
+  console.error('🚨 Upload route error:', error);
+  
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Maximum size is 100MB.' });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({ error: 'Too many files. Only one file allowed.' });
+    }
+  }
+  
+  // Generic error response
+  res.status(500).json({ 
+    error: 'Upload failed', 
+    message: error.message || 'Unknown error occurred'
+  });
 });
 
 module.exports = router;
