@@ -296,17 +296,24 @@ async function toggleShowExpansion(showId) {
 
 // Load Show Tracks
 async function loadShowTracks(showId) {
+    console.log(`🎵 Loading tracks for show ${showId}...`);
     const container = document.getElementById(`tracks-${showId}`);
-    if (!container) return;
+    if (!container) {
+        console.error(`❌ Container not found for tracks-${showId}`);
+        return;
+    }
 
     try {
+        console.log(`📡 Fetching from: ${API_BASE_URL}/api/shows/${showId}`);
         const response = await fetch(`${API_BASE_URL}/api/shows/${showId}`);
         if (!response.ok) {
             throw new Error(`Failed to fetch tracks: ${response.status}`);
         }
 
         const showData = await response.json();
+        console.log('📊 Show data received:', showData);
         const tracks = showData.tracks || [];
+        console.log(`🎵 Found ${tracks.length} tracks:`, tracks);
 
         if (tracks.length === 0) {
             container.innerHTML = `
@@ -357,7 +364,7 @@ async function loadShowTracks(showId) {
         container.innerHTML = `
             <div class="error-state">
                 <p>Error loading tracks: ${error.message}</p>
-                <button onclick="loadShowTracks(${showId})">Retry</button>
+                <button data-action="retry-tracks" data-show-id="${showId}">Retry</button>
             </div>
         `;
     }
@@ -404,6 +411,9 @@ function setupEventDelegation() {
                 const trackId = parseInt(actionButtons.dataset.trackId);
                 const trackTitle = actionButtons.dataset.trackTitle;
                 deleteTrack(showId, trackId, trackTitle);
+                break;
+            case 'retry-tracks':
+                loadShowTracks(showId);
                 break;
         }
     });
