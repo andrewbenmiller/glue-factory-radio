@@ -49,7 +49,39 @@ if (!fs.existsSync(uploadsPath)) {
   console.log(`📁 Created uploads directory: ${uploadsPath}`);
 }
 
-app.use("/uploads", express.static(uploadsPath));
+// Serve individual files from uploads directory
+app.get("/uploads/:filename", (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(uploadsPath, filename);
+  
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
+// List files in uploads directory
+app.get("/uploads", (req, res) => {
+  try {
+    const files = fs.readdirSync(uploadsPath);
+    const fileList = files
+      .filter(file => !file.startsWith('.') && file !== '.gitkeep')
+      .map(file => {
+        const filePath = path.join(uploadsPath, file);
+        const stats = fs.statSync(filePath);
+        return {
+          filename: file,
+          size: stats.size,
+          uploadDate: stats.mtime,
+          url: `/uploads/${file}`
+        };
+      });
+    res.json(fileList);
+  } catch (error) {
+    res.status(500).json({ error: "Cannot read uploads directory" });
+  }
+});
 
 // Test endpoint to check uploads directory
 app.get("/test-uploads", (req, res) => {
