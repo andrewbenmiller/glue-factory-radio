@@ -288,10 +288,11 @@ async function toggleShowExpansion(showId) {
         expandedShows.delete(showId);
     } else {
         expandedShows.add(showId);
-        // Load tracks for this show
+        // First render the table to create the container
+        renderShowsTable();
+        // Then load tracks for this show
         await loadShowTracks(showId);
     }
-    renderShowsTable();
 }
 
 // Load Show Tracks
