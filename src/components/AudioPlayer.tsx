@@ -64,11 +64,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  const handleDuration = (duration: any) => {
-    if (typeof duration === 'number' && duration > 0) {
-      setDuration(duration);
-    }
-  };
+  // Duration is handled by onLoadedMetadata callback
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const seekTime = parseFloat(e.target.value);
