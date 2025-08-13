@@ -32,14 +32,15 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
           >
             <div className="show-item-header">
               <h4 className="show-item-title">{show.title}</h4>
-              <span className="show-item-duration">{formatDuration(show.duration)}</span>
+              <span className="show-item-duration">{formatDuration(show.total_duration)}</span>
             </div>
             {show.description && (
               <p className="show-item-description">{show.description}</p>
             )}
             <div className="show-item-meta">
-              <span className="show-item-date">{formatDate(show.upload_date)}</span>
+              <span className="show-item-date">{formatDate(show.created_date)}</span>
               <span className="show-item-number">#{index + 1}</span>
+              <span className="show-item-tracks">🎵 {show.total_tracks} tracks</span>
             </div>
           </div>
         ))}

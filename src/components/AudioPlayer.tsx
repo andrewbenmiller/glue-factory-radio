@@ -126,28 +126,34 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       </div>
 
       <div className="player-main">
-        <ReactPlayer
-          ref={playerRef}
-          src={`https://glue-factory-radio-production.up.railway.app${currentShow.url}`}
-          playing={isPlaying}
-          volume={isMuted ? 0 : volume}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onEnded={handleEnded}
-          onProgress={handleProgress}
-          onReady={() => setIsLoading(false)}
-          onLoadStart={() => setIsLoading(true)}
-          onLoadedMetadata={(e) => {
-            const target = e.target as HTMLVideoElement;
-            if (target.duration) {
-              setDuration(target.duration);
-              setIsLoading(false);
-            }
-          }}
-          width="100%"
-          height="0"
-          style={{ display: 'none' }}
-        />
+        {currentShow.tracks && currentShow.tracks.length > 0 ? (
+          <ReactPlayer
+            ref={playerRef}
+            src={`https://glue-factory-radio-production.up.railway.app${currentShow.tracks[0].url}`}
+            playing={isPlaying}
+            volume={isMuted ? 0 : volume}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onEnded={handleEnded}
+            onProgress={handleProgress}
+            onReady={() => setIsLoading(false)}
+            onLoadStart={() => setIsLoading(true)}
+            onLoadedMetadata={(e) => {
+              const target = e.target as HTMLVideoElement;
+              if (target.duration) {
+                setDuration(target.duration);
+                setIsLoading(false);
+              }
+            }}
+            width="100%"
+            height="0"
+            style={{ display: 'none' }}
+          />
+        ) : (
+          <div className="no-tracks">
+            <p>No tracks available for this show</p>
+          </div>
+        )}
 
         <div className="progress-container">
           <div className="time-display">
