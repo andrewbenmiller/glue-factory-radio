@@ -8,9 +8,16 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Configure CORS for production
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 app.use(helmet());
-app.use(morgan("combined"));
-app.use(cors());
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -43,8 +50,9 @@ app.use("*", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Glue Factory Radio Server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`📁 Uploads served from: http://localhost:${PORT}/uploads`);
+  console.log(`📍 Health check: /api/health`);
+  console.log(`📁 Uploads served from: /uploads`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
