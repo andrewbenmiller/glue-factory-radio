@@ -514,6 +514,9 @@ async function toggleShowStatus(showId, currentStatus) {
         }
 
         showStatus(`✅ Show ${currentStatus ? 'paused' : 'activated'} successfully`, 'success');
+        
+        // Clear expanded shows to prevent spinning wheel issues
+        expandedShows.clear();
         loadShows();
         
     } catch (error) {
@@ -550,7 +553,7 @@ async function confirmDelete() {
 
         showStatus('✅ Show deleted successfully', 'success');
         closeDeleteModal();
-        expandedShows.delete(currentDeleteId);
+        expandedShows.clear(); // Clear all expanded shows
         loadShows();
         loadStats();
         

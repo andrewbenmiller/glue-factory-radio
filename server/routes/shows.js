@@ -43,7 +43,44 @@ router.get('/', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch shows' });
     }
     
-    res.json(rows);
+    // For each show, fetch its tracks
+    const showsWithTracks = [];
+    let processed = 0;
+    
+    if (rows.length === 0) {
+      return res.json([]);
+    }
+    
+    rows.forEach((show, index) => {
+      db.all(`
+        SELECT * FROM show_tracks 
+        WHERE show_id = ? AND is_active = 1 
+        ORDER BY track_order
+      `, [show.id], (err, tracks) => {
+        if (err) {
+          console.error('Error fetching tracks for show:', show.id, err);
+          tracks = [];
+        }
+        
+        // Add URLs to tracks
+        const tracksWithUrls = tracks.map(track => ({
+          ...track,
+          url: `/uploads/${track.filename}`
+        }));
+        
+        showsWithTracks[index] = {
+          ...show,
+          tracks: tracksWithUrls
+        };
+        
+        processed++;
+        
+        // When all shows are processed, send response
+        if (processed === rows.length) {
+          res.json(showsWithTracks);
+        }
+      });
+    });
   });
 });
 
