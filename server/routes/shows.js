@@ -228,4 +228,43 @@ router.post('/:showId/tracks/:trackId/play', (req, res) => {
   });
 });
 
+// GET audio file proxy (serves audio files with proper CORS)
+router.get('/audio/:filename', (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(__dirname, '..', 'uploads', filename);
+  
+  if (fs.existsSync(filePath)) {
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+    
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(filePath, { start, end });
+      
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'audio/mpeg'
+      });
+      
+      file.pipe(res);
+    } else {
+      res.writeHead(200, {
+        'Content-Length': fileSize,
+        'Content-Type': 'audio/mpeg',
+        'Accept-Ranges': 'bytes'
+      });
+      
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } else {
+    res.status(404).json({ error: "Audio file not found" });
+  }
+});
+
 module.exports = router;

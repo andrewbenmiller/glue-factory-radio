@@ -142,16 +142,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           <>
             {/* Debug info - remove this later */}
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-              Debug: Audio URL = https://glue-factory-radio-production.up.railway.app{currentShow.tracks[0].url}
+              Debug: Audio URL = https://glue-factory-radio-production.up.railway.app/api/shows/audio/{currentShow.tracks[0].filename}
             </div>
             
             {console.log('🎵 AudioPlayer - Current show tracks:', currentShow.tracks)}
-            {console.log('🎵 AudioPlayer - Attempting to play:', `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[0].url}`)}
+            {console.log('🎵 AudioPlayer - Attempting to play:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`)}
             
-            {/* Native HTML5 audio element - more reliable for external files */}
+            {/* Native HTML5 audio element - using API proxy for better CORS */}
             <audio
               ref={playerRef}
-              src={`https://glue-factory-radio-production.up.railway.app${currentShow.tracks[0].url}`}
+              src={`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`}
               preload="metadata"
               onPlay={handlePlay}
               onPause={handlePause}
@@ -170,7 +170,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               onLoadStart={() => setIsLoading(true)}
               onError={(e) => {
                 console.error('Audio element error:', e);
-                console.error('Attempted URL:', `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[0].url}`);
+                console.error('Attempted URL:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`);
               }}
               style={{ display: 'none' }}
             />
