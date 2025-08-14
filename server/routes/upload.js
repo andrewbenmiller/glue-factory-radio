@@ -4,19 +4,26 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('../config/database');
+const mm = require('music-metadata');
 
-// Function to extract audio duration using ffprobe or similar
+// Function to extract audio duration from MP3 files
 async function extractAudioDuration(filePath) {
   try {
-    // For now, we'll use a simple approach
-    // In production, you might want to use ffprobe or a Node.js audio library
     console.log('🎵 Extracting duration for:', filePath);
     
-    // Return a placeholder duration for now
-    // TODO: Implement actual duration extraction
-    return 180; // 3 minutes as placeholder
+    // Parse the audio file metadata
+    const metadata = await mm.parseFile(filePath);
+    const duration = metadata.format.duration;
+    
+    if (duration && !isNaN(duration)) {
+      console.log('✅ Duration extracted:', duration, 'seconds');
+      return Math.round(duration); // Round to nearest second
+    } else {
+      console.warn('⚠️ No valid duration found, using 0');
+      return 0;
+    }
   } catch (error) {
-    console.error('Error extracting duration:', error);
+    console.error('❌ Error extracting duration:', error);
     return 0;
   }
 }
