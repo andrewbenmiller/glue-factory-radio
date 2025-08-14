@@ -42,6 +42,23 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [currentTime, duration, autoPlay, currentShowIndex, shows.length, onShowChange]);
 
+  // Force metadata loading when show changes
+  useEffect(() => {
+    if (currentShow && currentShow.tracks && currentShow.tracks.length > 0) {
+      console.log('🎵 Show changed, resetting duration and loading metadata...');
+      setDuration(0);
+      setCurrentTime(0);
+      setIsLoading(true);
+      
+      // Force metadata loading
+      if (playerRef.current) {
+        const audio = playerRef.current as HTMLAudioElement;
+        audio.load(); // This forces metadata loading
+        console.log('🎵 Forced audio.load() for metadata');
+      }
+    }
+  }, [currentShowIndex, currentShow]);
+
   const handlePlay = async () => {
     if (playerRef.current) {
       try {
@@ -62,6 +79,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             (playerRef.current as HTMLAudioElement).src = objectUrl;
             await (playerRef.current as HTMLAudioElement).play();
             setIsPlaying(true);
+            
+            // Try to get duration from blob
+            if (duration === 0) {
+              const tempAudio = new Audio();
+              tempAudio.src = objectUrl;
+              tempAudio.addEventListener('loadedmetadata', () => {
+                if (tempAudio.duration && !isNaN(tempAudio.duration)) {
+                  setDuration(tempAudio.duration);
+                  console.log('✅ Duration extracted from blob:', tempAudio.duration);
+                }
+              });
+            }
             
             console.log('✅ Audio playing via blob URL!');
           }
@@ -142,9 +171,38 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const skipBackward = () => {
+    if (playerRef.current) {
+      const newTime = Math.max(0, currentTime - 10);
+      setCurrentTime(newTime);
+      (playerRef.current as HTMLAudioElement).currentTime = newTime;
+    }
+  };
+
+  const skipForward = () => {
+    if (playerRef.current && duration > 0) {
+      const newTime = Math.min(duration, currentTime + 10);
+      setCurrentTime(newTime);
+      (playerRef.current as HTMLAudioElement).currentTime = newTime;
+    }
+  };
+
+  const previousShow = () => {
+    if (currentShowIndex > 0) {
+      onShowChange(currentShowIndex - 1);
+    }
+  };
+
+  const nextShow = () => {
+    if (currentShowIndex < shows.length - 1) {
+      onShowChange(currentShowIndex + 1);
+    }
   };
 
   if (!currentShow) {
@@ -166,6 +224,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             {/* Debug info - remove this later */}
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
               Debug: Audio URL = https://glue-factory-radio-production.up.railway.app/api/shows/audio/{currentShow.tracks[0].filename}
+              <br />
+              Duration: {duration > 0 ? `${formatTime(duration)} (${duration}s)` : 'Loading...'}
+              <br />
+              Current Time: {formatTime(currentTime)}
             </div>
             
             {console.log('🎵 AudioPlayer - Current show tracks:', currentShow.tracks)}
@@ -191,15 +253,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               }}
               onLoadedMetadata={(e) => {
                 const target = e.target as HTMLAudioElement;
-                if (target.duration) {
+                console.log('🎵 Metadata loaded, duration:', target.duration);
+                if (target.duration && !isNaN(target.duration)) {
                   setDuration(target.duration);
                   setIsLoading(false);
+                  console.log('✅ Duration set to:', target.duration);
+                } else {
+                  console.warn('⚠️ Invalid duration received:', target.duration);
                 }
               }}
-              onLoadStart={() => setIsLoading(true)}
+              onCanPlay={(e) => {
+                const target = e.target as HTMLAudioElement;
+                console.log('🎵 Can play, duration:', target.duration);
+                if (target.duration && !isNaN(target.duration) && duration === 0) {
+                  setDuration(target.duration);
+                  setIsLoading(false);
+                  console.log('✅ Duration set from canplay:', target.duration);
+                }
+              }}
+              onLoadStart={() => {
+                setIsLoading(true);
+                console.log('🎵 Audio loading started...');
+              }}
               onError={(e) => {
                 console.error('Audio element error:', e);
                 console.error('Attempted URL:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`);
+                setIsLoading(false);
               }}
               style={{ display: 'none' }}
             />
