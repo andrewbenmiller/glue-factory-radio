@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ReactPlayer from 'react-player';
 import './AudioPlayer.css';
 import { Show } from '../services/api';
 
@@ -63,11 +62,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  const handleProgress = (state: any) => {
-    if (state && typeof state.playedSeconds === 'number') {
-      setCurrentTime(state.playedSeconds);
-    }
-  };
+
 
   // Duration is handled by onLoadedMetadata callback
 
