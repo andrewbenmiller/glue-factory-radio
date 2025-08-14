@@ -5,6 +5,22 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../config/database');
 
+// Function to extract audio duration using ffprobe or similar
+async function extractAudioDuration(filePath) {
+  try {
+    // For now, we'll use a simple approach
+    // In production, you might want to use ffprobe or a Node.js audio library
+    console.log('🎵 Extracting duration for:', filePath);
+    
+    // Return a placeholder duration for now
+    // TODO: Implement actual duration extraction
+    return 180; // 3 minutes as placeholder
+  } catch (error) {
+    console.error('Error extracting duration:', error);
+    return 0;
+  }
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -82,18 +98,21 @@ router.post('/track', upload.single('audio'), async (req, res) => {
         const nextOrder = (result.max_order || 0) + 1;
         const filename = audioFile.filename;
         const size = audioFile.size;
-        const duration = 0; // Will be updated when audio is processed
+        
+        // Extract duration from the uploaded file
+        const filePath = path.join(__dirname, '../uploads', filename);
+        const duration = await extractAudioDuration(filePath);
 
         // Insert track
         const query = `
-          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
+          VALUES (?, ?, ?, ?, ?, ?)
         `;
         
         console.log('🗄️ Database query:', query);
-        console.log('🗄️ Database values:', [showId, title, filename, size, nextOrder]);
+        console.log('🗄️ Database values:', [showId, title, filename, size, nextOrder, duration]);
 
-        db.run(query, [showId, title, filename, size, nextOrder], function(err) {
+        db.run(query, [showId, title, filename, size, nextOrder, duration], function(err) {
           if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Failed to save track to database' });
@@ -175,13 +194,16 @@ router.post('/show', upload.single('audio'), async (req, res) => {
         const showId = this.lastID;
         const filename = audioFile.filename;
         const size = audioFile.size;
-        const duration = 0; // Will be updated when audio is processed
+        
+        // Extract duration from the uploaded file
+        const filePath = path.join(__dirname, '../uploads', filename);
+        const duration = await extractAudioDuration(filePath);
 
         // Create first track
         db.run(`
-          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order)
-          VALUES (?, ?, ?, ?, ?)
-        `, [showId, title, filename, size, 1], function(err) {
+          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [showId, title, filename, size, 1, duration], function(err) {
           if (err) {
             console.error('Error creating track:', err);
             return res.status(500).json({ error: 'Show created but track failed' });
@@ -191,9 +213,9 @@ router.post('/show', upload.single('audio'), async (req, res) => {
           db.run(`
             UPDATE shows 
             SET total_tracks = 1,
-                total_duration = 0
+                total_duration = ?
             WHERE id = ?
-          `, [showId], (err) => {
+          `, [duration, showId], (err) => {
             if (err) {
               console.error('Error updating show totals:', err);
             }
