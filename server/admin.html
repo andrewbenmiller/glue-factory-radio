@@ -384,6 +384,15 @@
             transform: rotate(90deg);
         }
     </style>
+    
+    <!-- Basic JavaScript test - should run immediately -->
+    <script>
+        console.log('🎵 HEAD script tag executed');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎵 DOMContentLoaded in HEAD script');
+            document.body.style.border = '3px solid green';
+        });
+    </script>
 </head>
 <body>
     <div class="admin-container">
@@ -449,6 +458,16 @@
                 <div style="margin-top: 10px; padding: 10px; background: #e9ecef; border-radius: 4px;">
                     <strong>HTML Test:</strong> If you can see this text, the page is loading. 
                     <br><strong>JavaScript Status:</strong> <span id="jsStatus">Checking...</span>
+                    
+                    <!-- Completely inline JavaScript test -->
+                    <br><br>
+                    <button type="button" style="background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;" 
+                            onmouseover="this.style.background='#c82333'" 
+                            onmouseout="this.style.background='#dc3545'"
+                            onclick="document.getElementById('jsStatus').innerHTML='INLINE JS WORKS!'; this.style.background='#28a745';">
+                        🧪 Test Inline JS
+                    </button>
+                    <small style="color: #666; margin-left: 10px;">This button uses only inline JavaScript</small>
                 </div>
             </div>
             
