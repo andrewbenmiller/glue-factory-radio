@@ -43,8 +43,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [currentTime, duration, autoPlay, currentShowIndex, shows.length, onShowChange]);
 
-  const handlePlay = () => setIsPlaying(true);
-  const handlePause = () => setIsPlaying(false);
+  const handlePlay = () => {
+    if (playerRef.current) {
+      (playerRef.current as HTMLAudioElement).play();
+      setIsPlaying(true);
+    }
+  };
+  
+  const handlePause = () => {
+    if (playerRef.current) {
+      (playerRef.current as HTMLAudioElement).pause();
+      setIsPlaying(false);
+    }
+  };
   const handleEnded = () => {
     setIsPlaying(false);
     if (autoPlay && currentShowIndex < shows.length - 1) {
@@ -64,7 +75,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const seekTime = parseFloat(e.target.value);
     setCurrentTime(seekTime);
     if (playerRef.current) {
-      playerRef.current.seekTo(seekTime);
+      (playerRef.current as HTMLAudioElement).currentTime = seekTime;
     }
   };
 
@@ -72,17 +83,23 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
+    if (playerRef.current) {
+      (playerRef.current as HTMLAudioElement).volume = newVolume;
+    }
   };
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
+    if (playerRef.current) {
+      (playerRef.current as HTMLAudioElement).muted = !isMuted;
+    }
   };
 
   const skipForward = () => {
     const newTime = Math.min(currentTime + 30, duration);
     setCurrentTime(newTime);
     if (playerRef.current) {
-      playerRef.current.seekTo(newTime);
+      (playerRef.current as HTMLAudioElement).currentTime = newTime;
     }
   };
 
@@ -90,7 +107,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const newTime = Math.max(currentTime - 30, 0);
     setCurrentTime(newTime);
     if (playerRef.current) {
-      playerRef.current.seekTo(newTime);
+      (playerRef.current as HTMLAudioElement).currentTime = newTime;
     }
   };
 
@@ -136,30 +153,30 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             {console.log('🎵 AudioPlayer - Current show tracks:', currentShow.tracks)}
             {console.log('🎵 AudioPlayer - Attempting to play:', `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[0].url}`)}
             
-            <ReactPlayer
+            {/* Native HTML5 audio element - more reliable for external files */}
+            <audio
               ref={playerRef}
               src={`https://glue-factory-radio-production.up.railway.app${currentShow.tracks[0].url}`}
-              playing={isPlaying}
-              volume={isMuted ? 0 : volume}
+              preload="metadata"
               onPlay={handlePlay}
               onPause={handlePause}
               onEnded={handleEnded}
-              onProgress={handleProgress}
-              onReady={() => setIsLoading(false)}
-              onLoadStart={() => setIsLoading(true)}
+              onTimeUpdate={(e) => {
+                const target = e.target as HTMLAudioElement;
+                setCurrentTime(target.currentTime);
+              }}
               onLoadedMetadata={(e) => {
-                const target = e.target as HTMLVideoElement;
+                const target = e.target as HTMLAudioElement;
                 if (target.duration) {
                   setDuration(target.duration);
                   setIsLoading(false);
                 }
               }}
+              onLoadStart={() => setIsLoading(true)}
               onError={(e) => {
-                console.error('ReactPlayer error:', e);
+                console.error('Audio element error:', e);
                 console.error('Attempted URL:', `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[0].url}`);
               }}
-              width="100%"
-              height="0"
               style={{ display: 'none' }}
             />
           </>
