@@ -230,10 +230,25 @@ router.post('/:showId/tracks/:trackId/play', (req, res) => {
   });
 });
 
+// Handle OPTIONS preflight for audio files
+router.options('/audio/:filename', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.sendStatus(200);
+});
+
 // GET audio file proxy (serves audio files with proper CORS)
 router.get('/audio/:filename', (req, res) => {
   const { filename } = req.params;
   const filePath = path.join(__dirname, '..', 'uploads', filename);
+  
+  // Add CORS headers for audio files
+  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
   
   if (fs.existsSync(filePath)) {
     const stat = fs.statSync(filePath);
