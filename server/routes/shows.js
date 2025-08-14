@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const fs = require('fs');
+const path = require('path');
 
 // GET all shows (admin endpoint - includes inactive)
 router.get('/admin', (req, res) => {
