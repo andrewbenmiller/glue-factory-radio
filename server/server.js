@@ -66,13 +66,56 @@ if (!fs.existsSync(uploadsPath)) {
   console.log(`📁 Created uploads directory: ${uploadsPath}`);
 }
 
+// Handle OPTIONS preflight for uploads
+app.options("/uploads/:filename", (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.sendStatus(200);
+});
+
 // Serve individual files from uploads directory
 app.get("/uploads/:filename", (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(uploadsPath, filename);
   
   if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
+    // Add CORS headers for audio files
+    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
+    
+    // Handle range requests for audio streaming
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+    
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(filePath, { start, end });
+      
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'audio/mpeg'
+      });
+      
+      file.pipe(res);
+    } else {
+      res.writeHead(200, {
+        'Content-Length': fileSize,
+        'Content-Type': 'audio/mpeg',
+        'Accept-Ranges': 'bytes'
+      });
+      
+      fs.createReadStream(filePath).pipe(res);
+    }
   } else {
     res.status(404).json({ error: "File not found" });
   }
