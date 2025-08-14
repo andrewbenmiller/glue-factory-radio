@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './AudioPlayer.css';
 import { Show } from '../services/api';
 
@@ -42,6 +42,41 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [currentTime, duration, autoPlay, currentShowIndex, shows.length, onShowChange]);
 
+  // Manual duration extraction as last resort
+  const extractDurationManually = useCallback(async () => {
+    if (duration > 0) return; // Already have duration
+    
+    try {
+      console.log('🎵 Attempting manual duration extraction...');
+      const response = await fetch(`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`, {
+        method: 'HEAD' // Just get headers, not the full file
+      });
+      
+      if (response.ok) {
+        // Create a temporary audio element to extract duration
+        const tempAudio = new Audio();
+        tempAudio.crossOrigin = 'anonymous';
+        tempAudio.preload = 'metadata';
+        
+        tempAudio.addEventListener('loadedmetadata', () => {
+          if (tempAudio.duration && !isNaN(tempAudio.duration) && tempAudio.duration > 0) {
+            console.log('✅ Manual duration extraction successful:', tempAudio.duration);
+            setDuration(tempAudio.duration);
+            setIsLoading(false);
+          }
+        });
+        
+        tempAudio.addEventListener('error', (e) => {
+          console.warn('⚠️ Manual duration extraction failed:', e);
+        });
+        
+        tempAudio.src = `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`;
+      }
+    } catch (error) {
+      console.error('❌ Manual duration extraction error:', error);
+    }
+  }, [currentShow.tracks, duration]);
+
   // Force metadata loading when show changes
   useEffect(() => {
     if (currentShow && currentShow.tracks && currentShow.tracks.length > 0) {
@@ -79,7 +114,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         }, 500);
       }
     }
-  }, [currentShowIndex, currentShow]);
+  }, [currentShowIndex, currentShow, extractDurationManually]);
 
   const handlePlay = async () => {
     if (playerRef.current) {
@@ -123,41 +158,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  // Manual duration extraction as last resort
-  const extractDurationManually = async () => {
-    if (duration > 0) return; // Already have duration
-    
-    try {
-      console.log('🎵 Attempting manual duration extraction...');
-      const response = await fetch(`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`, {
-        method: 'HEAD' // Just get headers, not the full file
-      });
-      
-      if (response.ok) {
-        // Create a temporary audio element to extract duration
-        const tempAudio = new Audio();
-        tempAudio.crossOrigin = 'anonymous';
-        tempAudio.preload = 'metadata';
-        
-        tempAudio.addEventListener('loadedmetadata', () => {
-          if (tempAudio.duration && !isNaN(tempAudio.duration) && tempAudio.duration > 0) {
-            console.log('✅ Manual duration extraction successful:', tempAudio.duration);
-            setDuration(tempAudio.duration);
-            setIsLoading(false);
-          }
-        });
-        
-        tempAudio.addEventListener('error', (e) => {
-          console.warn('⚠️ Manual duration extraction failed:', e);
-        });
-        
-        tempAudio.src = `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`;
-      }
-    } catch (error) {
-      console.error('❌ Manual duration extraction error:', error);
-    }
-  };
-  
   const handlePause = () => {
     if (playerRef.current) {
       (playerRef.current as HTMLAudioElement).pause();
