@@ -483,14 +483,14 @@
             <span class="close">&times;</span>
             <h3>Add Track to Show</h3>
             <form id="addTrackForm">
-                <input type="hidden" id="addTrackShowId">
+                <input type="hidden" id="addTrackShowId" name="showId">
                 <div class="form-group">
                     <label for="trackTitle">Track Title *</label>
-                    <input type="text" id="trackTitle" required placeholder="Enter track title">
+                    <input type="text" id="trackTitle" name="title" required placeholder="Enter track title">
                 </div>
                 <div class="form-group">
                     <label for="trackAudio">Audio File *</label>
-                    <input type="file" id="trackAudio" accept="audio/*" required>
+                    <input type="file" id="trackAudio" name="audio" accept="audio/*" required>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="btn-cancel" onclick="closeAddTrackModal()">Cancel</button>

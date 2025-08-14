@@ -113,10 +113,19 @@ function setupAddTrackForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        console.log('🎵 Add Track form submitted');
+        
         const formData = new FormData(form);
         const showId = formData.get('showId');
         const title = formData.get('title');
         const audioFile = formData.get('audio');
+
+        console.log('📊 Form data:', { showId, title, audioFile: audioFile ? audioFile.name : 'none' });
+
+        if (!showId) {
+            showStatus('❌ Show ID is missing', 'error');
+            return;
+        }
 
         if (!title.trim()) {
             showStatus('Please enter a track title', 'error');
@@ -129,10 +138,19 @@ function setupAddTrackForm() {
         }
 
         try {
+            console.log('📡 Sending request to:', `${API_BASE_URL}/api/upload/track`);
+            console.log('📁 FormData contents:', {
+                showId: formData.get('showId'),
+                title: formData.get('title'),
+                audioFile: formData.get('audio') ? formData.get('audio').name : 'none'
+            });
+
             const response = await fetch(`${API_BASE_URL}/api/upload/track`, {
                 method: 'POST',
                 body: formData
             });
+
+            console.log('📡 Response status:', response.status);
 
             if (!response.ok) {
                 const errorData = await response.json();
