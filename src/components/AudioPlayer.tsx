@@ -143,17 +143,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const skipForward = () => {
-    const newTime = Math.min(currentTime + 30, duration);
-    setCurrentTime(newTime);
-    if (playerRef.current) {
+    if (playerRef.current && duration > 0) {
+      const newTime = Math.min(duration, currentTime + 10);
+      setCurrentTime(newTime);
       (playerRef.current as HTMLAudioElement).currentTime = newTime;
     }
   };
 
   const skipBackward = () => {
-    const newTime = Math.max(currentTime - 30, 0);
-    setCurrentTime(newTime);
     if (playerRef.current) {
+      const newTime = Math.max(0, currentTime - 10);
+      setCurrentTime(newTime);
       (playerRef.current as HTMLAudioElement).currentTime = newTime;
     }
   };
@@ -177,33 +177,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const skipBackward = () => {
-    if (playerRef.current) {
-      const newTime = Math.max(0, currentTime - 10);
-      setCurrentTime(newTime);
-      (playerRef.current as HTMLAudioElement).currentTime = newTime;
-    }
-  };
 
-  const skipForward = () => {
-    if (playerRef.current && duration > 0) {
-      const newTime = Math.min(duration, currentTime + 10);
-      setCurrentTime(newTime);
-      (playerRef.current as HTMLAudioElement).currentTime = newTime;
-    }
-  };
-
-  const previousShow = () => {
-    if (currentShowIndex > 0) {
-      onShowChange(currentShowIndex - 1);
-    }
-  };
-
-  const nextShow = () => {
-    if (currentShowIndex < shows.length - 1) {
-      onShowChange(currentShowIndex + 1);
-    }
-  };
 
   if (!currentShow) {
     return <div className="audio-player no-show">No shows available</div>;
