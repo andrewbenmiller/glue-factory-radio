@@ -17,6 +17,19 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStats();
 });
 
+// Test function to debug modal
+function testModal() {
+    console.log('🧪 Test modal function called');
+    const modal = document.getElementById('addTrackModal');
+    if (modal) {
+        console.log('✅ Modal found, setting display to block');
+        modal.style.display = 'block';
+        console.log('🎯 Modal should now be visible');
+    } else {
+        console.error('❌ Modal not found');
+    }
+}
+
 // Tab Navigation
 function setupTabNavigation() {
     const tabs = document.querySelectorAll('.nav-tab');
@@ -405,35 +418,50 @@ function setupEventDelegation() {
         const button = e.target.closest('button');
         if (!button) return;
 
+        console.log('🎯 Button clicked:', button.textContent, 'with classes:', button.className);
+
         const actionButtons = button.closest('.action-buttons');
-        if (!actionButtons) return;
+        if (!actionButtons) {
+            console.log('❌ No action-buttons container found');
+            return;
+        }
 
         const action = button.dataset.action;
         const showId = parseInt(actionButtons.dataset.showId);
+        
+        console.log('🎯 Action detected:', action, 'for showId:', showId);
 
         switch (action) {
             case 'edit':
+                console.log('✏️ Edit show case executed');
                 editShow(showId);
                 break;
             case 'toggle':
+                console.log('🔄 Toggle show case executed');
                 const currentStatus = actionButtons.dataset.showStatus === 'true';
                 toggleShowStatus(showId, currentStatus);
                 break;
             case 'delete':
+                console.log('🗑️ Delete show case executed');
                 const showTitle = actionButtons.dataset.showTitle;
                 deleteShow(showId, showTitle);
                 break;
             case 'add-track':
+                console.log('➕ Add track case executed');
                 addTrackToShow(showId);
                 break;
             case 'delete-track':
+                console.log('🗑️ Delete track case executed');
                 const trackId = parseInt(actionButtons.dataset.trackId);
                 const trackTitle = actionButtons.dataset.trackTitle;
                 deleteTrack(showId, trackId, trackTitle);
                 break;
             case 'retry-tracks':
+                console.log('🔄 Retry tracks case executed');
                 loadShowTracks(showId);
                 break;
+            default:
+                console.log('❓ Unknown action:', action);
         }
     });
 }
