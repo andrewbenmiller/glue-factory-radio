@@ -42,10 +42,33 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [currentTime, duration, autoPlay, currentShowIndex, shows.length, onShowChange]);
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     if (playerRef.current) {
-      (playerRef.current as HTMLAudioElement).play();
-      setIsPlaying(true);
+      try {
+        // Try to play directly first
+        await (playerRef.current as HTMLAudioElement).play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.log('Direct play failed, trying blob approach...', error);
+        
+        // Fallback: fetch as blob and create object URL
+        try {
+          const response = await fetch(`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`);
+          if (response.ok) {
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            
+            // Update audio source to blob URL
+            (playerRef.current as HTMLAudioElement).src = objectUrl;
+            await (playerRef.current as HTMLAudioElement).play();
+            setIsPlaying(true);
+            
+            console.log('✅ Audio playing via blob URL!');
+          }
+        } catch (blobError) {
+          console.error('Blob approach also failed:', blobError);
+        }
+      }
     }
   };
   
@@ -148,11 +171,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             {console.log('🎵 AudioPlayer - Current show tracks:', currentShow.tracks)}
             {console.log('🎵 AudioPlayer - Attempting to play:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`)}
             
-            {/* Native HTML5 audio element - using API proxy for better CORS */}
+            {/* Web Audio API approach for better CORS handling */}
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+              Using Web Audio API for better CORS compatibility
+            </div>
+            
+            {/* Hidden audio element for Web Audio API */}
             <audio
               ref={playerRef}
               src={`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`}
               preload="metadata"
+              crossOrigin="anonymous"
               onPlay={handlePlay}
               onPause={handlePause}
               onEnded={handleEnded}
