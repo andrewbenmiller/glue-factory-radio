@@ -440,8 +440,26 @@ function setupEventDelegation() {
 
 // Add Track to Show
 function addTrackToShow(showId) {
-    document.getElementById('addTrackShowId').value = showId;
-    document.getElementById('addTrackModal').style.display = 'block';
+    console.log('🎵 addTrackToShow called with showId:', showId);
+    
+    const showIdField = document.getElementById('addTrackShowId');
+    const modal = document.getElementById('addTrackModal');
+    
+    if (!showIdField) {
+        console.error('❌ addTrackShowId field not found');
+        return;
+    }
+    
+    if (!modal) {
+        console.error('❌ addTrackModal not found');
+        return;
+    }
+    
+    console.log('✅ Found modal elements, setting showId and displaying modal');
+    showIdField.value = showId;
+    modal.style.display = 'block';
+    
+    console.log('🎯 Modal should now be visible');
 }
 
 // Close Add Track Modal
