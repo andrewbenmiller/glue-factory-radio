@@ -89,7 +89,7 @@ router.post('/track', upload.single('audio'), async (req, res) => {
       }
 
       // Get next track order for this show
-      db.get('SELECT MAX(track_order) as max_order FROM show_tracks WHERE show_id = ?', [showId], (err, result) => {
+      db.get('SELECT MAX(track_order) as max_order FROM show_tracks WHERE show_id = ?', [showId], async (err, result) => {
         if (err) {
           console.error('Database error:', err);
           return res.status(500).json({ error: 'Database error' });
@@ -185,7 +185,7 @@ router.post('/show', upload.single('audio'), async (req, res) => {
       db.run(`
         INSERT INTO shows (title, description)
         VALUES (?, ?)
-      `, [title, description], function(err) {
+      `, [title, description], async function(err) {
         if (err) {
           console.error('Error creating show:', err);
           return res.status(500).json({ error: 'Failed to create show' });
@@ -203,7 +203,7 @@ router.post('/show', upload.single('audio'), async (req, res) => {
         db.run(`
           INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
           VALUES (?, ?, ?, ?, ?, ?)
-        `, [showId, title, filename, size, 1, duration], function(err) {
+        `, [showId, title, filename, size, 1, duration], async function(err) {
           if (err) {
             console.error('Error creating track:', err);
             return res.status(500).json({ error: 'Show created but track failed' });
