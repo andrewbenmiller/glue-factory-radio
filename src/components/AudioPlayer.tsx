@@ -55,6 +55,28 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         const audio = playerRef.current as HTMLAudioElement;
         audio.load(); // This forces metadata loading
         console.log('🎵 Forced audio.load() for metadata');
+        
+        // Also try to access duration directly after a short delay
+        setTimeout(() => {
+          if (audio.duration && !isNaN(audio.duration) && audio.duration > 0) {
+            console.log('🎵 Duration accessed directly:', audio.duration);
+            setDuration(audio.duration);
+            setIsLoading(false);
+          } else {
+            console.log('🎵 Duration not available yet, trying again...');
+            // Try one more time
+            setTimeout(() => {
+              if (audio.duration && !isNaN(audio.duration) && audio.duration > 0) {
+                console.log('🎵 Duration accessed on second try:', audio.duration);
+                setDuration(audio.duration);
+                setIsLoading(false);
+              } else {
+                console.log('🎵 All automatic methods failed, trying manual extraction...');
+                extractDurationManually();
+              }
+            }, 1000);
+          }
+        }, 500);
       }
     }
   }, [currentShowIndex, currentShow]);
@@ -98,6 +120,41 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           console.error('Blob approach also failed:', blobError);
         }
       }
+    }
+  };
+
+  // Manual duration extraction as last resort
+  const extractDurationManually = async () => {
+    if (duration > 0) return; // Already have duration
+    
+    try {
+      console.log('🎵 Attempting manual duration extraction...');
+      const response = await fetch(`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`, {
+        method: 'HEAD' // Just get headers, not the full file
+      });
+      
+      if (response.ok) {
+        // Create a temporary audio element to extract duration
+        const tempAudio = new Audio();
+        tempAudio.crossOrigin = 'anonymous';
+        tempAudio.preload = 'metadata';
+        
+        tempAudio.addEventListener('loadedmetadata', () => {
+          if (tempAudio.duration && !isNaN(tempAudio.duration) && tempAudio.duration > 0) {
+            console.log('✅ Manual duration extraction successful:', tempAudio.duration);
+            setDuration(tempAudio.duration);
+            setIsLoading(false);
+          }
+        });
+        
+        tempAudio.addEventListener('error', (e) => {
+          console.warn('⚠️ Manual duration extraction failed:', e);
+        });
+        
+        tempAudio.src = `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`;
+      }
+    } catch (error) {
+      console.error('❌ Manual duration extraction error:', error);
     }
   };
   
@@ -202,6 +259,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               Duration: {duration > 0 ? `${formatTime(duration)} (${duration}s)` : 'Loading...'}
               <br />
               Current Time: {formatTime(currentTime)}
+              <br />
+              <button 
+                onClick={extractDurationManually}
+                style={{ 
+                  fontSize: '10px', 
+                  padding: '2px 6px', 
+                  marginTop: '5px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                🔍 Force Duration Load
+              </button>
             </div>
             
             {console.log('🎵 AudioPlayer - Current show tracks:', currentShow.tracks)}
@@ -212,7 +285,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               Using Web Audio API for better CORS compatibility
             </div>
             
-            {/* Hidden audio element for Web Audio API */}
+            {/* Audio element - invisible but functional for metadata loading */}
             <audio
               ref={playerRef}
               src={`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`}
@@ -254,7 +327,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 console.error('Attempted URL:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`);
                 setIsLoading(false);
               }}
-              style={{ display: 'none' }}
+              style={{ 
+                position: 'absolute',
+                left: '-9999px',
+                width: '1px',
+                height: '1px',
+                opacity: 0,
+                pointerEvents: 'none'
+              }}
             />
           </>
         ) : (
