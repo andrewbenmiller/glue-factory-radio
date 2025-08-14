@@ -437,7 +437,10 @@
                 <button onclick="testModal()" style="background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
                     🧪 Test Modal (Debug)
                 </button>
-                <small style="color: #666; margin-left: 10px;">Click this to test if the modal system works</small>
+                <button onclick="alert('Basic JavaScript works!')" style="background: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                    🧪 Test Basic JS
+                </button>
+                <small style="color: #666; margin-left: 10px;">Click these to test if JavaScript is working at all</small>
             </div>
             
             <div id="showsTableContainer">
@@ -636,5 +639,37 @@
         }
     </style>
     <script src="admin.js"></script>
+    <script>
+        // Basic debugging to see if JavaScript is running
+        console.log('🎵 HTML page loaded, checking JavaScript...');
+        
+        // Test if we can access DOM elements
+        window.addEventListener('load', function() {
+            console.log('🎵 Window load event fired');
+            
+            // Check if admin.js loaded
+            if (typeof setupTabNavigation === 'function') {
+                console.log('✅ admin.js functions are available');
+            } else {
+                console.error('❌ admin.js functions NOT available');
+            }
+            
+            // Check if modal exists
+            const modal = document.getElementById('addTrackModal');
+            if (modal) {
+                console.log('✅ Modal HTML found');
+            } else {
+                console.error('❌ Modal HTML NOT found');
+            }
+            
+            // Check if test button exists
+            const testBtn = document.querySelector('button[onclick="testModal()"]');
+            if (testBtn) {
+                console.log('✅ Test button found');
+            } else {
+                console.error('❌ Test button NOT found');
+            }
+        });
+    </script>
 </body>
 </html>
