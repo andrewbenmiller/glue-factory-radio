@@ -59,6 +59,11 @@ app.get("/admin.js", (req, res) => {
   res.sendFile(path.join(__dirname, "admin.js"));
 });
 
+// Serve the JavaScript test page
+app.get("/javascript-test", (req, res) => {
+  res.sendFile(path.join(__dirname, "javascript-test.html"));
+});
+
 // API routes
 app.use("/api/shows", require("./routes/shows"));
 app.use("/api/upload", require("./routes/upload"));

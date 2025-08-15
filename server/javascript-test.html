@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .status { margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 JavaScript Execution Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Basic JavaScript</h3>
+        <button onclick="alert('Basic JavaScript works!')">Test Alert</button>
+        <button onclick="console.log('Console log works!')">Test Console</button>
+        <button onclick="document.getElementById('status1').innerHTML='Basic JS works!'">Test DOM</button>
+        <div id="status1" class="status">Click a button above...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Inline Event Handlers</h3>
+        <button onmouseover="this.style.background='red'" onmouseout="this.style.background='white'" onclick="this.innerHTML='Clicked!'">Hover & Click Test</button>
+        <div class="status">This button should change color on hover and text on click</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: External JavaScript File</h3>
+        <button onclick="testExternalFunction()">Test External Function</button>
+        <div id="status3" class="status">Click to test external JS...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 4: CSP Status</h3>
+        <div id="cspStatus" class="status">Checking CSP...</div>
+    </div>
+    
+    <script>
+        // Basic script tag test
+        console.log('🎵 Basic script tag executed');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎵 DOMContentLoaded fired');
+            document.getElementById('cspStatus').innerHTML = '✅ Basic JavaScript is working!';
+        });
+        
+        // Test external function
+        function testExternalFunction() {
+            document.getElementById('status3').innerHTML = '✅ External function called successfully!';
+            console.log('External function executed');
+        }
+        
+        // Test CSP
+        try {
+            eval('console.log("Eval test")');
+            document.getElementById('cspStatus').innerHTML += '<br>⚠️ eval() is allowed (CSP might be too permissive)';
+        } catch (e) {
+            document.getElementById('cspStatus').innerHTML += '<br>✅ eval() is blocked (CSP is working)';
+        }
+    </script>
+</body>
+</html>
