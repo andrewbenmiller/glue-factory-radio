@@ -420,13 +420,24 @@ function setupEventDelegation() {
 
         console.log('🎯 Button clicked:', button.textContent, 'with classes:', button.className);
 
-        const actionButtons = button.closest('.action-buttons');
-        if (!actionButtons) {
-            console.log('❌ No action-buttons container found');
+        const action = button.dataset.action;
+        if (!action) return;
+
+        // Handle buttons that are directly in the tracks section (like Add Track)
+        if (action === 'add-track') {
+            const showId = parseInt(button.dataset.showId);
+            console.log('🎯 Add track action detected for showId:', showId);
+            addTrackToShow(showId);
             return;
         }
 
-        const action = button.dataset.action;
+        // Handle buttons that are in action-buttons containers
+        const actionButtons = button.closest('.action-buttons');
+        if (!actionButtons) {
+            console.log('❌ No action-buttons container found for action:', action);
+            return;
+        }
+
         const showId = parseInt(actionButtons.dataset.showId);
         
         console.log('🎯 Action detected:', action, 'for showId:', showId);
