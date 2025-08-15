@@ -3,99 +3,128 @@ import './App.css';
 import AudioPlayer from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import { apiService, Show } from './services/api';
+import logo from './assets/logo.png';
 
 function App() {
   const [shows, setShows] = useState<Show[]>([]);
   const [currentShowIndex, setCurrentShowIndex] = useState(0);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Fetch shows from Railway backend
-  const fetchShows = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const showsData = await apiService.getShows();
-      setShows(showsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch shows');
-      console.error('Error fetching shows:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Load shows on component mount
+  
+  // Fetch shows on component mount
   useEffect(() => {
+    const fetchShows = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedShows = await apiService.getShows();
+        setShows(fetchedShows);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch shows');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
     fetchShows();
   }, []);
-
-  const handleShowChange = (index: number) => {
-    setCurrentShowIndex(index);
+  
+  // Monitor state changes for debugging
+  useEffect(() => {
+    console.log('🎵 App: State changed - Show:', currentShowIndex, 'Track:', currentTrackIndex);
+  }, [currentShowIndex, currentTrackIndex]);
+  
+  // Handle show selection
+  const handleShowChange = (newShowIndex: number) => {
+    console.log('🎵 App: Changing show to:', newShowIndex);
+    setCurrentShowIndex(newShowIndex);
+    setCurrentTrackIndex(0); // Reset to first track when changing shows
   };
-
+  
+  // Handle track selection from ShowList
+  const handleTrackSelect = (showIndex: number, trackIndex: number) => {
+    console.log('🎵 App: handleTrackSelect CALLED!');
+    console.log('🎵 App: Track selected - Show:', showIndex, 'Track:', trackIndex);
+    console.log('🎵 App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
+    
+    // Update the track index
+    setCurrentTrackIndex(trackIndex);
+    
+    console.log('🎵 App: Updated currentTrackIndex to:', trackIndex);
+  };
+  
+  // Handle track navigation from AudioPlayer
+  const handleTrackChange = (newTrackIndex: number) => {
+    setCurrentTrackIndex(newTrackIndex);
+  };
+  
+  // Handle auto-play toggle
   const handleAutoPlayToggle = () => {
     setAutoPlay(!autoPlay);
   };
-
-
-
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="loading-state">
+        <h2>Loading Glue Factory Radio...</h2>
+        <p>Please wait while we fetch your shows.</p>
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="error-state">
+        <h2>Error Loading Shows</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
+  
+  // No shows state
+  if (shows.length === 0) {
+    return (
+      <div className="no-shows-state">
+        <h2>No Shows Available</h2>
+        <p>No shows have been uploaded yet.</p>
+        <p>Check back later or contact an administrator.</p>
+      </div>
+    );
+  }
+  
+  // Ensure indices are valid
+  const validShowIndex = Math.min(Math.max(0, currentShowIndex), shows.length - 1);
+  const currentShow = shows[validShowIndex];
+  const validTrackIndex = currentShow && currentShow.tracks && currentShow.tracks.length > 0 
+    ? Math.min(Math.max(0, currentTrackIndex), currentShow.tracks.length - 1)
+    : 0;
+  
+  console.log('🎵 App: Final values - validShowIndex:', validShowIndex, 'validTrackIndex:', validTrackIndex);
+  
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1 className="app-title">🎵 Glue Factory Radio 🎵</h1>
-        <p className="app-subtitle">Your Internet Radio Station</p>
-      </header>
+    <>
+      <AudioPlayer
+        shows={shows}
+        currentShowIndex={validShowIndex}
+        currentTrackIndex={validTrackIndex}
+        onShowChange={handleShowChange}
+        onTrackChange={handleTrackChange}
+        autoPlay={autoPlay}
+        onAutoPlayToggle={handleAutoPlayToggle}
+      />
       
-      <main className="App-main">
-        {/* Loading State */}
-        {isLoading && (
-          <div className="loading-state">
-            <p>Loading shows from Railway...</p>
-          </div>
-        )}
-        
-        {/* Error State */}
-        {error && (
-          <div className="error-state">
-            <p>Error: {error}</p>
-            <button onClick={fetchShows}>Retry</button>
-          </div>
-        )}
-        
-        {/* Audio Player and Show List */}
-        {!isLoading && !error && shows.length > 0 && (
-          <>
-            <AudioPlayer
-              shows={shows}
-              currentShowIndex={currentShowIndex}
-              onShowChange={handleShowChange}
-              autoPlay={autoPlay}
-              onAutoPlayToggle={handleAutoPlayToggle}
-            />
-            
-            <ShowList
-              shows={shows}
-              currentShowIndex={currentShowIndex}
-              onShowSelect={handleShowChange}
-            />
-          </>
-        )}
-        
-        {/* No Shows State */}
-        {!isLoading && !error && shows.length === 0 && (
-          <div className="no-shows-state">
-            <h3>No Shows Yet</h3>
-            <p>Shows will appear here once they're uploaded via the admin interface.</p>
-          </div>
-        )}
-      </main>
-      
-      <footer className="App-footer">
-        <p>&copy; 2024 Glue Factory Radio. All rights reserved.</p>
-      </footer>
-    </div>
+      <ShowList
+        shows={shows}
+        currentShowIndex={validShowIndex}
+        onShowSelect={handleShowChange}
+        onTrackSelect={handleTrackSelect}
+      />
+    </>
   );
 }
 

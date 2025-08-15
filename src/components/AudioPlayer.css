@@ -36,7 +36,27 @@
 .progress-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
+}
+
+.track-title-display {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.current-track-title {
+  font-size: 1.3rem;
+  margin: 0 0 5px 0;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+.track-info {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 300;
 }
 
 .time-display {

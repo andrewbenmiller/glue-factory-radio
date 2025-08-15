@@ -125,6 +125,110 @@
   font-weight: 500;
 }
 
+.show-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.expand-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expand-button:hover {
+  background: #5a6268;
+  transform: scale(1.1);
+}
+
+.expand-button:active {
+  transform: scale(0.95);
+}
+
+/* Tracks Dropdown Styles */
+.tracks-dropdown {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f1f3f4;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.tracks-header h5 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tracks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.track-item {
+  background: white;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.track-item:hover {
+  background: #f8f9fa;
+  border-color: #667eea;
+  transform: translateX(2px);
+}
+
+.track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.track-number {
+  background: #667eea;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.track-title {
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.track-duration {
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+
+
 .no-shows {
   text-align: center;
   padding: 40px 20px;
@@ -169,6 +273,24 @@
   .show-item-duration {
     align-self: flex-start;
   }
+  
+  .show-item-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .tracks-dropdown {
+    padding: 12px;
+  }
+  
+  .track-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+
 }
 
 @media (max-width: 480px) {

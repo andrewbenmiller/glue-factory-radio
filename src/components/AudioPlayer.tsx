@@ -5,7 +5,9 @@ import { Show } from '../services/api';
 interface AudioPlayerProps {
   shows: Show[];
   currentShowIndex: number;
+  currentTrackIndex: number;
   onShowChange: (index: number) => void;
+  onTrackChange: (trackIndex: number) => void;
   autoPlay: boolean;
   onAutoPlayToggle: () => void;
 }
@@ -13,10 +15,14 @@ interface AudioPlayerProps {
 const AudioPlayer: React.FC<AudioPlayerProps> = ({
   shows,
   currentShowIndex,
+  currentTrackIndex,
   onShowChange,
+  onTrackChange,
   autoPlay,
   onAutoPlayToggle
 }) => {
+  console.log('🎵 AudioPlayer render - Props received:', { currentShowIndex, currentTrackIndex, showsLength: shows.length });
+  console.log('🎵 AudioPlayer - currentTrackIndex type:', typeof currentTrackIndex, 'value:', currentTrackIndex);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -44,10 +50,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
 
 
-  // Force metadata loading when show changes
+  // Force metadata loading when show or track changes
   useEffect(() => {
+    console.log('🎵 useEffect triggered - Show:', currentShowIndex, 'Track:', currentTrackIndex);
+    console.log('🎵 useEffect dependencies changed - currentShowIndex:', currentShowIndex, 'currentTrackIndex:', currentTrackIndex);
+    console.log('🎵 useEffect - Dependencies array:', [currentShowIndex, currentTrackIndex, currentShow]);
     if (currentShow && currentShow.tracks && currentShow.tracks.length > 0) {
-      console.log('🎵 Show changed, resetting duration and loading metadata...');
+      console.log('🎵 Show or track changed - Show:', currentShowIndex, 'Track:', currentTrackIndex, 'Track title:', currentShow.tracks[currentTrackIndex]?.title);
+      console.log('🎵 Available tracks:', currentShow.tracks.map(t => t.title));
       setDuration(0);
       setCurrentTime(0);
       setIsLoading(true);
@@ -57,9 +67,30 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         const audio = playerRef.current as HTMLAudioElement;
         audio.load(); // This forces metadata loading
         console.log('🎵 Forced audio.load() for metadata');
+        
+        // Auto-play the new track when it's ready
+        const handleCanPlay = () => {
+          console.log('🎵 New track ready, attempting auto-play...');
+          audio.removeEventListener('canplay', handleCanPlay);
+          
+          // Small delay to ensure everything is loaded
+          setTimeout(() => {
+            audio.play().then(() => {
+              setIsPlaying(true);
+              console.log('✅ Auto-play successful for new track!');
+            }).catch(err => {
+              console.error('❌ Auto-play failed for new track:', err);
+              setIsPlaying(false);
+            });
+          }, 200);
+        };
+        
+        audio.addEventListener('canplay', handleCanPlay);
       }
+    } else {
+      console.log('❌ No current show or tracks available');
     }
-  }, [currentShowIndex, currentShow]);
+  }, [currentShowIndex, currentTrackIndex, currentShow]);
 
   const handlePlay = async () => {
     if (playerRef.current) {
@@ -96,7 +127,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const seekTime = parseFloat(e.target.value);
     setCurrentTime(seekTime);
     if (playerRef.current) {
-      (playerRef.current as HTMLAudioElement).currentTime = seekTime;
+      const audio = playerRef.current as HTMLAudioElement;
+      audio.currentTime = seekTime;
+      
+      // Ensure audio continues playing smoothly after seek
+      if (isPlaying) {
+        console.log('🎵 Refreshing audio playback after progress bar seek');
+        audio.pause();
+        setTimeout(() => {
+          audio.play().catch(err => console.error('❌ Auto-play after progress seek failed:', err));
+        }, 50);
+      }
     }
   };
 
@@ -117,30 +158,212 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const skipForward = () => {
+    console.log('🎵 skipForward called, currentTime:', currentTime, 'duration:', duration);
     if (playerRef.current && duration > 0) {
       const newTime = Math.min(duration, currentTime + 10);
+      console.log('✅ Skipping forward to:', newTime);
       setCurrentTime(newTime);
-      (playerRef.current as HTMLAudioElement).currentTime = newTime;
+      
+      const audio = playerRef.current as HTMLAudioElement;
+      audio.currentTime = newTime;
+      
+      // Ensure audio continues playing smoothly after seek
+      if (isPlaying) {
+        console.log('🎵 Refreshing audio playback after forward seek');
+        audio.pause();
+        setTimeout(() => {
+          audio.play().catch(err => console.error('❌ Auto-play after seek failed:', err));
+        }, 50);
+      }
+    } else {
+      console.log('⚠️ Cannot skip forward - no player or duration');
     }
   };
 
   const skipBackward = () => {
+    console.log('🎵 skipBackward called, currentTime:', currentTime);
     if (playerRef.current) {
       const newTime = Math.max(0, currentTime - 10);
+      console.log('✅ Skipping backward to:', newTime);
       setCurrentTime(newTime);
-      (playerRef.current as HTMLAudioElement).currentTime = newTime;
+      
+      const audio = playerRef.current as HTMLAudioElement;
+      audio.currentTime = newTime;
+      
+      // Ensure audio continues playing smoothly after seek
+      if (isPlaying) {
+        console.log('🎵 Refreshing audio playback after backward seek');
+        audio.pause();
+        setTimeout(() => {
+          audio.play().catch(err => console.error('❌ Auto-play after seek failed:', err));
+        }, 50);
+      }
+    } else {
+      console.log('⚠️ Cannot skip backward - no player');
+    }
+  };
+
+
+
+  const nextTrack = () => {
+    console.log('🎵 nextTrack called, currentTrackIndex:', currentTrackIndex, 'tracks.length:', currentShow?.tracks?.length);
+    if (currentShow?.tracks && currentTrackIndex < currentShow.tracks.length - 1) {
+      const newTrackIndex = currentTrackIndex + 1;
+      console.log('✅ Moving to next track, index:', newTrackIndex);
+      
+      // Pause current audio before switching
+      if (playerRef.current && isPlaying) {
+        (playerRef.current as HTMLAudioElement).pause();
+        setIsPlaying(false);
+      }
+      
+      onTrackChange(newTrackIndex);
+      
+      // Wait for the new audio source to load, then auto-play
+      setTimeout(() => {
+        if (playerRef.current) {
+          const audio = playerRef.current as HTMLAudioElement;
+          console.log('🎵 Loading new track audio source');
+          
+          // Force reload the audio element with new source
+          audio.load();
+          
+          // Wait for the audio to be ready, then play
+          audio.addEventListener('canplay', function onCanPlay() {
+            console.log('🎵 New track ready to play, starting playback');
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.play().then(() => {
+              setIsPlaying(true);
+              console.log('✅ Next track auto-played successfully');
+            }).catch(err => {
+              console.error('❌ Auto-play failed for next track:', err);
+            });
+          }, { once: true });
+        }
+      }, 200);
+    } else {
+      console.log('⚠️ Already at last track');
+    }
+  };
+
+  const previousTrack = () => {
+    console.log('🎵 previousTrack called, currentTrackIndex:', currentTrackIndex);
+    if (currentTrackIndex > 0) {
+      const newTrackIndex = currentTrackIndex - 1;
+      console.log('✅ Moving to previous track, index:', newTrackIndex);
+      
+      // Pause current audio before switching
+      if (playerRef.current && isPlaying) {
+        (playerRef.current as HTMLAudioElement).pause();
+        setIsPlaying(false);
+      }
+      
+      onTrackChange(newTrackIndex);
+      
+      // Wait for the new audio source to load, then auto-play
+      setTimeout(() => {
+        if (playerRef.current) {
+          const audio = playerRef.current as HTMLAudioElement;
+          console.log('🎵 Loading new track audio source');
+          
+          // Force reload the audio element with new source
+          audio.load();
+          
+          // Wait for the audio to be ready, then play
+          audio.addEventListener('canplay', function onCanPlay() {
+            console.log('🎵 New track ready to play, starting playback');
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.play().then(() => {
+              setIsPlaying(true);
+              console.log('✅ Previous track auto-played successfully');
+            }).catch(err => {
+              console.error('❌ Auto-play failed for previous track:', err);
+            });
+          }, { once: true });
+        }
+      }, 200);
+    } else {
+      console.log('⚠️ Already at first track');
     }
   };
 
   const nextShow = () => {
+    console.log('🎵 nextShow called, currentShowIndex:', currentShowIndex, 'shows.length:', shows.length);
     if (currentShowIndex < shows.length - 1) {
+      console.log('✅ Moving to next show, index:', currentShowIndex + 1);
+      
+      // Pause current audio before switching
+      if (playerRef.current && isPlaying) {
+        (playerRef.current as HTMLAudioElement).pause();
+        setIsPlaying(false);
+      }
+      
       onShowChange(currentShowIndex + 1);
+      
+      // Wait for the new show to load, then auto-play first track
+      setTimeout(() => {
+        if (playerRef.current) {
+          const audio = playerRef.current as HTMLAudioElement;
+          console.log('🎵 Loading new show audio source');
+          
+          // Force reload the audio element with new source
+          audio.load();
+          
+          // Wait for the audio to be ready, then play
+          audio.addEventListener('canplay', function onCanPlay() {
+            console.log('🎵 New show ready to play, starting playback');
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.play().then(() => {
+              setIsPlaying(true);
+              console.log('✅ First track of new show auto-played successfully');
+            }).catch(err => {
+              console.error('❌ Auto-play failed for new show:', err);
+            });
+          }, { once: true });
+        }
+      }, 300);
+    } else {
+      console.log('⚠️ Already at last show');
     }
   };
 
   const previousShow = () => {
+    console.log('🎵 previousShow called, currentShowIndex:', currentShowIndex);
     if (currentShowIndex > 0) {
+      console.log('✅ Moving to previous show, index:', currentShowIndex - 1);
+      
+      // Pause current audio before switching
+      if (playerRef.current && isPlaying) {
+        (playerRef.current as HTMLAudioElement).pause();
+        setIsPlaying(false);
+      }
+      
       onShowChange(currentShowIndex - 1);
+      
+      // Wait for the new show to load, then auto-play first track
+      setTimeout(() => {
+        if (playerRef.current) {
+          const audio = playerRef.current as HTMLAudioElement;
+          console.log('🎵 Loading new show audio source');
+          
+          // Force reload the audio element with new source
+          audio.load();
+          
+          // Wait for the audio to be ready, then play
+          audio.addEventListener('canplay', function onCanPlay() {
+            console.log('🎵 New show ready to play, starting playback');
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.play().then(() => {
+              setIsPlaying(true);
+              console.log('✅ First track of previous show auto-played successfully');
+            }).catch(err => {
+              console.error('❌ Auto-play failed for previous show:', err);
+            });
+          }, { once: true });
+        }
+      }, 300);
+    } else {
+      console.log('⚠️ Already at first show');
     }
   };
 
@@ -157,6 +380,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return <div className="audio-player no-show">No shows available</div>;
   }
 
+  // Debug current state
+  console.log('🎵 AudioPlayer render - currentShowIndex:', currentShowIndex, 'shows.length:', shows.length, 'currentTime:', currentTime, 'duration:', duration);
+
   return (
     <div className="audio-player">
       <div className="player-header">
@@ -169,30 +395,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <div className="player-main">
         {currentShow.tracks && currentShow.tracks.length > 0 ? (
           <>
-            {/* Debug info - remove this later */}
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-              Debug: Audio URL = https://glue-factory-radio-production.up.railway.app/api/shows/audio/{currentShow.tracks[0].filename}
-              <br />
-              Duration: {duration > 0 ? `${formatTime(duration)} (${duration}s)` : 'Loading...'}
-              <br />
-              Current Time: {formatTime(currentTime)}
 
-            </div>
-            
-            {console.log('🎵 AudioPlayer - Current show tracks:', currentShow.tracks)}
-            {console.log('🎵 AudioPlayer - Attempting to play:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`)}
-            
-            {/* Web Audio API approach for better CORS handling */}
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-              Using Web Audio API for better CORS compatibility
-            </div>
             
             {/* Audio element - invisible but functional for metadata loading */}
             <audio
               ref={playerRef}
-              src={`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`}
+              src={`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[currentTrackIndex]?.filename}`}
               preload="metadata"
               crossOrigin="anonymous"
+              key={`${currentShowIndex}-${currentTrackIndex}`}
               onPlay={handlePlay}
               onPause={handlePause}
               onEnded={handleEnded}
@@ -202,31 +413,24 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               }}
               onLoadedMetadata={(e) => {
                 const target = e.target as HTMLAudioElement;
-                console.log('🎵 Metadata loaded, duration:', target.duration);
                 if (target.duration && !isNaN(target.duration)) {
                   setDuration(target.duration);
                   setIsLoading(false);
-                  console.log('✅ Duration set to:', target.duration);
-                } else {
-                  console.warn('⚠️ Invalid duration received:', target.duration);
                 }
               }}
               onCanPlay={(e) => {
                 const target = e.target as HTMLAudioElement;
-                console.log('🎵 Can play, duration:', target.duration);
                 if (target.duration && !isNaN(target.duration) && duration === 0) {
                   setDuration(target.duration);
                   setIsLoading(false);
-                  console.log('✅ Duration set from canplay:', target.duration);
                 }
               }}
               onLoadStart={() => {
+                console.log('🎵 Audio source changed to:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[currentTrackIndex]?.filename}`);
                 setIsLoading(true);
-                console.log('🎵 Audio loading started...');
               }}
               onError={(e) => {
                 console.error('Audio element error:', e);
-                console.error('Attempted URL:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[0].filename}`);
                 setIsLoading(false);
               }}
               style={{ 
@@ -246,6 +450,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         )}
 
         <div className="progress-container">
+          {/* Track Title Display */}
+          {currentShow?.tracks && currentShow.tracks[currentTrackIndex] && (
+            <div className="track-title-display">
+              <h3 className="current-track-title">
+                🎵 {currentShow.tracks[currentTrackIndex].title}
+              </h3>
+              <div className="track-info">
+                Track {currentTrackIndex + 1} of {currentShow.tracks.length}
+              </div>
+            </div>
+          )}
+          
           <div className="time-display">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
@@ -263,37 +479,61 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         <div className="controls">
           <button 
             className="control-btn skip-btn" 
-            onClick={previousShow}
-            disabled={currentShowIndex === 0}
+            onClick={() => {
+              console.log('🎯 Previous Track button clicked!');
+              previousTrack();
+            }}
+            disabled={!currentShow?.tracks || currentTrackIndex === 0}
+            title="Previous Track"
           >
             ⏮
           </button>
           
           <button 
             className="control-btn skip-btn" 
-            onClick={skipBackward}
+            onClick={() => {
+              console.log('🎯 Skip Backward button clicked!');
+              skipBackward();
+            }}
+            title="Skip Backward 10s"
           >
             ⏪
           </button>
 
           <button 
             className="control-btn play-btn" 
-            onClick={isPlaying ? handlePause : handlePlay}
+            onClick={() => {
+              console.log('🎯 Play/Pause button clicked!');
+              if (isPlaying) {
+                handlePause();
+              } else {
+                handlePlay();
+              }
+            }}
+            title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? '⏸' : '▶️'}
           </button>
 
           <button 
             className="control-btn skip-btn" 
-            onClick={skipForward}
+            onClick={() => {
+              console.log('🎯 Skip Forward button clicked!');
+              skipForward();
+            }}
+            title="Skip Forward 10s"
           >
             ⏩
           </button>
 
           <button 
             className="control-btn skip-btn" 
-            onClick={nextShow}
-            disabled={currentShowIndex === shows.length - 1}
+            onClick={() => {
+              console.log('🎯 Next Track button clicked!');
+              nextTrack();
+            }}
+            disabled={!currentShow?.tracks || currentTrackIndex === (currentShow.tracks.length - 1)}
+            title="Next Track"
           >
             ⏭
           </button>
