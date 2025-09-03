@@ -286,86 +286,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  const nextShow = () => {
-    console.log('🎵 nextShow called, currentShowIndex:', currentShowIndex, 'shows.length:', shows.length);
-    if (currentShowIndex < shows.length - 1) {
-      console.log('✅ Moving to next show, index:', currentShowIndex + 1);
-      
-      // Pause current audio before switching
-      if (playerRef.current && isPlaying) {
-        (playerRef.current as HTMLAudioElement).pause();
-        setIsPlaying(false);
-      }
-      
-      onShowChange(currentShowIndex + 1);
-      
-      // Wait for the new show to load, then auto-play first track
-      setTimeout(() => {
-        if (playerRef.current) {
-          const audio = playerRef.current as HTMLAudioElement;
-          console.log('🎵 Loading new show audio source');
-          
-          // Force reload the audio element with new source
-          audio.load();
-          
-          // Wait for the audio to be ready, then play
-          audio.addEventListener('canplay', function onCanPlay() {
-            console.log('🎵 New show ready to play, starting playback');
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.play().then(() => {
-              setIsPlaying(true);
-              console.log('✅ First track of new show auto-played successfully');
-            }).catch(err => {
-              console.error('❌ Auto-play failed for new show:', err);
-            });
-          }, { once: true });
-        }
-      }, 300);
-    } else {
-      console.log('⚠️ Already at last show');
-    }
-  };
-
-  const previousShow = () => {
-    console.log('🎵 previousShow called, currentShowIndex:', currentShowIndex);
-    if (currentShowIndex > 0) {
-      console.log('✅ Moving to previous show, index:', currentShowIndex - 1);
-      
-      // Pause current audio before switching
-      if (playerRef.current && isPlaying) {
-        (playerRef.current as HTMLAudioElement).pause();
-        setIsPlaying(false);
-      }
-      
-      onShowChange(currentShowIndex - 1);
-      
-      // Wait for the new show to load, then auto-play first track
-      setTimeout(() => {
-        if (playerRef.current) {
-          const audio = playerRef.current as HTMLAudioElement;
-          console.log('🎵 Loading new show audio source');
-          
-          // Force reload the audio element with new source
-          audio.load();
-          
-          // Wait for the audio to be ready, then play
-          audio.addEventListener('canplay', function onCanPlay() {
-            console.log('🎵 New show ready to play, starting playback');
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.play().then(() => {
-              setIsPlaying(true);
-              console.log('✅ First track of previous show auto-played successfully');
-            }).catch(err => {
-              console.error('❌ Auto-play failed for previous show:', err);
-            });
-          }, { once: true });
-        }
-      }, 300);
-    } else {
-      console.log('⚠️ Already at first show');
-    }
-  };
-
   const formatTime = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
@@ -423,7 +343,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 }
               }}
               onLoadStart={() => {
-                console.log('🎵 Audio source changed to:', currentShow?.url);
+                console.log('🎵 Audio source changed to:', currentShow?.tracks?.[currentTrackIndex]?.url ? `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[currentTrackIndex].url}` : '');
                 setIsLoading(true);
               }}
               onError={(e) => {

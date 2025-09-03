@@ -3,7 +3,6 @@ import './App.css';
 import AudioPlayer from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import { apiService, Show } from './services/api';
-import logo from './assets/logo.png';
 
 function App() {
   const [shows, setShows] = useState<Show[]>([]);
@@ -99,7 +98,6 @@ function App() {
   
   // Ensure indices are valid
   const validShowIndex = Math.min(Math.max(0, currentShowIndex), shows.length - 1);
-  const currentShow = shows[validShowIndex];
   
   console.log('🎵 App: Final values - validShowIndex:', validShowIndex);
   

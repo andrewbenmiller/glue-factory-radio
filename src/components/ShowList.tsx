@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './ShowList.css';
 import { Show } from '../services/api';
 
