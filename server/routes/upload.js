@@ -103,7 +103,7 @@ router.post('/track', upload.single('audio'), async (req, res) => {
       }
 
       // Get next track order for this show
-      db.get('SELECT MAX(track_order) as max_order FROM show_tracks WHERE show_id = ?', [showId], async (err, result) => {
+      db.get('SELECT MAX(track_order) as max_order FROM show_tracks WHERE show_id = ?', [showId], (err, result) => {
         if (err) {
           console.error('Database error:', err);
           return res.status(500).json({ error: 'Database error' });
@@ -115,62 +115,66 @@ router.post('/track', upload.single('audio'), async (req, res) => {
         
         // Extract duration from the uploaded file
         const filePath = path.join(__dirname, '../uploads', filename);
-        const duration = await extractAudioDuration(filePath);
-
-        // Temporarily skip cloud storage for testing
-        const storageResult = {
-          success: true,
-          url: `/uploads/${filename}`,
-          message: 'File stored locally for testing'
-        };
-
-        // Insert track with local storage URL
-        const query = `
-          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `;
         
-        console.log('🗄️ Database query:', query);
-        console.log('🗄️ Database values:', [showId, title, filename, size, nextOrder, duration]);
+        extractAudioDuration(filePath).then(duration => {
+          // Temporarily skip cloud storage for testing
+          const storageResult = {
+            success: true,
+            url: `/uploads/${filename}`,
+            message: 'File stored locally for testing'
+          };
 
-        db.run(query, [showId, title, filename, size, nextOrder, duration], function(err) {
-          if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Failed to save track to database' });
-          }
+          // Insert track with local storage URL
+          const query = `
+            INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `;
+          
+          console.log('🗄️ Database query:', query);
+          console.log('🗄️ Database values:', [showId, title, filename, size, nextOrder, duration]);
 
-          const trackId = this.lastID;
-
-          // Update show totals
-          db.run(`
-            UPDATE shows 
-            SET total_tracks = total_tracks + 1,
-                total_duration = (
-                  SELECT COALESCE(SUM(duration), 0) 
-                  FROM show_tracks 
-                  WHERE show_id = ? AND is_active = 1
-                )
-            WHERE id = ?
-          `, [showId, showId], (err) => {
+          db.run(query, [showId, title, filename, size, nextOrder, duration], function(err) {
             if (err) {
-              console.error('Error updating show totals:', err);
-            }
-          });
-
-          // Get the created track
-          db.get('SELECT * FROM show_tracks WHERE id = ?', [trackId], (err, track) => {
-            if (err) {
-              return res.status(500).json({ error: 'Track created but failed to retrieve' });
+              console.error('Database error:', err);
+              return res.status(500).json({ error: 'Failed to save track to database' });
             }
 
-            res.json({
-              message: 'Track uploaded successfully',
-              track: {
-                ...track,
-                url: storageResult.url // Use cloud storage URL
+            const trackId = this.lastID;
+
+            // Update show totals
+            db.run(`
+              UPDATE shows 
+              SET total_tracks = total_tracks + 1,
+                  total_duration = (
+                    SELECT COALESCE(SUM(duration), 0) 
+                    FROM show_tracks 
+                    WHERE show_id = ? AND is_active = 1
+                  )
+              WHERE id = ?
+            `, [showId, showId], (err) => {
+              if (err) {
+                console.error('Error updating show totals:', err);
               }
             });
+
+            // Get the created track
+            db.get('SELECT * FROM show_tracks WHERE id = ?', [trackId], (err, track) => {
+              if (err) {
+                return res.status(500).json({ error: 'Track created but failed to retrieve' });
+              }
+
+              res.json({
+                message: 'Track uploaded successfully',
+                track: {
+                  ...track,
+                  url: storageResult.url // Use cloud storage URL
+                }
+              });
+            });
           });
+        }).catch(error => {
+          console.error('Error extracting audio duration:', error);
+          res.status(500).json({ error: 'Failed to process audio file' });
         });
       });
     });
