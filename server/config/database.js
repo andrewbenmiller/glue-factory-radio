@@ -27,12 +27,12 @@ if (usePostgreSQL) {
     },
     get: (sql, params = [], callback) => {
       pool.query(sql, params, (err, result) => {
-        if (callback) callback(err, result.rows[0]);
+        if (callback) callback(err, result ? result.rows[0] : null);
       });
     },
     all: (sql, params = [], callback) => {
       pool.query(sql, params, (err, result) => {
-        if (callback) callback(err, result.rows);
+        if (callback) callback(err, result ? result.rows : []);
       });
     },
     close: (callback) => {
