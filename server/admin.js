@@ -1,5 +1,5 @@
 // Glue Factory Radio Admin Portal JavaScript
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = window.location.origin; // Use the same domain as the admin interface
 
 // Global variables
 let shows = [];
