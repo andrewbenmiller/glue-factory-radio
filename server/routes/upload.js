@@ -209,82 +209,79 @@ router.post('/show', upload.single('audio'), async (req, res) => {
       size: audioFile.size 
     });
 
-    // Start transaction
-    db.serialize(() => {
-      // Create the show first
+    // Extract duration from the uploaded file
+    const filePath = path.join(__dirname, '../uploads', audioFile.filename);
+    const duration = await extractAudioDuration(filePath);
+
+    // Upload to cloud storage (R2)
+    const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
+    
+    if (!storageResult.success) {
+      console.error('Cloud storage upload failed:', storageResult.error);
+      return res.status(500).json({ error: 'Failed to upload file to storage' });
+    }
+
+    // Create the show first
+    db.run(`
+      INSERT INTO shows (title, description)
+      VALUES (?, ?)
+    `, [title, description], function(err) {
+      if (err) {
+        console.error('Error creating show:', err);
+        return res.status(500).json({ error: 'Failed to create show' });
+      }
+
+      const showId = this.lastID;
+      
+      // Create the first track for this show
       db.run(`
-        INSERT INTO shows (title, description)
-        VALUES (?, ?)
-      `, [title, description], async function(err) {
+        INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [showId, title, audioFile.filename, audioFile.size, 1, duration], function(err) {
         if (err) {
-          console.error('Error creating show:', err);
-          return res.status(500).json({ error: 'Failed to create show' });
+          console.error('Error creating track:', err);
+          return res.status(500).json({ error: 'Failed to create track' });
         }
 
-        const showId = this.lastID;
-        
-        // Extract duration from the uploaded file
-        const filePath = path.join(__dirname, '../uploads', audioFile.filename);
-        const duration = await extractAudioDuration(filePath);
+        const trackId = this.lastID;
 
-        // Upload to cloud storage (R2)
-        const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
-        
-        if (!storageResult.success) {
-          console.error('Cloud storage upload failed:', storageResult.error);
-          return res.status(500).json({ error: 'Failed to upload file to storage' });
-        }
-
-        // Create the first track for this show
+        // Update show totals
         db.run(`
-          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [showId, title, audioFile.filename, audioFile.size, 1, duration], function(err) {
+          UPDATE shows 
+          SET total_tracks = 1,
+              total_duration = ?
+          WHERE id = ?
+        `, [duration, showId], (err) => {
           if (err) {
-            console.error('Error creating track:', err);
-            return res.status(500).json({ error: 'Failed to create track' });
+            console.error('Error updating show totals:', err);
           }
-
-          const trackId = this.lastID;
-
-          // Update show totals
-          db.run(`
-            UPDATE shows 
-            SET total_tracks = 1,
-                total_duration = ?
-            WHERE id = ?
-          `, [duration, showId], (err) => {
+          
+          // Get the created show with track
+          db.get(`
+            SELECT s.*, st.filename, st.duration, st.file_size
+            FROM shows s
+            LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
+            WHERE s.id = ?
+          `, [showId], (err, result) => {
             if (err) {
-              console.error('Error updating show totals:', err);
+              return res.status(500).json({ error: 'Show created but failed to retrieve' });
             }
-            
-            // Get the created show with track
-            db.get(`
-              SELECT s.*, st.filename, st.duration, st.file_size
-              FROM shows s
-              LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
-              WHERE s.id = ?
-            `, [showId], (err, result) => {
-              if (err) {
-                return res.status(500).json({ error: 'Show created but failed to retrieve' });
-              }
 
-              res.json({
-                message: 'Show created successfully',
-                show: {
-                  id: result.id,
-                  title: result.title,
-                  description: result.description,
-                  created_date: result.created_date,
-                  is_active: result.is_active,
-                  total_duration: result.total_duration,
-                  total_tracks: result.total_tracks,
-                  filename: result.filename,
-                  duration: result.duration,
-                  file_size: result.file_size,
-                  url: storageResult.url
-                }
-              });
+            res.json({
+              message: 'Show created successfully',
+              show: {
+                id: result.id,
+                title: result.title,
+                description: result.description,
+                created_date: result.created_date,
+                is_active: result.is_active,
+                total_duration: result.total_duration,
+                total_tracks: result.total_tracks,
+                filename: result.filename,
+                duration: result.duration,
+                file_size: result.file_size,
+                url: storageResult.url
+              }
             });
           });
         });
