@@ -20,42 +20,45 @@ if (usePostgreSQL) {
   
   // Create a database interface that mimics SQLite3
   db = {
-    run: (sql, params = [], callback) => {
+    run: (sql, params, callback) => {
       // Convert ? placeholders to $1, $2, etc. for PostgreSQL
       let convertedSql = sql;
-      if (Array.isArray(params)) {
-        params.forEach((_, index) => {
+      const paramArray = Array.isArray(params) ? params : [];
+      if (paramArray.length > 0) {
+        paramArray.forEach((_, index) => {
           convertedSql = convertedSql.replace('?', `$${index + 1}`);
         });
       }
       
-      pool.query(convertedSql, params, (err, result) => {
+      pool.query(convertedSql, paramArray, (err, result) => {
         if (callback) callback(err, result);
       });
     },
-    get: (sql, params = [], callback) => {
+    get: (sql, params, callback) => {
       // Convert ? placeholders to $1, $2, etc. for PostgreSQL
       let convertedSql = sql;
-      if (Array.isArray(params)) {
-        params.forEach((_, index) => {
+      const paramArray = Array.isArray(params) ? params : [];
+      if (paramArray.length > 0) {
+        paramArray.forEach((_, index) => {
           convertedSql = convertedSql.replace('?', `$${index + 1}`);
         });
       }
       
-      pool.query(convertedSql, params, (err, result) => {
+      pool.query(convertedSql, paramArray, (err, result) => {
         if (callback) callback(err, result ? result.rows[0] : null);
       });
     },
-    all: (sql, params = [], callback) => {
+    all: (sql, params, callback) => {
       // Convert ? placeholders to $1, $2, etc. for PostgreSQL
       let convertedSql = sql;
-      if (Array.isArray(params)) {
-        params.forEach((_, index) => {
+      const paramArray = Array.isArray(params) ? params : [];
+      if (paramArray.length > 0) {
+        paramArray.forEach((_, index) => {
           convertedSql = convertedSql.replace('?', `$${index + 1}`);
         });
       }
       
-      pool.query(convertedSql, params, (err, result) => {
+      pool.query(convertedSql, paramArray, (err, result) => {
         if (callback) callback(err, result ? result.rows : []);
       });
     },
