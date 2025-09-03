@@ -9,7 +9,7 @@ router.get('/admin', (req, res) => {
   const query = `
     SELECT s.*, st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
     FROM shows s
-    LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
+    LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = true
     ORDER BY s.created_date DESC, st.track_order
   `;
   
@@ -63,8 +63,8 @@ router.get('/', (req, res) => {
   const query = `
     SELECT s.*, st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
     FROM shows s
-    LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
-    WHERE s.is_active = 1
+    LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = true
+    WHERE s.is_active = true
     ORDER BY s.created_date DESC, st.track_order
   `;
   
@@ -131,7 +131,7 @@ router.get('/:id', (req, res) => {
     // Get all tracks for this show
     db.all(`
       SELECT * FROM show_tracks 
-      WHERE show_id = ? AND is_active = 1 
+      WHERE show_id = ? AND is_active = true 
       ORDER BY track_order
     `, [id], (err, tracks) => {
       if (err) {
@@ -213,7 +213,7 @@ router.put('/:id/toggle', (req, res) => {
       
       res.json({ 
         message: 'Show status toggled successfully',
-        is_active: newStatus === 1
+        is_active: newStatus === true
       });
     });
   });
@@ -223,7 +223,7 @@ router.put('/:id/toggle', (req, res) => {
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
   
-  db.run('UPDATE shows SET is_active = 0 WHERE id = ?', [id], function(err) {
+  db.run('UPDATE shows SET is_active = false WHERE id = ?', [id], function(err) {
     if (err) {
       console.error('Error deleting show:', err);
       return res.status(500).json({ error: 'Failed to delete show' });
