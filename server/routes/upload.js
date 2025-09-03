@@ -129,18 +129,19 @@ router.post('/track', upload.single('audio'), async (req, res) => {
             const query = `
               INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
               VALUES (?, ?, ?, ?, ?, ?)
+              RETURNING id
             `;
             
             console.log('🗄️ Database query:', query);
             console.log('🗄️ Database values:', [showId, title, filename, size, nextOrder, duration]);
 
-            db.run(query, [showId, title, filename, size, nextOrder, duration], function(err) {
+            db.run(query, [showId, title, filename, size, nextOrder, duration], function(err, result) {
               if (err) {
                 console.error('Database error:', err);
                 return res.status(500).json({ error: 'Failed to save track to database' });
               }
 
-              const trackId = this.lastID;
+              const trackId = result.rows[0].id;
 
               // Update show totals
               db.run(`
@@ -225,25 +226,27 @@ router.post('/show', upload.single('audio'), async (req, res) => {
     db.run(`
       INSERT INTO shows (title, description)
       VALUES (?, ?)
-    `, [title, description], function(err) {
+      RETURNING id
+    `, [title, description], function(err, result) {
       if (err) {
         console.error('Error creating show:', err);
         return res.status(500).json({ error: 'Failed to create show' });
       }
 
-      const showId = this.lastID;
+      const showId = result.rows[0].id;
       
       // Create the first track for this show
       db.run(`
         INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
         VALUES (?, ?, ?, ?, ?, ?)
-      `, [showId, title, audioFile.filename, audioFile.size, 1, duration], function(err) {
+        RETURNING id
+      `, [showId, title, audioFile.filename, audioFile.size, 1, duration], function(err, result) {
         if (err) {
           console.error('Error creating track:', err);
           return res.status(500).json({ error: 'Failed to create track' });
         }
 
-        const trackId = this.lastID;
+        const trackId = result.rows[0].id;
 
         // Update show totals
         db.run(`
