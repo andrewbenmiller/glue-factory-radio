@@ -7,12 +7,9 @@ const path = require('path');
 // GET all shows (admin endpoint - includes inactive)
 router.get('/admin', (req, res) => {
   const query = `
-    SELECT s.*, 
-           COUNT(st.id) as track_count,
-           COALESCE(SUM(st.duration), 0) as total_duration
+    SELECT s.*, st.filename, st.duration, st.file_size
     FROM shows s
     LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
-    GROUP BY s.id
     ORDER BY s.created_date DESC
   `;
   
@@ -22,20 +19,23 @@ router.get('/admin', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch shows' });
     }
     
-    res.json(rows);
+    // Add URLs to shows
+    const showsWithUrls = rows.map(show => ({
+      ...show,
+      url: show.filename ? `/uploads/${show.filename}` : null
+    }));
+    
+    res.json(showsWithUrls);
   });
 });
 
 // GET all shows (public endpoint - only active)
 router.get('/', (req, res) => {
   const query = `
-    SELECT s.*, 
-           COUNT(st.id) as track_count,
-           COALESCE(SUM(st.duration), 0) as total_duration
+    SELECT s.*, st.filename, st.duration, st.file_size
     FROM shows s
     LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
     WHERE s.is_active = 1
-    GROUP BY s.id
     ORDER BY s.created_date DESC
   `;
   
@@ -45,44 +45,13 @@ router.get('/', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch shows' });
     }
     
-    // For each show, fetch its tracks
-    const showsWithTracks = [];
-    let processed = 0;
+    // Add URLs to shows
+    const showsWithUrls = rows.map(show => ({
+      ...show,
+      url: show.filename ? `/uploads/${show.filename}` : null
+    }));
     
-    if (rows.length === 0) {
-      return res.json([]);
-    }
-    
-    rows.forEach((show, index) => {
-      db.all(`
-        SELECT * FROM show_tracks 
-        WHERE show_id = ? AND is_active = 1 
-        ORDER BY track_order
-      `, [show.id], (err, tracks) => {
-        if (err) {
-          console.error('Error fetching tracks for show:', show.id, err);
-          tracks = [];
-        }
-        
-        // Add URLs to tracks
-        const tracksWithUrls = tracks.map(track => ({
-          ...track,
-          url: `/uploads/${track.filename}`
-        }));
-        
-        showsWithTracks[index] = {
-          ...show,
-          tracks: tracksWithUrls
-        };
-        
-        processed++;
-        
-        // When all shows are processed, send response
-        if (processed === rows.length) {
-          res.json(showsWithTracks);
-        }
-      });
-    });
+    res.json(showsWithUrls);
   });
 });
 

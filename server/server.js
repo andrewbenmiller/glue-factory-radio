@@ -17,7 +17,7 @@ const corsOptions = {
 
 // Configure Helmet to allow inline JavaScript for admin portal
 app.use(helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: process.env.NODE_ENV === 'development' ? false : {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'"],

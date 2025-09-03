@@ -100,18 +100,15 @@ function App() {
   // Ensure indices are valid
   const validShowIndex = Math.min(Math.max(0, currentShowIndex), shows.length - 1);
   const currentShow = shows[validShowIndex];
-  const validTrackIndex = currentShow && currentShow.tracks && currentShow.tracks.length > 0 
-    ? Math.min(Math.max(0, currentTrackIndex), currentShow.tracks.length - 1)
-    : 0;
   
-  console.log('🎵 App: Final values - validShowIndex:', validShowIndex, 'validTrackIndex:', validTrackIndex);
+  console.log('🎵 App: Final values - validShowIndex:', validShowIndex);
   
   return (
     <>
       <AudioPlayer
         shows={shows}
         currentShowIndex={validShowIndex}
-        currentTrackIndex={validTrackIndex}
+        currentTrackIndex={0}
         onShowChange={handleShowChange}
         onTrackChange={handleTrackChange}
         autoPlay={autoPlay}

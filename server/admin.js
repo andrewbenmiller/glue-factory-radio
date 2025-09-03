@@ -1,5 +1,5 @@
 // Glue Factory Radio Admin Portal JavaScript
-const API_BASE_URL = 'https://glue-factory-radio-production.up.railway.app';
+const API_BASE_URL = 'http://localhost:5001';
 
 // Global variables
 let shows = [];
@@ -17,18 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStats();
 });
 
-// Test function to debug modal
-function testModal() {
-    console.log('🧪 Test modal function called');
-    const modal = document.getElementById('addTrackModal');
-    if (modal) {
-        console.log('✅ Modal found, setting display to block');
-        modal.style.display = 'block';
-        console.log('🎯 Modal should now be visible');
-    } else {
-        console.error('❌ Modal not found');
-    }
-}
+
 
 // Tab Navigation
 function setupTabNavigation() {
@@ -418,7 +407,7 @@ function setupEventDelegation() {
         const button = e.target.closest('button');
         if (!button) return;
 
-        console.log('🎯 Button clicked:', button.textContent, 'with classes:', button.className);
+
 
         const action = button.dataset.action;
         if (!action) return;
@@ -426,7 +415,7 @@ function setupEventDelegation() {
         // Handle buttons that are directly in the tracks section (like Add Track)
         if (action === 'add-track') {
             const showId = parseInt(button.dataset.showId);
-            console.log('🎯 Add track action detected for showId:', showId);
+    
             addTrackToShow(showId);
             return;
         }
@@ -434,13 +423,13 @@ function setupEventDelegation() {
         // Handle buttons that are in action-buttons containers
         const actionButtons = button.closest('.action-buttons');
         if (!actionButtons) {
-            console.log('❌ No action-buttons container found for action:', action);
+    
             return;
         }
 
         const showId = parseInt(actionButtons.dataset.showId);
         
-        console.log('🎯 Action detected:', action, 'for showId:', showId);
+
 
         switch (action) {
             case 'edit':
@@ -494,11 +483,11 @@ function addTrackToShow(showId) {
         return;
     }
     
-    console.log('✅ Found modal elements, setting showId and displaying modal');
+    
     showIdField.value = showId;
     modal.style.display = 'block';
     
-    console.log('🎯 Modal should now be visible');
+    
 }
 
 // Close Add Track Modal

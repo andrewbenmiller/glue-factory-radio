@@ -195,52 +195,33 @@ router.post('/show', upload.single('audio'), async (req, res) => {
 
     // Start transaction
     db.serialize(() => {
-      // Create the show first
+      // Create the show first (using current schema with filename)
       db.run(`
-        INSERT INTO shows (title, description)
-        VALUES (?, ?)
-      `, [title, description], async function(err) {
+        INSERT INTO shows (title, description, filename, file_size, duration)
+        VALUES (?, ?, ?, ?, ?)
+      `, [title, description, audioFile.filename, audioFile.size, 0], async function(err) {
         if (err) {
           console.error('Error creating show:', err);
           return res.status(500).json({ error: 'Failed to create show' });
         }
 
         const showId = this.lastID;
-        const filename = audioFile.filename;
-        const size = audioFile.size;
         
         // Extract duration from the uploaded file
-        const filePath = path.join(__dirname, '../uploads', filename);
+        const filePath = path.join(__dirname, '../uploads', audioFile.filename);
         const duration = await extractAudioDuration(filePath);
 
-        // Create first track
+        // Update show with duration
         db.run(`
-          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [showId, title, filename, size, 1, duration], async function(err) {
+          UPDATE shows SET duration = ? WHERE id = ?
+        `, [duration, showId], (err) => {
           if (err) {
-            console.error('Error creating track:', err);
-            return res.status(500).json({ error: 'Show created but track failed' });
+            console.error('Error updating show duration:', err);
           }
-
-          // Update show totals
-          db.run(`
-            UPDATE shows 
-            SET total_tracks = 1,
-                total_duration = ?
-            WHERE id = ?
-          `, [duration, showId], (err) => {
-            if (err) {
-              console.error('Error updating show totals:', err);
-            }
-          });
-
-          // Get the created show with track
+          
+          // Get the created show
           db.get(`
-            SELECT s.*, st.* 
-            FROM shows s 
-            LEFT JOIN show_tracks st ON s.id = st.show_id 
-            WHERE s.id = ?
+            SELECT * FROM shows WHERE id = ?
           `, [showId], (err, result) => {
             if (err) {
               return res.status(500).json({ error: 'Show created but failed to retrieve' });
@@ -252,19 +233,12 @@ router.post('/show', upload.single('audio'), async (req, res) => {
                 id: result.id,
                 title: result.title,
                 description: result.description,
+                filename: result.filename,
                 created_date: result.created_date,
                 is_active: result.is_active,
-                total_duration: result.total_duration,
-                total_tracks: result.total_tracks,
-                tracks: [{
-                  id: result.id,
-                  title: result.title,
-                  filename: result.filename,
-                  url: `/uploads/${result.filename}`,
-                  duration: result.duration,
-                  file_size: result.file_size,
-                  track_order: result.track_order
-                }]
+                duration: result.duration,
+                file_size: result.file_size,
+                url: `/uploads/${result.filename}`
               }
             });
           });

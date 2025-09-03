@@ -55,9 +55,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     console.log('🎵 useEffect triggered - Show:', currentShowIndex, 'Track:', currentTrackIndex);
     console.log('🎵 useEffect dependencies changed - currentShowIndex:', currentShowIndex, 'currentTrackIndex:', currentTrackIndex);
     console.log('🎵 useEffect - Dependencies array:', [currentShowIndex, currentTrackIndex, currentShow]);
-    if (currentShow && currentShow.tracks && currentShow.tracks.length > 0) {
-      console.log('🎵 Show or track changed - Show:', currentShowIndex, 'Track:', currentTrackIndex, 'Track title:', currentShow.tracks[currentTrackIndex]?.title);
-      console.log('🎵 Available tracks:', currentShow.tracks.map(t => t.title));
+    if (currentShow) {
+      console.log('🎵 Show changed - Show:', currentShowIndex, 'Show title:', currentShow.title);
       setDuration(0);
       setCurrentTime(0);
       setIsLoading(true);
@@ -88,7 +87,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         audio.addEventListener('canplay', handleCanPlay);
       }
     } else {
-      console.log('❌ No current show or tracks available');
+      console.log('❌ No current show available');
     }
   }, [currentShowIndex, currentTrackIndex, currentShow]);
 
@@ -206,10 +205,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
 
   const nextTrack = () => {
-    console.log('🎵 nextTrack called, currentTrackIndex:', currentTrackIndex, 'tracks.length:', currentShow?.tracks?.length);
-    if (currentShow?.tracks && currentTrackIndex < currentShow.tracks.length - 1) {
-      const newTrackIndex = currentTrackIndex + 1;
-      console.log('✅ Moving to next track, index:', newTrackIndex);
+    console.log('🎵 nextTrack called, currentShowIndex:', currentShowIndex, 'shows.length:', shows.length);
+    if (currentShowIndex < shows.length - 1) {
+      const newShowIndex = currentShowIndex + 1;
+      console.log('✅ Moving to next show, index:', newShowIndex);
       
       // Pause current audio before switching
       if (playerRef.current && isPlaying) {
@@ -217,40 +216,40 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         setIsPlaying(false);
       }
       
-      onTrackChange(newTrackIndex);
+      onShowChange(newShowIndex);
       
       // Wait for the new audio source to load, then auto-play
       setTimeout(() => {
         if (playerRef.current) {
           const audio = playerRef.current as HTMLAudioElement;
-          console.log('🎵 Loading new track audio source');
+          console.log('🎵 Loading new show audio source');
           
           // Force reload the audio element with new source
           audio.load();
           
           // Wait for the audio to be ready, then play
           audio.addEventListener('canplay', function onCanPlay() {
-            console.log('🎵 New track ready to play, starting playback');
+            console.log('🎵 New show ready to play, starting playback');
             audio.removeEventListener('canplay', onCanPlay);
             audio.play().then(() => {
               setIsPlaying(true);
-              console.log('✅ Next track auto-played successfully');
+              console.log('✅ Next show auto-played successfully');
             }).catch(err => {
-              console.error('❌ Auto-play failed for next track:', err);
+              console.error('❌ Auto-play failed for next show:', err);
             });
           }, { once: true });
         }
       }, 200);
     } else {
-      console.log('⚠️ Already at last track');
+      console.log('⚠️ Already at last show');
     }
   };
 
   const previousTrack = () => {
-    console.log('🎵 previousTrack called, currentTrackIndex:', currentTrackIndex);
-    if (currentTrackIndex > 0) {
-      const newTrackIndex = currentTrackIndex - 1;
-      console.log('✅ Moving to previous track, index:', newTrackIndex);
+    console.log('🎵 previousTrack called, currentShowIndex:', currentShowIndex);
+    if (currentShowIndex > 0) {
+      const newShowIndex = currentShowIndex - 1;
+      console.log('✅ Moving to previous show, index:', newShowIndex);
       
       // Pause current audio before switching
       if (playerRef.current && isPlaying) {
@@ -258,32 +257,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         setIsPlaying(false);
       }
       
-      onTrackChange(newTrackIndex);
+      onShowChange(newShowIndex);
       
       // Wait for the new audio source to load, then auto-play
       setTimeout(() => {
         if (playerRef.current) {
           const audio = playerRef.current as HTMLAudioElement;
-          console.log('🎵 Loading new track audio source');
+          console.log('🎵 Loading previous show audio source');
           
           // Force reload the audio element with new source
           audio.load();
           
           // Wait for the audio to be ready, then play
           audio.addEventListener('canplay', function onCanPlay() {
-            console.log('🎵 New track ready to play, starting playback');
+            console.log('🎵 Previous show ready to play, starting playback');
             audio.removeEventListener('canplay', onCanPlay);
             audio.play().then(() => {
               setIsPlaying(true);
-              console.log('✅ Previous track auto-played successfully');
+              console.log('✅ Previous show auto-played successfully');
             }).catch(err => {
-              console.error('❌ Auto-play failed for previous track:', err);
+              console.error('❌ Auto-play failed for previous show:', err);
             });
           }, { once: true });
         }
       }, 200);
     } else {
-      console.log('⚠️ Already at first track');
+      console.log('⚠️ Already at first show');
     }
   };
 
@@ -393,14 +392,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       </div>
 
       <div className="player-main">
-        {currentShow.tracks && currentShow.tracks.length > 0 ? (
+        {currentShow && (
           <>
-
-            
             {/* Audio element - invisible but functional for metadata loading */}
             <audio
               ref={playerRef}
-              src={`https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[currentTrackIndex]?.filename}`}
+              src={currentShow?.url}
               preload="metadata"
               crossOrigin="anonymous"
               key={`${currentShowIndex}-${currentTrackIndex}`}
@@ -426,7 +423,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 }
               }}
               onLoadStart={() => {
-                console.log('🎵 Audio source changed to:', `https://glue-factory-radio-production.up.railway.app/api/shows/audio/${currentShow.tracks[currentTrackIndex]?.filename}`);
+                console.log('🎵 Audio source changed to:', currentShow?.url);
                 setIsLoading(true);
               }}
               onError={(e) => {
@@ -443,21 +440,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               }}
             />
           </>
-        ) : (
-          <div className="no-tracks">
-            <p>No tracks available for this show</p>
-          </div>
         )}
 
         <div className="progress-container">
           {/* Track Title Display */}
-          {currentShow?.tracks && currentShow.tracks[currentTrackIndex] && (
+          {currentShow && (
             <div className="track-title-display">
               <h3 className="current-track-title">
-                🎵 {currentShow.tracks[currentTrackIndex].title}
+                🎵 {currentShow.title}
               </h3>
               <div className="track-info">
-                Track {currentTrackIndex + 1} of {currentShow.tracks.length}
+                Show {currentShowIndex + 1} of {shows.length}
               </div>
             </div>
           )}
@@ -483,8 +476,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               console.log('🎯 Previous Track button clicked!');
               previousTrack();
             }}
-            disabled={!currentShow?.tracks || currentTrackIndex === 0}
-            title="Previous Track"
+            disabled={currentShowIndex === 0}
+            title="Previous Show"
           >
             ⏮
           </button>
@@ -532,8 +525,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               console.log('🎯 Next Track button clicked!');
               nextTrack();
             }}
-            disabled={!currentShow?.tracks || currentTrackIndex === (currentShow.tracks.length - 1)}
-            title="Next Track"
+            disabled={currentShowIndex === (shows.length - 1)}
+            title="Next Show"
           >
             ⏭
           </button>

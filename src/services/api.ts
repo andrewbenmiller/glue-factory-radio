@@ -20,11 +20,12 @@ export interface Show {
   id: number;
   title: string;
   description?: string;
+  filename: string;
+  duration: number;
+  file_size: number;
   created_date: string;
   is_active: boolean;
-  total_duration: number;
-  total_tracks: number;
-  tracks: Track[];
+  url: string;
 }
 
 export interface UploadResponse {
