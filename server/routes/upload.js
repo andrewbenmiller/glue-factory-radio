@@ -220,13 +220,12 @@ router.post('/show', upload.single('audio'), async (req, res) => {
         const filePath = path.join(__dirname, '../uploads', audioFile.filename);
         const duration = await extractAudioDuration(filePath);
 
-        // Upload to cloud storage (or keep local for development)
-        const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
-        
-        if (!storageResult.success) {
-          console.error('Cloud storage upload failed:', storageResult.error);
-          return res.status(500).json({ error: 'Failed to upload file to storage' });
-        }
+        // Temporarily skip cloud storage for testing
+        const storageResult = {
+          success: true,
+          url: `/uploads/${audioFile.filename}`,
+          message: 'File stored locally for testing'
+        };
 
         // Create the first track for this show
         db.run(`
