@@ -117,15 +117,14 @@ router.post('/track', upload.single('audio'), async (req, res) => {
         const filePath = path.join(__dirname, '../uploads', filename);
         const duration = await extractAudioDuration(filePath);
 
-        // Upload to cloud storage (or keep local for development)
-        const storageResult = await cloudStorage.uploadFile(filePath, filename);
-        
-        if (!storageResult.success) {
-          console.error('Cloud storage upload failed:', storageResult.error);
-          return res.status(500).json({ error: 'Failed to upload file to storage' });
-        }
+        // Temporarily skip cloud storage for testing
+        const storageResult = {
+          success: true,
+          url: `/uploads/${filename}`,
+          message: 'File stored locally for testing'
+        };
 
-        // Insert track with cloud storage URL
+        // Insert track with local storage URL
         const query = `
           INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
           VALUES (?, ?, ?, ?, ?, ?)
