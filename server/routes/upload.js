@@ -180,8 +180,6 @@ router.post('/track', upload.single('audio'), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-  }
-});
 
 // Create new show with first track
 router.post('/show', upload.single('audio'), async (req, res) => {
