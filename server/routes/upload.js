@@ -204,11 +204,11 @@ router.post('/show', upload.single('audio'), async (req, res) => {
 
     // Start transaction
     db.serialize(() => {
-      // Create the show first (using current schema with filename)
+      // Create the show first
       db.run(`
-        INSERT INTO shows (title, description, filename, file_size, duration)
-        VALUES (?, ?, ?, ?, ?)
-      `, [title, description, audioFile.filename, audioFile.size, 0], async function(err) {
+        INSERT INTO shows (title, description)
+        VALUES (?, ?)
+      `, [title, description], async function(err) {
         if (err) {
           console.error('Error creating show:', err);
           return res.status(500).json({ error: 'Failed to create show' });
@@ -220,33 +220,68 @@ router.post('/show', upload.single('audio'), async (req, res) => {
         const filePath = path.join(__dirname, '../uploads', audioFile.filename);
         const duration = await extractAudioDuration(filePath);
 
-        // Update show with duration
-        db.run(`
-          UPDATE shows SET duration = ? WHERE id = ?
-        `, [duration, showId], (err) => {
-          if (err) {
-            console.error('Error updating show duration:', err);
-          }
-          
-          // Get the created show
-          db.get(`
-            SELECT * FROM shows WHERE id = ?
-          `, [showId], (err, result) => {
-            if (err) {
-              return res.status(500).json({ error: 'Show created but failed to retrieve' });
-            }
+        // Upload to cloud storage (or keep local for development)
+        const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
+        
+        if (!storageResult.success) {
+          console.error('Cloud storage upload failed:', storageResult.error);
+          return res.status(500).json({ error: 'Failed to upload file to storage' });
+        }
 
-            res.json({
-              message: 'Show created successfully',
-              show: {
-                id: result.id,
-                title: result.title,
-                description: result.description,
-                filename: result.filename,
-                created_date: result.created_date,
-                is_active: result.is_active,
-                duration: result.duration,
-                file_size: result.file_size,
+        // Create the first track for this show
+        db.run(`
+          INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [showId, title, audioFile.filename, audioFile.size, 1, duration], function(err) {
+          if (err) {
+            console.error('Error creating track:', err);
+            return res.status(500).json({ error: 'Failed to create track' });
+          }
+
+          const trackId = this.lastID;
+
+          // Update show totals
+          db.run(`
+            UPDATE shows 
+            SET total_tracks = 1,
+                total_duration = ?
+            WHERE id = ?
+          `, [duration, showId], (err) => {
+            if (err) {
+              console.error('Error updating show totals:', err);
+            }
+            
+            // Get the created show with track
+            db.get(`
+              SELECT s.*, st.filename, st.duration, st.file_size
+              FROM shows s
+              LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
+              WHERE s.id = ?
+            `, [showId], (err, result) => {
+              if (err) {
+                return res.status(500).json({ error: 'Show created but failed to retrieve' });
+              }
+
+              res.json({
+                message: 'Show created successfully',
+                show: {
+                  id: result.id,
+                  title: result.title,
+                  description: result.description,
+                  created_date: result.created_date,
+                  is_active: result.is_active,
+                  total_duration: result.total_duration,
+                  total_tracks: result.total_tracks,
+                  filename: result.filename,
+                  duration: result.duration,
+                  file_size: result.file_size,
+                  url: storageResult.url
+                }
+              });
+            });
+          });
+        });
+      });
                 url: `/uploads/${result.filename}`
               }
             });
