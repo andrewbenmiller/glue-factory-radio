@@ -61,10 +61,16 @@ function setupUploadForm() {
         const formData = new FormData(form);
         const title = formData.get('title');
         const description = formData.get('description');
+        const trackTitle = formData.get('trackTitle');
         const audioFile = formData.get('audio');
 
         if (!title.trim()) {
             showStatus('Please enter a show title', 'error');
+            return;
+        }
+
+        if (!trackTitle.trim()) {
+            showStatus('Please enter a track title', 'error');
             return;
         }
 

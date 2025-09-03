@@ -196,11 +196,11 @@ router.post('/show', upload.single('audio'), async (req, res) => {
   try {
     console.log('📤 Show creation request received:', { body: req.body, file: req.file });
     
-    const { title, description } = req.body;
+    const { title, description, trackTitle } = req.body;
     const audioFile = req.file;
 
-    if (!title || !audioFile) {
-      return res.status(400).json({ error: 'Title and audio file are required' });
+    if (!title || !trackTitle || !audioFile) {
+      return res.status(400).json({ error: 'Show title, track title, and audio file are required' });
     }
 
     console.log('📁 File details:', { 
@@ -240,7 +240,7 @@ router.post('/show', upload.single('audio'), async (req, res) => {
         INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
         VALUES (?, ?, ?, ?, ?, ?)
         RETURNING id
-      `, [showId, title, audioFile.filename, audioFile.size, 1, duration], function(err, result) {
+      `, [showId, trackTitle, audioFile.filename, audioFile.size, 1, duration], function(err, result) {
         if (err) {
           console.error('Error creating track:', err);
           return res.status(500).json({ error: 'Failed to create track' });
