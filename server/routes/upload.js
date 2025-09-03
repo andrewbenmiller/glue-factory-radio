@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../config/database');
 const mp3Duration = require('mp3-duration');
+const cloudStorage = require('../services/cloudStorage');
 
 // Function to extract audio duration from MP3 files using metadata
 async function extractAudioDuration(filePath) {
@@ -117,7 +118,15 @@ router.post('/track', upload.single('audio'), async (req, res) => {
         const filePath = path.join(__dirname, '../uploads', filename);
         const duration = await extractAudioDuration(filePath);
 
-        // Insert track
+        // Upload to cloud storage (or keep local for development)
+        const storageResult = await cloudStorage.uploadFile(filePath, filename);
+        
+        if (!storageResult.success) {
+          console.error('Cloud storage upload failed:', storageResult.error);
+          return res.status(500).json({ error: 'Failed to upload file to storage' });
+        }
+
+        // Insert track with cloud storage URL
         const query = `
           INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
           VALUES (?, ?, ?, ?, ?, ?)
@@ -160,7 +169,7 @@ router.post('/track', upload.single('audio'), async (req, res) => {
               message: 'Track uploaded successfully',
               track: {
                 ...track,
-                url: `/uploads/${track.filename}`
+                url: storageResult.url // Use cloud storage URL
               }
             });
           });
