@@ -23,9 +23,11 @@ if (usePostgreSQL) {
     run: (sql, params = [], callback) => {
       // Convert ? placeholders to $1, $2, etc. for PostgreSQL
       let convertedSql = sql;
-      params.forEach((_, index) => {
-        convertedSql = convertedSql.replace('?', `$${index + 1}`);
-      });
+      if (Array.isArray(params)) {
+        params.forEach((_, index) => {
+          convertedSql = convertedSql.replace('?', `$${index + 1}`);
+        });
+      }
       
       pool.query(convertedSql, params, (err, result) => {
         if (callback) callback(err, result);
@@ -34,9 +36,11 @@ if (usePostgreSQL) {
     get: (sql, params = [], callback) => {
       // Convert ? placeholders to $1, $2, etc. for PostgreSQL
       let convertedSql = sql;
-      params.forEach((_, index) => {
-        convertedSql = convertedSql.replace('?', `$${index + 1}`);
-      });
+      if (Array.isArray(params)) {
+        params.forEach((_, index) => {
+          convertedSql = convertedSql.replace('?', `$${index + 1}`);
+        });
+      }
       
       pool.query(convertedSql, params, (err, result) => {
         if (callback) callback(err, result ? result.rows[0] : null);
@@ -45,9 +49,11 @@ if (usePostgreSQL) {
     all: (sql, params = [], callback) => {
       // Convert ? placeholders to $1, $2, etc. for PostgreSQL
       let convertedSql = sql;
-      params.forEach((_, index) => {
-        convertedSql = convertedSql.replace('?', `$${index + 1}`);
-      });
+      if (Array.isArray(params)) {
+        params.forEach((_, index) => {
+          convertedSql = convertedSql.replace('?', `$${index + 1}`);
+        });
+      }
       
       pool.query(convertedSql, params, (err, result) => {
         if (callback) callback(err, result ? result.rows : []);
