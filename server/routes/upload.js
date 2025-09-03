@@ -5,7 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const db = require('../config/database');
 const mp3Duration = require('mp3-duration');
-const cloudStorage = require('../services/cloudStorage');
 
 // Function to extract audio duration from MP3 files using metadata
 async function extractAudioDuration(filePath) {
