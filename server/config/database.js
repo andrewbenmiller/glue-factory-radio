@@ -21,17 +21,35 @@ if (usePostgreSQL) {
   // Create a database interface that mimics SQLite3
   db = {
     run: (sql, params = [], callback) => {
-      pool.query(sql, params, (err, result) => {
+      // Convert ? placeholders to $1, $2, etc. for PostgreSQL
+      let convertedSql = sql;
+      for (let i = 0; i < params.length; i++) {
+        convertedSql = convertedSql.replace('?', `$${i + 1}`);
+      }
+      
+      pool.query(convertedSql, params, (err, result) => {
         if (callback) callback(err, result);
       });
     },
     get: (sql, params = [], callback) => {
-      pool.query(sql, params, (err, result) => {
+      // Convert ? placeholders to $1, $2, etc. for PostgreSQL
+      let convertedSql = sql;
+      for (let i = 0; i < params.length; i++) {
+        convertedSql = convertedSql.replace('?', `$${i + 1}`);
+      }
+      
+      pool.query(convertedSql, params, (err, result) => {
         if (callback) callback(err, result ? result.rows[0] : null);
       });
     },
     all: (sql, params = [], callback) => {
-      pool.query(sql, params, (err, result) => {
+      // Convert ? placeholders to $1, $2, etc. for PostgreSQL
+      let convertedSql = sql;
+      for (let i = 0; i < params.length; i++) {
+        convertedSql = convertedSql.replace('?', `$${i + 1}`);
+      }
+      
+      pool.query(convertedSql, params, (err, result) => {
         if (callback) callback(err, result ? result.rows : []);
       });
     },
