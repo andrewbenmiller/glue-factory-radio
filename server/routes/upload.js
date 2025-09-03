@@ -280,12 +280,6 @@ router.post('/show', upload.single('audio'), async (req, res) => {
           });
         });
       });
-                url: `/uploads/${result.filename}`
-              }
-            });
-          });
-        });
-      });
     });
 
   } catch (error) {
