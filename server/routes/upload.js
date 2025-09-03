@@ -150,7 +150,7 @@ router.post('/track', upload.single('audio'), async (req, res) => {
                     total_duration = (
                       SELECT COALESCE(SUM(duration), 0) 
                       FROM show_tracks 
-                      WHERE show_id = ? AND is_active = 1
+                      WHERE show_id = ? AND is_active = true
                     )
                 WHERE id = ?
               `, [showId, showId], (err) => {
@@ -263,7 +263,7 @@ router.post('/show', upload.single('audio'), async (req, res) => {
           db.get(`
             SELECT s.*, st.filename, st.duration, st.file_size
             FROM shows s
-            LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
+                          LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = true
             WHERE s.id = ?
           `, [showId], (err, result) => {
             if (err) {
