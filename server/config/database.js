@@ -1,28 +1,72 @@
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-
-// Database file path
-const dbPath = path.join(__dirname, '../data/radio.db');
-
-// Create database directory if it doesn't exist
 const fs = require('fs');
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+
+// Determine database type based on environment
+const isProduction = process.env.NODE_ENV === 'production';
+const usePostgreSQL = isProduction && process.env.DATABASE_URL;
+
+let db;
+
+if (usePostgreSQL) {
+  // PostgreSQL for Railway production
+  const { Pool } = require('pg');
+  
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+
+  console.log('✅ Connected to PostgreSQL database');
+  
+  // Create a database interface that mimics SQLite3
+  db = {
+    run: (sql, params = [], callback) => {
+      pool.query(sql, params, (err, result) => {
+        if (callback) callback(err, result);
+      });
+    },
+    get: (sql, params = [], callback) => {
+      pool.query(sql, params, (err, result) => {
+        if (callback) callback(err, result.rows[0]);
+      });
+    },
+    all: (sql, params = [], callback) => {
+      pool.query(sql, params, (err, result) => {
+        if (callback) callback(err, result.rows);
+      });
+    },
+    close: (callback) => {
+      pool.end(callback);
+    }
+  };
+  
+  initializePostgreSQLDatabase();
+} else {
+  // SQLite for local development
+  const sqlite3 = require('sqlite3').verbose();
+  
+  // Database file path
+  const dbPath = path.join(__dirname, '../data/radio.db');
+
+  // Create database directory if it doesn't exist
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  // Create database connection
+  db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('Error opening database:', err.message);
+    } else {
+      console.log('✅ Connected to SQLite database');
+      initializeSQLiteDatabase();
+    }
+  });
 }
 
-// Create database connection
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('✅ Connected to SQLite database');
-    initializeDatabase();
-  }
-});
-
-// Initialize database tables
-function initializeDatabase() {
+// Initialize SQLite database tables
+function initializeSQLiteDatabase() {
   // Shows table - Main show information
   db.run(`
     CREATE TABLE IF NOT EXISTS shows (
@@ -105,11 +149,14 @@ function initializeDatabase() {
   db.run(`
     CREATE TABLE IF NOT EXISTS playlist_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      playlist_id INTEGER,
-      show_id INTEGER,
-      position INTEGER,
-      FOREIGN KEY (playlist_id) REFERENCES playlists (id),
-      FOREIGN KEY (show_id) REFERENCES shows (id)
+      playlist_id INTEGER NOT NULL,
+      show_id INTEGER NOT NULL,
+      track_id INTEGER,
+      position INTEGER DEFAULT 0,
+      added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (playlist_id) REFERENCES playlists (id) ON DELETE CASCADE,
+      FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
+      FOREIGN KEY (track_id) REFERENCES show_tracks (id) ON DELETE CASCADE
     )
   `, (err) => {
     if (err) {
@@ -120,10 +167,7 @@ function initializeDatabase() {
   });
 
   // Create indexes for better performance
-  db.run(`
-    CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id 
-    ON show_tracks(show_id)
-  `, (err) => {
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`, (err) => {
     if (err) {
       console.error('Error creating index:', err.message);
     } else {
@@ -131,180 +175,151 @@ function initializeDatabase() {
     }
   });
 
-  // Run migration to update existing database schema
-  runMigrations();
-}
-
-// Database migration function
-function runMigrations() {
-  console.log('🔄 Running database migrations...');
-  
-  // Check if we need to migrate from old shows table structure
-  db.get("PRAGMA table_info(shows)", (err, row) => {
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_active ON show_tracks(is_active)`, (err) => {
     if (err) {
-      console.error('Error checking shows table structure:', err);
-      return;
+      console.error('Error creating index:', err.message);
     }
+  });
 
-    // Check if old columns exist
-    db.all("PRAGMA table_info(shows)", (err, columns) => {
-      if (err) {
-        console.error('Error getting shows table columns:', err);
-        return;
-      }
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
 
-      const columnNames = columns.map(col => col.name);
-      console.log('📋 Current shows table columns:', columnNames);
-
-      // If old structure exists, migrate the data
-      if (columnNames.includes('filename') && columnNames.includes('upload_date')) {
-        console.log('🔄 Migrating old shows table to new structure...');
-        migrateOldShowsTable();
-      } else {
-        console.log('✅ Database schema is up to date');
-      }
-    });
+  // Log current schema
+  db.all("PRAGMA table_info(shows)", [], (err, rows) => {
+    if (err) {
+      console.error('Error getting table info:', err.message);
+    } else {
+      console.log('📋 Current shows table columns:', rows.map(row => row.name));
+    }
   });
 }
 
-// Migrate old shows table structure to new show/track structure
-function migrateOldShowsTable() {
-  console.log('🔄 Starting migration...');
-  
-  // First, create the new show_tracks table if it doesn't exist
+// Initialize PostgreSQL database tables
+function initializePostgreSQLDatabase() {
+  // Shows table - Main show information
+  db.run(`
+    CREATE TABLE IF NOT EXISTS shows (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      is_active BOOLEAN DEFAULT TRUE,
+      total_duration REAL DEFAULT 0,
+      total_tracks INTEGER DEFAULT 0
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating shows table:', err.message);
+    } else {
+      console.log('✅ Shows table ready');
+    }
+  });
+
+  // Show tracks table - Individual MP3s within each show
   db.run(`
     CREATE TABLE IF NOT EXISTS show_tracks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       show_id INTEGER NOT NULL,
       title TEXT NOT NULL,
       filename TEXT NOT NULL,
       duration REAL DEFAULT 0,
       file_size INTEGER,
       track_order INTEGER DEFAULT 0,
-      upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-      is_active BOOLEAN DEFAULT 1,
+      upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      is_active BOOLEAN DEFAULT TRUE,
       play_count INTEGER DEFAULT 0,
-      last_played DATETIME,
+      last_played TIMESTAMP,
       FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE
     )
   `, (err) => {
     if (err) {
-      console.error('Error creating show_tracks table during migration:', err);
-      return;
+      console.error('Error creating show_tracks table:', err.message);
+    } else {
+      console.log('✅ Show tracks table ready');
     }
-
-    // Get all existing shows with old structure
-    db.all('SELECT * FROM shows', (err, oldShows) => {
-      if (err) {
-        console.error('Error fetching old shows:', err);
-        return;
-      }
-
-      console.log(`🔄 Found ${oldShows.length} shows to migrate`);
-
-      oldShows.forEach((show, index) => {
-        // Insert into show_tracks table
-        const trackQuery = `
-          INSERT INTO show_tracks (show_id, title, filename, duration, file_size, track_order, upload_date, is_active, play_count, last_played)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        
-        db.run(trackQuery, [
-          show.id,
-          show.title || 'Untitled Track',
-          show.filename || '',
-          show.duration || 0,
-          show.file_size || 0,
-          1, // track_order
-          show.upload_date || new Date().toISOString(),
-          show.is_active || 1,
-          show.play_count || 0,
-          show.last_played || null
-        ], function(err) {
-          if (err) {
-            console.error(`Error migrating show ${show.id}:`, err);
-          } else {
-            console.log(`✅ Migrated show ${show.id}: ${show.title}`);
-          }
-
-          // Update the shows table to new structure
-          const updateQuery = `
-            UPDATE shows 
-            SET created_date = upload_date,
-                total_duration = COALESCE(duration, 0),
-                total_tracks = 1
-            WHERE id = ?
-          `;
-          
-          db.run(updateQuery, [show.id], (err) => {
-            if (err) {
-              console.error(`Error updating show ${show.id}:`, err);
-            }
-          });
-
-          // If this is the last show, remove old columns
-          if (index === oldShows.length - 1) {
-            console.log('🔄 Migration complete! Removing old columns...');
-            removeOldColumns();
-          }
-        });
-      });
-    });
   });
-}
 
-// Remove old columns from shows table
-function removeOldColumns() {
-  console.log('🧹 Cleaning up old columns...');
-  
-  // SQLite doesn't support DROP COLUMN directly, so we'll recreate the table
-  db.serialize(() => {
-    // Create new table with correct structure
-    db.run(`
-      CREATE TABLE shows_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT,
-        created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-        is_active BOOLEAN DEFAULT 1,
-        total_duration REAL DEFAULT 0,
-        total_tracks INTEGER DEFAULT 0
-      )
-    `, (err) => {
-      if (err) {
-        console.error('Error creating new shows table:', err);
-        return;
-      }
-
-      // Copy data to new table
-      db.run(`
-        INSERT INTO shows_new (id, title, description, created_date, is_active, total_duration, total_tracks)
-        SELECT id, title, description, created_date, is_active, total_duration, total_tracks
-        FROM shows
-      `, (err) => {
-        if (err) {
-          console.error('Error copying data to new table:', err);
-          return;
-        }
-
-        // Drop old table and rename new one
-        db.run('DROP TABLE shows', (err) => {
-          if (err) {
-            console.error('Error dropping old table:', err);
-            return;
-          }
-
-          db.run('ALTER TABLE shows_new RENAME TO shows', (err) => {
-            if (err) {
-              console.error('Error renaming table:', err);
-            } else {
-              console.log('✅ Database migration completed successfully!');
-            }
-          });
-        });
-      });
-    });
+  // Users table for future admin features
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'admin',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating users table:', err.message);
+    } else {
+      console.log('✅ Users table ready');
+    }
   });
+
+  // Playlists table for future features
+  db.run(`
+    CREATE TABLE IF NOT EXISTS playlists (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      is_active BOOLEAN DEFAULT TRUE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating playlists table:', err.message);
+    } else {
+      console.log('✅ Playlists table ready');
+    }
+  });
+
+  // Playlist items table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS playlist_items (
+      id SERIAL PRIMARY KEY,
+      playlist_id INTEGER NOT NULL,
+      show_id INTEGER NOT NULL,
+      track_id INTEGER,
+      position INTEGER DEFAULT 0,
+      added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (playlist_id) REFERENCES playlists (id) ON DELETE CASCADE,
+      FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
+      FOREIGN KEY (track_id) REFERENCES show_tracks (id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating playlist_items table:', err.message);
+    } else {
+      console.log('✅ Playlist items table ready');
+    }
+  });
+
+  // Create indexes for better performance
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    } else {
+      console.log('✅ Database indexes ready');
+    }
+  });
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_active ON show_tracks(is_active)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
+  console.log('✅ Database schema is up to date');
 }
 
 module.exports = db;

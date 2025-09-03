@@ -7,10 +7,10 @@ const path = require('path');
 // GET all shows (admin endpoint - includes inactive)
 router.get('/admin', (req, res) => {
   const query = `
-    SELECT s.*, st.filename, st.duration, st.file_size
+    SELECT s.*, st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
     FROM shows s
     LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
-    ORDER BY s.created_date DESC
+    ORDER BY s.created_date DESC, st.track_order
   `;
   
   db.all(query, [], (err, rows) => {
@@ -19,24 +19,53 @@ router.get('/admin', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch shows' });
     }
     
-    // Add URLs to shows
-    const showsWithUrls = rows.map(show => ({
-      ...show,
-      url: show.filename ? `/uploads/${show.filename}` : null
-    }));
+    // Group tracks by show
+    const showsMap = new Map();
     
-    res.json(showsWithUrls);
+    rows.forEach(row => {
+      if (!showsMap.has(row.id)) {
+        showsMap.set(row.id, {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          created_date: row.created_date,
+          is_active: row.is_active,
+          total_duration: row.total_duration,
+          total_tracks: row.total_tracks,
+          tracks: []
+        });
+      }
+      
+      if (row.track_id) {
+        showsMap.get(row.id).tracks.push({
+          id: row.track_id,
+          show_id: row.id,
+          title: row.track_title,
+          filename: row.filename,
+          duration: row.duration,
+          file_size: row.file_size,
+          track_order: row.track_order,
+          upload_date: row.upload_date,
+          is_active: row.track_active,
+          play_count: row.play_count,
+          last_played: row.last_played,
+          url: `/uploads/${row.filename}`
+        });
+      }
+    });
+    
+    res.json(Array.from(showsMap.values()));
   });
 });
 
 // GET all shows (public endpoint - only active)
 router.get('/', (req, res) => {
   const query = `
-    SELECT s.*, st.filename, st.duration, st.file_size
+    SELECT s.*, st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
     FROM shows s
     LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = 1
     WHERE s.is_active = 1
-    ORDER BY s.created_date DESC
+    ORDER BY s.created_date DESC, st.track_order
   `;
   
   db.all(query, [], (err, rows) => {
@@ -45,13 +74,42 @@ router.get('/', (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch shows' });
     }
     
-    // Add URLs to shows
-    const showsWithUrls = rows.map(show => ({
-      ...show,
-      url: show.filename ? `/uploads/${show.filename}` : null
-    }));
+    // Group tracks by show
+    const showsMap = new Map();
     
-    res.json(showsWithUrls);
+    rows.forEach(row => {
+      if (!showsMap.has(row.id)) {
+        showsMap.set(row.id, {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          created_date: row.created_date,
+          is_active: row.is_active,
+          total_duration: row.total_duration,
+          total_tracks: row.total_tracks,
+          tracks: []
+        });
+      }
+      
+      if (row.track_id) {
+        showsMap.get(row.id).tracks.push({
+          id: row.track_id,
+          show_id: row.id,
+          title: row.track_title,
+          filename: row.filename,
+          duration: row.duration,
+          file_size: row.file_size,
+          track_order: row.track_order,
+          upload_date: row.upload_date,
+          is_active: row.track_active,
+          play_count: row.play_count,
+          last_played: row.last_played,
+          url: `/uploads/${row.filename}`
+        });
+      }
+    });
+    
+    res.json(Array.from(showsMap.values()));
   });
 });
 

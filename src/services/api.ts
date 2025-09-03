@@ -1,4 +1,4 @@
-// API service for connecting to Railway backend
+// API service for connecting to Railway backend with persistent database
 const API_BASE_URL = 'https://glue-factory-radio-production.up.railway.app';
 
 export interface Track {
