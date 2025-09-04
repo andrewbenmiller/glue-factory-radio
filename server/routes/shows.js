@@ -329,4 +329,50 @@ router.get('/audio/:filename', (req, res) => {
   }
 });
 
+// DELETE track (soft delete)
+router.delete('/:showId/tracks/:trackId', (req, res) => {
+  const { showId, trackId } = req.params;
+  
+  // First, get the track info to delete from R2
+  db.get('SELECT filename FROM show_tracks WHERE id = ? AND show_id = ?', [trackId, showId], async (err, track) => {
+    if (err) {
+      console.error('Error fetching track:', err);
+      return res.status(500).json({ error: 'Failed to fetch track' });
+    }
+    
+    if (!track) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+    
+    // Soft delete the track from database
+    db.run('UPDATE show_tracks SET is_active = false WHERE id = ? AND show_id = ?', [trackId, showId], async function(err) {
+      if (err) {
+        console.error('Error deleting track:', err);
+        return res.status(500).json({ error: 'Failed to delete track' });
+      }
+      
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Track not found' });
+      }
+      
+      // Delete file from R2 storage
+      try {
+        const cloudStorage = require('../services/cloudStorage');
+        const deleteResult = await cloudStorage.deleteFile(track.filename);
+        
+        if (!deleteResult.success) {
+          console.error('Error deleting file from R2:', deleteResult.error);
+          // Don't fail the request if R2 deletion fails, just log it
+        }
+        
+        res.json({ message: 'Track deleted successfully' });
+      } catch (deleteErr) {
+        console.error('Error deleting file from R2:', deleteErr);
+        // Don't fail the request if R2 deletion fails, just log it
+        res.json({ message: 'Track deleted successfully' });
+      }
+    });
+  });
+});
+
 module.exports = router;
