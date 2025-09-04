@@ -34,6 +34,8 @@ const corsOptions = {
 // Configure Helmet to allow inline JavaScript for admin portal
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for now to fix audio issues
+  crossOriginOpenerPolicy: false, // Disable COOP to allow audio
+  crossOriginResourcePolicy: false, // Disable CORP to allow audio
 }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(cors(corsOptions));
