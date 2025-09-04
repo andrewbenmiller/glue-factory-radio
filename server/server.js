@@ -84,6 +84,28 @@ app.get("/javascript-test", (req, res) => {
 app.use("/api/shows", require("./routes/shows"));
 app.use("/api/upload", require("./routes/upload"));
 
+// Audio proxy route for R2 files
+app.get("/api/audio/:filename", async (req, res) => {
+  const { filename } = req.params;
+  
+  // Add CORS headers for audio files
+  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
+  
+  try {
+    const cloudStorage = require('./services/cloudStorage');
+    const signedUrl = await cloudStorage.getSignedUrl(`uploads/${filename}`);
+    
+    // Redirect to the signed URL
+    res.redirect(signedUrl);
+  } catch (error) {
+    console.error('Error generating signed URL for audio file:', error);
+    res.status(404).json({ error: "Audio file not found" });
+  }
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "OK", 

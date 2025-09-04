@@ -250,7 +250,7 @@ function renderShowsTable() {
                                 <strong>${escapeHtml(show.title)}</strong>
                             </td>
                             <td>${escapeHtml(show.description || 'No description')}</td>
-                            <td>${show.track_count || 0}</td>
+                            <td>${show.total_tracks || 0}</td>
                             <td>${formatDuration(show.total_duration)}</td>
                             <td>${formatDate(show.created_date)}</td>
                             <td>

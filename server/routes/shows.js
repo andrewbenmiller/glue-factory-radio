@@ -296,27 +296,8 @@ router.options('/audio/:filename', (req, res) => {
   res.sendStatus(200);
 });
 
-// GET audio file proxy (serves audio files with proper CORS)
-router.get('/audio/:filename', async (req, res) => {
-  const { filename } = req.params;
-  
-  // Add CORS headers for audio files
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Range');
-  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
-  
-  try {
-    const cloudStorage = require('../services/cloudStorage');
-    const signedUrl = await cloudStorage.getSignedUrl(`uploads/${filename}`);
-    
-    // Redirect to the signed URL
-    res.redirect(signedUrl);
-  } catch (error) {
-    console.error('Error generating signed URL for audio file:', error);
-    res.status(404).json({ error: "Audio file not found" });
-  }
-});
+// GET audio file proxy (serves audio files with proper CORS) - MOVED TO server.js
+// This route is now handled at /api/audio/:filename in the main server
 
 // DELETE track (soft delete)
 router.delete('/:showId/tracks/:trackId', (req, res) => {
