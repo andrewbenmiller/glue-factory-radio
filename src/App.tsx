@@ -3,6 +3,7 @@ import './App.css';
 import AudioPlayer from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import { apiService, Show } from './services/api';
+import logo from './logo.png'; // Import the PNG logo
 
 function App() {
   const [shows, setShows] = useState<Show[]>([]);
@@ -103,22 +104,32 @@ function App() {
   
   return (
     <>
-      <AudioPlayer
-        shows={shows}
-        currentShowIndex={validShowIndex}
-        currentTrackIndex={currentTrackIndex}
-        onShowChange={handleShowChange}
-        onTrackChange={handleTrackChange}
-        autoPlay={autoPlay}
-        onAutoPlayToggle={handleAutoPlayToggle}
-      />
+      <header className="App-header">
+        <div className="logo-container">
+          <div className="logo-image-container">
+            <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
+          </div>
+        </div>
+      </header>
       
-      <ShowList
-        shows={shows}
-        currentShowIndex={validShowIndex}
-        onShowSelect={handleShowChange}
-        onTrackSelect={handleTrackSelect}
-      />
+      <main className="App-main">
+        <AudioPlayer
+          shows={shows}
+          currentShowIndex={validShowIndex}
+          currentTrackIndex={currentTrackIndex}
+          onShowChange={handleShowChange}
+          onTrackChange={handleTrackChange}
+          autoPlay={autoPlay}
+          onAutoPlayToggle={handleAutoPlayToggle}
+        />
+        
+        <ShowList
+          shows={shows}
+          currentShowIndex={validShowIndex}
+          onShowSelect={handleShowChange}
+          onTrackSelect={handleTrackSelect}
+        />
+      </main>
     </>
   );
 }

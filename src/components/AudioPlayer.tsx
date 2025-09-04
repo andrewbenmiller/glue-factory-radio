@@ -71,24 +71,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         audio.load(); // This forces metadata loading
         console.log('🎵 Forced audio.load() for metadata');
         
-        // Auto-play the new track when it's ready
-        const handleCanPlay = () => {
-          console.log('🎵 New track ready, attempting auto-play...');
-          audio.removeEventListener('canplay', handleCanPlay);
-          
-          // Small delay to ensure everything is loaded
-          setTimeout(() => {
-            audio.play().then(() => {
-              setIsPlaying(true);
-              console.log('✅ Auto-play successful for new track!');
-            }).catch(err => {
-              console.error('❌ Auto-play failed for new track:', err);
-              setIsPlaying(false);
-            });
-          }, 200);
-        };
-        
-        audio.addEventListener('canplay', handleCanPlay);
+        // No auto-play - user must manually click play
       }
     } else {
       console.log('❌ No current show available');
@@ -222,28 +205,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       
       onTrackChange(newTrackIndex);
       
-      // Wait for the new audio source to load, then auto-play
-      setTimeout(() => {
-        if (playerRef.current) {
-          const audio = playerRef.current as HTMLAudioElement;
-          console.log('🎵 Loading new track audio source');
-          
-          // Force reload the audio element with new source
-          audio.load();
-          
-          // Wait for the audio to be ready, then play
-          audio.addEventListener('canplay', function onCanPlay() {
-            console.log('🎵 New track ready to play, starting playback');
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.play().then(() => {
-              setIsPlaying(true);
-              console.log('✅ Next track auto-played successfully');
-            }).catch(err => {
-              console.error('❌ Auto-play failed for next track:', err);
-            });
-          }, { once: true });
-        }
-      }, 200);
+      // No auto-play - user must manually click play
     } else {
       console.log('⚠️ Already at last track');
     }
@@ -263,28 +225,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       
       onTrackChange(newTrackIndex);
       
-      // Wait for the new audio source to load, then auto-play
-      setTimeout(() => {
-        if (playerRef.current) {
-          const audio = playerRef.current as HTMLAudioElement;
-          console.log('🎵 Loading previous track audio source');
-          
-          // Force reload the audio element with new source
-          audio.load();
-          
-          // Wait for the audio to be ready, then play
-          audio.addEventListener('canplay', function onCanPlay() {
-            console.log('🎵 Previous track ready to play, starting playback');
-            audio.removeEventListener('canplay', onCanPlay);
-            audio.play().then(() => {
-              setIsPlaying(true);
-              console.log('✅ Previous track auto-played successfully');
-            }).catch(err => {
-              console.error('❌ Auto-play failed for previous track:', err);
-            });
-          }, { once: true });
-        }
-      }, 200);
+      // No auto-play - user must manually click play
     } else {
       console.log('⚠️ Already at first track');
     }
@@ -315,66 +256,66 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </div>
       </div>
 
-      <div className="player-main">
-        {currentShow && (
-          <>
-            {/* Audio element - invisible but functional for metadata loading */}
-            <audio
-              ref={playerRef}
-              src={(() => {
-                const audioUrl = currentShow?.tracks?.[currentTrackIndex]?.url ? 
-                  `https://glue-factory-radio-production.up.railway.app/api${currentShow.tracks[currentTrackIndex].url}` : '';
-                console.log('🎵 Audio URL constructed:', audioUrl);
-                console.log('🎵 Current show:', currentShow?.title);
-                console.log('🎵 Current track:', currentShow?.tracks?.[currentTrackIndex]?.title);
-                console.log('🎵 Track URL from backend:', currentShow?.tracks?.[currentTrackIndex]?.url);
-                console.log('🎵 Audio element being rendered with src:', audioUrl);
-                return audioUrl;
-              })()}
-              preload="metadata"
-              crossOrigin="anonymous"
-              key={`${currentShowIndex}-${currentTrackIndex}`}
-              onPlay={handlePlay}
-              onPause={handlePause}
-              onEnded={handleEnded}
-              onTimeUpdate={(e) => {
-                const target = e.target as HTMLAudioElement;
-                setCurrentTime(target.currentTime);
-              }}
-              onLoadedMetadata={(e) => {
-                const target = e.target as HTMLAudioElement;
-                if (target.duration && !isNaN(target.duration)) {
-                  setDuration(target.duration);
+              <div className="player-main">
+          {currentShow && (
+            <>
+              {/* Audio element - invisible but functional for metadata loading */}
+              <audio
+                ref={playerRef}
+                src={(() => {
+                  const audioUrl = currentShow?.tracks?.[currentTrackIndex]?.url ? 
+                    `https://glue-factory-radio-production.up.railway.app/api${currentShow.tracks[currentTrackIndex].url}` : '';
+                  console.log('🎵 Audio URL constructed:', audioUrl);
+                  console.log('🎵 Current show:', currentShow?.title);
+                  console.log('🎵 Current track:', currentShow?.tracks?.[currentTrackIndex]?.title);
+                  console.log('🎵 Track URL from backend:', currentShow?.tracks?.[currentTrackIndex]?.url);
+                  console.log('🎵 Audio element being rendered with src:', audioUrl);
+                  return audioUrl;
+                })()}
+                preload="metadata"
+                crossOrigin="anonymous"
+                key={`${currentShowIndex}-${currentTrackIndex}`}
+                onPlay={handlePlay}
+                onPause={handlePause}
+                onEnded={handleEnded}
+                onTimeUpdate={(e) => {
+                  const target = e.target as HTMLAudioElement;
+                  setCurrentTime(target.currentTime);
+                }}
+                onLoadedMetadata={(e) => {
+                  const target = e.target as HTMLAudioElement;
+                  if (target.duration && !isNaN(target.duration)) {
+                    setDuration(target.duration);
+                    setIsLoading(false);
+                  }
+                }}
+                onCanPlay={(e) => {
+                  const target = e.target as HTMLAudioElement;
+                  if (target.duration && !isNaN(target.duration) && duration === 0) {
+                    setDuration(target.duration);
+                    setIsLoading(false);
+                  }
+                }}
+                onLoadStart={() => {
+                  console.log('🎵 Audio source changed to:', currentShow?.tracks?.[currentTrackIndex]?.url ? `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[currentTrackIndex].url}` : '');
+                  setIsLoading(true);
+                }}
+                onError={(e) => {
+                  console.error('Audio element error:', e);
                   setIsLoading(false);
-                }
-              }}
-              onCanPlay={(e) => {
-                const target = e.target as HTMLAudioElement;
-                if (target.duration && !isNaN(target.duration) && duration === 0) {
-                  setDuration(target.duration);
-                  setIsLoading(false);
-                }
-              }}
-              onLoadStart={() => {
-                console.log('🎵 Audio source changed to:', currentShow?.tracks?.[currentTrackIndex]?.url ? `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[currentTrackIndex].url}` : '');
-                setIsLoading(true);
-              }}
-              onError={(e) => {
-                console.error('Audio element error:', e);
-                setIsLoading(false);
-              }}
-              style={{ 
-                position: 'absolute',
-                left: '10px',
-                top: '10px',
-                width: '200px',
-                height: '50px',
-                opacity: 0.8,
-                pointerEvents: 'auto'
-              }}
-            />
-          </>
-        )}
+                }}
+                style={{ 
+                  position: 'absolute',
+                  left: '10px',
+                  top: '10px',
+                  width: '200px',
+                  height: '50px',
+                  opacity: 0.8,
+                  pointerEvents: 'auto'
+                }}
+              />
+            </>
+          )}
 
         <div className="progress-container">
           {/* Track Title Display */}
@@ -440,34 +381,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? '⏸' : '▶️'}
-          </button>
-
-          <button 
-            className="control-btn test-btn" 
-            onClick={() => {
-              console.log('🧪 Testing audio element...');
-              if (playerRef.current) {
-                const audio = playerRef.current as HTMLAudioElement;
-                console.log('🎵 Audio element found:', audio);
-                console.log('🎵 Audio src:', audio.src);
-                console.log('🎵 Audio readyState:', audio.readyState);
-                console.log('🎵 Audio networkState:', audio.networkState);
-                
-                // Try to play
-                audio.play().then(() => {
-                  console.log('✅ Audio play successful!');
-                  setIsPlaying(true);
-                }).catch(err => {
-                  console.error('❌ Audio play failed:', err);
-                  setIsPlaying(false);
-                });
-              } else {
-                console.error('❌ No audio element found!');
-              }
-            }}
-            title="Test Audio"
-          >
-            🧪
           </button>
 
           <button 
