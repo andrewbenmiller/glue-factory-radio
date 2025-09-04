@@ -89,7 +89,7 @@ app.get("/api/audio/:filename", async (req, res) => {
   const { filename } = req.params;
   
   // Add CORS headers for audio files
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Range');
   res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');

@@ -317,7 +317,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             {/* Audio element - invisible but functional for metadata loading */}
             <audio
               ref={playerRef}
-              src={currentShow?.tracks?.[currentTrackIndex]?.url ? `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[currentTrackIndex].url}` : ''}
+              src={(() => {
+                const audioUrl = currentShow?.tracks?.[currentTrackIndex]?.url ? 
+                  `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[currentTrackIndex].url}` : '';
+                console.log('🎵 Audio URL constructed:', audioUrl);
+                console.log('🎵 Current show:', currentShow?.title);
+                console.log('🎵 Current track:', currentShow?.tracks?.[currentTrackIndex]?.title);
+                console.log('🎵 Track URL from backend:', currentShow?.tracks?.[currentTrackIndex]?.url);
+                return audioUrl;
+              })()}
               preload="metadata"
               crossOrigin="anonymous"
               key={`${currentShowIndex}-${currentTrackIndex}`}
