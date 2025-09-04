@@ -317,6 +317,8 @@ function renderTracksSection(showId) {
 async function toggleShowExpansion(showId) {
     if (expandedShows.has(showId)) {
         expandedShows.delete(showId);
+        // Re-render the table to remove the tracks section
+        renderShowsTable();
     } else {
         expandedShows.add(showId);
         // First render the table to create the container
@@ -523,13 +525,17 @@ async function deleteTrack(showId, trackId, trackTitle) {
             }
 
             showStatus('✅ Track deleted successfully', 'success');
-            loadShows();
-            loadStats();
             
             // Refresh the tracks section for the specific show
             if (expandedShows.has(showId)) {
+                // Re-render the table to recreate the tracks container
+                renderShowsTable();
+                // Then load the updated tracks
                 await loadShowTracks(showId);
             }
+            
+            loadShows();
+            loadStats();
             
         } catch (error) {
             console.error('Delete track error:', error);
