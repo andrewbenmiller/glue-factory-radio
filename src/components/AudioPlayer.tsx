@@ -29,6 +29,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
   
   const playerRef = useRef<any>(null);
   const currentShow = shows[currentShowIndex];
@@ -93,6 +94,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const handlePause = () => {
+    // Don't change isPlaying state if we're currently seeking
+    if (isSeeking) {
+      console.log('🎵 Ignoring pause event during seeking');
+      return;
+    }
+    
     if (playerRef.current) {
       (playerRef.current as HTMLAudioElement).pause();
       setIsPlaying(false);
@@ -115,15 +122,26 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     if (playerRef.current) {
       const audio = playerRef.current as HTMLAudioElement;
       audio.currentTime = seekTime;
-      
-      // Ensure audio continues playing smoothly after seek
-      if (isPlaying) {
-        console.log('🎵 Refreshing audio playback after progress bar seek');
-        audio.pause();
-        setTimeout(() => {
-          audio.play().catch(err => console.error('❌ Auto-play after progress seek failed:', err));
-        }, 50);
-      }
+    }
+  };
+
+  const handleSeekStart = () => {
+    console.log('🎵 Seek started - pausing audio (but keeping play state)');
+    setIsSeeking(true);
+    if (playerRef.current && isPlaying) {
+      const audio = playerRef.current as HTMLAudioElement;
+      audio.pause();
+      // Don't change isPlaying state - keep the UI showing "pause" button
+    }
+  };
+
+  const handleSeekEnd = () => {
+    console.log('🎵 Seek ended - resuming audio if it was playing');
+    setIsSeeking(false);
+    if (playerRef.current && isPlaying) {
+      const audio = playerRef.current as HTMLAudioElement;
+      audio.play().catch(err => console.error('❌ Auto-play after seek failed:', err));
+      // isPlaying state is already true, so UI stays in "pause" mode
     }
   };
 
@@ -340,7 +358,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             max={duration || 0}
             value={currentTime}
             onChange={handleSeek}
-            className="progress-bar"
+            onMouseDown={handleSeekStart}
+            onMouseUp={handleSeekEnd}
+            onTouchStart={handleSeekStart}
+            onTouchEnd={handleSeekEnd}
+            className={`progress-bar ${isSeeking ? 'seeking' : ''}`}
           />
         </div>
 
