@@ -321,10 +321,12 @@ async function toggleShowExpansion(showId) {
         renderShowsTable();
     } else {
         expandedShows.add(showId);
-        // First render the table to create the container
+        // Re-render the table to create all track containers
         renderShowsTable();
-        // Then load tracks for this show
-        await loadShowTracks(showId);
+        // Load tracks for all expanded shows
+        for (const expandedShowId of expandedShows) {
+            await loadShowTracks(expandedShowId);
+        }
     }
 }
 
