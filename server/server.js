@@ -84,11 +84,21 @@ app.get("/javascript-test", (req, res) => {
 app.use("/api/shows", require("./routes/shows"));
 app.use("/api/upload", require("./routes/upload"));
 
+// Handle OPTIONS preflight for audio files
+app.options("/api/audio/:filename", (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.sendStatus(200);
+});
+
 // Audio proxy route for R2 files
 app.get("/api/audio/:filename", async (req, res) => {
   const { filename } = req.params;
   
-  // Add CORS headers for audio files
+  // Add CORS headers for audio files - MUST be set before any response
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Range');
@@ -106,10 +116,6 @@ app.get("/api/audio/:filename", async (req, res) => {
     
     const response = await cloudStorage.s3Client.send(command);
     
-    // Set appropriate headers
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Accept-Ranges', 'bytes');
-    
     // Handle range requests for audio streaming
     const range = req.headers.range;
     if (range && response.ContentLength) {
@@ -118,17 +124,27 @@ app.get("/api/audio/:filename", async (req, res) => {
       const end = parts[1] ? parseInt(parts[1], 10) : response.ContentLength - 1;
       const chunksize = (end - start) + 1;
       
+      // Set headers for partial content
       res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${response.ContentLength}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
-        'Content-Type': 'audio/mpeg'
+        'Content-Type': 'audio/mpeg',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Range',
+        'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges'
       });
     } else {
+      // Set headers for full content
       res.writeHead(200, {
         'Content-Length': response.ContentLength,
         'Content-Type': 'audio/mpeg',
-        'Accept-Ranges': 'bytes'
+        'Accept-Ranges': 'bytes',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Range',
+        'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges'
       });
     }
     
