@@ -96,12 +96,47 @@ app.get("/api/audio/:filename", async (req, res) => {
   
   try {
     const cloudStorage = require('./services/cloudStorage');
-    const signedUrl = await cloudStorage.getSignedUrl(`uploads/${filename}`);
     
-    // Redirect to the signed URL
-    res.redirect(signedUrl);
+    // Get the file stream from R2
+    const { GetObjectCommand } = require('@aws-sdk/client-s3');
+    const command = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `uploads/${filename}`,
+    });
+    
+    const response = await cloudStorage.s3Client.send(command);
+    
+    // Set appropriate headers
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Accept-Ranges', 'bytes');
+    
+    // Handle range requests for audio streaming
+    const range = req.headers.range;
+    if (range && response.ContentLength) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : response.ContentLength - 1;
+      const chunksize = (end - start) + 1;
+      
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${response.ContentLength}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'audio/mpeg'
+      });
+    } else {
+      res.writeHead(200, {
+        'Content-Length': response.ContentLength,
+        'Content-Type': 'audio/mpeg',
+        'Accept-Ranges': 'bytes'
+      });
+    }
+    
+    // Pipe the audio stream to the response
+    response.Body.pipe(res);
+    
   } catch (error) {
-    console.error('Error generating signed URL for audio file:', error);
+    console.error('Error streaming audio file:', error);
     res.status(404).json({ error: "Audio file not found" });
   }
 });
