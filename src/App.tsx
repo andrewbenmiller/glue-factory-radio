@@ -106,7 +106,7 @@ function App() {
       <AudioPlayer
         shows={shows}
         currentShowIndex={validShowIndex}
-        currentTrackIndex={0}
+        currentTrackIndex={currentTrackIndex}
         onShowChange={handleShowChange}
         onTrackChange={handleTrackChange}
         autoPlay={autoPlay}
