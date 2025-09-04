@@ -237,6 +237,24 @@ router.delete('/:id', (req, res) => {
   });
 });
 
+// POST restore show (soft restore)
+router.post('/:id/restore', (req, res) => {
+  const { id } = req.params;
+  
+  db.run('UPDATE shows SET is_active = true WHERE id = ?', [id], function(err) {
+    if (err) {
+      console.error('Error restoring show:', err);
+      return res.status(500).json({ error: 'Failed to restore show' });
+    }
+    
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Show not found' });
+    }
+    
+    res.json({ message: 'Show restored successfully' });
+  });
+});
+
 // POST increment play count for a track
 router.post('/:showId/tracks/:trackId/play', (req, res) => {
   const { showId, trackId } = req.params;

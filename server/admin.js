@@ -266,9 +266,14 @@ function renderShowsTable() {
                                     <button class="btn-toggle" data-action="toggle">
                                         ${show.is_active ? '⏸️ Pause' : '▶️ Activate'}
                                     </button>
-                                    <button class="btn-delete" data-action="delete">
-                                        🗑️ Delete
-                                    </button>
+                                    ${show.is_active ? 
+                                        `<button class="btn-delete" data-action="delete">
+                                            🗑️ Delete
+                                        </button>` :
+                                        `<button class="btn-restore" data-action="restore">
+                                            🔄 Restore
+                                        </button>`
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -452,6 +457,10 @@ function setupEventDelegation() {
                 const showTitle = actionButtons.dataset.showTitle;
                 deleteShow(showId, showTitle);
                 break;
+            case 'restore':
+                console.log('🔄 Restore show case executed');
+                restoreShow(showId);
+                break;
             case 'add-track':
                 console.log('➕ Add track case executed');
                 addTrackToShow(showId);
@@ -630,6 +639,28 @@ async function confirmDelete() {
     } catch (error) {
         console.error('Delete error:', error);
         showStatus(`❌ Delete failed: ${error.message}`, 'error');
+    }
+}
+
+// Restore Show
+async function restoreShow(showId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/shows/${showId}/restore`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Restore failed: ${response.status}`);
+        }
+
+        showStatus('✅ Show restored successfully', 'success');
+        expandedShows.clear(); // Clear all expanded shows
+        loadShows();
+        loadStats();
+        
+    } catch (error) {
+        console.error('Restore error:', error);
+        showStatus(`❌ Restore failed: ${error.message}`, 'error');
     }
 }
 
