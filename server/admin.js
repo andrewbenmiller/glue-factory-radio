@@ -526,6 +526,11 @@ async function deleteTrack(showId, trackId, trackTitle) {
             loadShows();
             loadStats();
             
+            // Refresh the tracks section for the specific show
+            if (expandedShows.has(showId)) {
+                await loadShowTracks(showId);
+            }
+            
         } catch (error) {
             console.error('Delete track error:', error);
             showStatus(`❌ Track delete failed: ${error.message}`, 'error');
