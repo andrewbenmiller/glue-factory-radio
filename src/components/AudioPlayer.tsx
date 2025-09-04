@@ -32,6 +32,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   
   const playerRef = useRef<any>(null);
   const currentShow = shows[currentShowIndex];
+  
+  console.log('🎵 Current show:', currentShow);
+  console.log('🎵 Current show tracks:', currentShow?.tracks);
+  console.log('🎵 Current track:', currentShow?.tracks?.[currentTrackIndex]);
 
   // Handle show completion and auto-play
   useEffect(() => {
@@ -319,11 +323,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               ref={playerRef}
               src={(() => {
                 const audioUrl = currentShow?.tracks?.[currentTrackIndex]?.url ? 
-                  `https://glue-factory-radio-production.up.railway.app${currentShow.tracks[currentTrackIndex].url}` : '';
+                  `https://glue-factory-radio-production.up.railway.app/api${currentShow.tracks[currentTrackIndex].url}` : '';
                 console.log('🎵 Audio URL constructed:', audioUrl);
                 console.log('🎵 Current show:', currentShow?.title);
                 console.log('🎵 Current track:', currentShow?.tracks?.[currentTrackIndex]?.title);
                 console.log('🎵 Track URL from backend:', currentShow?.tracks?.[currentTrackIndex]?.url);
+                console.log('🎵 Audio element being rendered with src:', audioUrl);
                 return audioUrl;
               })()}
               preload="metadata"
@@ -360,11 +365,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               }}
               style={{ 
                 position: 'absolute',
-                left: '-9999px',
-                width: '1px',
-                height: '1px',
-                opacity: 0,
-                pointerEvents: 'none'
+                left: '10px',
+                top: '10px',
+                width: '200px',
+                height: '50px',
+                opacity: 0.8,
+                pointerEvents: 'auto'
               }}
             />
           </>
@@ -434,6 +440,34 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? '⏸' : '▶️'}
+          </button>
+
+          <button 
+            className="control-btn test-btn" 
+            onClick={() => {
+              console.log('🧪 Testing audio element...');
+              if (playerRef.current) {
+                const audio = playerRef.current as HTMLAudioElement;
+                console.log('🎵 Audio element found:', audio);
+                console.log('🎵 Audio src:', audio.src);
+                console.log('🎵 Audio readyState:', audio.readyState);
+                console.log('🎵 Audio networkState:', audio.networkState);
+                
+                // Try to play
+                audio.play().then(() => {
+                  console.log('✅ Audio play successful!');
+                  setIsPlaying(true);
+                }).catch(err => {
+                  console.error('❌ Audio play failed:', err);
+                  setIsPlaying(false);
+                });
+              } else {
+                console.error('❌ No audio element found!');
+              }
+            }}
+            title="Test Audio"
+          >
+            🧪
           </button>
 
           <button 
