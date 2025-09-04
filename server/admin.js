@@ -319,6 +319,10 @@ async function toggleShowExpansion(showId) {
         expandedShows.delete(showId);
         // Re-render the table to remove the tracks section
         renderShowsTable();
+        // Load tracks for any remaining expanded shows
+        for (const expandedShowId of expandedShows) {
+            await loadShowTracks(expandedShowId);
+        }
     } else {
         expandedShows.add(showId);
         // Re-render the table to create all track containers
