@@ -31,7 +31,7 @@ router.get('/admin', (req, res) => {
           created_date: row.created_date,
           is_active: row.is_active,
           total_duration: row.total_duration,
-          total_tracks: row.total_tracks,
+          total_tracks: 0, // Will be calculated from actual tracks
           tracks: []
         });
       }
@@ -52,6 +52,12 @@ router.get('/admin', (req, res) => {
           url: `/audio/${row.filename}`
         });
       }
+    });
+    
+    // Calculate actual track counts and total duration
+    showsMap.forEach((show, showId) => {
+      show.total_tracks = show.tracks.length;
+      show.total_duration = show.tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
     });
     
     res.json(Array.from(showsMap.values()));
@@ -85,8 +91,8 @@ router.get('/', (req, res) => {
           description: row.description,
           created_date: row.created_date,
           is_active: row.is_active,
-          total_duration: row.total_duration,
-          total_tracks: row.total_tracks,
+          total_duration: 0, // Will be calculated from actual tracks
+          total_tracks: 0, // Will be calculated from actual tracks
           tracks: []
         });
       }
@@ -107,6 +113,12 @@ router.get('/', (req, res) => {
           url: `/audio/${row.filename}`
         });
       }
+    });
+    
+    // Calculate actual track counts and total duration
+    showsMap.forEach((show, showId) => {
+      show.total_tracks = show.tracks.length;
+      show.total_duration = show.tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
     });
     
     res.json(Array.from(showsMap.values()));
