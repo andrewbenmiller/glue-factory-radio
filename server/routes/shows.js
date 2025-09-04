@@ -49,7 +49,7 @@ router.get('/admin', (req, res) => {
           is_active: row.track_active,
           play_count: row.play_count,
           last_played: row.last_played,
-          url: `/uploads/${row.filename}`
+          url: `/audio/${row.filename}`
         });
       }
     });
@@ -104,7 +104,7 @@ router.get('/', (req, res) => {
           is_active: row.track_active,
           play_count: row.play_count,
           last_played: row.last_played,
-          url: `/uploads/${row.filename}`
+          url: `/audio/${row.filename}`
         });
       }
     });
@@ -142,7 +142,7 @@ router.get('/:id', (req, res) => {
       // Add URLs to tracks
       const tracksWithUrls = tracks.map(track => ({
         ...track,
-        url: `/uploads/${track.filename}`
+        url: `/audio/${track.filename}`
       }));
       
       const showWithTracks = {
@@ -285,9 +285,8 @@ router.options('/audio/:filename', (req, res) => {
 });
 
 // GET audio file proxy (serves audio files with proper CORS)
-router.get('/audio/:filename', (req, res) => {
+router.get('/audio/:filename', async (req, res) => {
   const { filename } = req.params;
-  const filePath = path.join(__dirname, '..', 'uploads', filename);
   
   // Add CORS headers for audio files
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'http://localhost:3000');
@@ -295,36 +294,14 @@ router.get('/audio/:filename', (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Range');
   res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
   
-  if (fs.existsSync(filePath)) {
-    const stat = fs.statSync(filePath);
-    const fileSize = stat.size;
-    const range = req.headers.range;
+  try {
+    const cloudStorage = require('../services/cloudStorage');
+    const signedUrl = await cloudStorage.getSignedUrl(`uploads/${filename}`);
     
-    if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      const chunksize = (end - start) + 1;
-      const file = fs.createReadStream(filePath, { start, end });
-      
-      res.writeHead(206, {
-        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': chunksize,
-        'Content-Type': 'audio/mpeg'
-      });
-      
-      file.pipe(res);
-    } else {
-      res.writeHead(200, {
-        'Content-Length': fileSize,
-        'Content-Type': 'audio/mpeg',
-        'Accept-Ranges': 'bytes'
-      });
-      
-      fs.createReadStream(filePath).pipe(res);
-    }
-  } else {
+    // Redirect to the signed URL
+    res.redirect(signedUrl);
+  } catch (error) {
+    console.error('Error generating signed URL for audio file:', error);
     res.status(404).json({ error: "Audio file not found" });
   }
 });
