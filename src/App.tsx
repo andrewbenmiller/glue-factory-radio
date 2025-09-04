@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import AudioPlayer from './components/AudioPlayer';
+import AudioPlayer, { Track } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import { apiService, Show } from './services/api';
 import logo from './logo.png'; // Import the PNG logo
@@ -100,6 +100,17 @@ function App() {
   // Ensure indices are valid
   const validShowIndex = Math.min(Math.max(0, currentShowIndex), shows.length - 1);
   
+  // Convert show tracks to EpisodePlayer format
+  const convertShowToTracks = (show: Show): Track[] => {
+    return show.tracks.map(track => ({
+      src: `https://glue-factory-radio-production.up.railway.app/api${track.url}`,
+      title: track.title
+    }));
+  };
+
+  // Get tracks for current show
+  const currentTracks = shows[validShowIndex] ? convertShowToTracks(shows[validShowIndex]) : [];
+  
   console.log('🎵 App: Final values - validShowIndex:', validShowIndex);
   
   return (
@@ -114,13 +125,8 @@ function App() {
       
       <main className="App-main">
         <AudioPlayer
-          shows={shows}
-          currentShowIndex={validShowIndex}
-          currentTrackIndex={currentTrackIndex}
-          onShowChange={handleShowChange}
-          onTrackChange={handleTrackChange}
-          autoPlay={autoPlay}
-          onAutoPlayToggle={handleAutoPlayToggle}
+          tracks={currentTracks}
+          initialIndex={currentTrackIndex}
         />
         
         <ShowList
