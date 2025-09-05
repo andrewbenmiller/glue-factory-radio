@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Howl } from "howler";
+import { Howl, Howler } from "howler";
 import './AudioPlayer.css';
 
 export type Track = { src: string; title?: string };
@@ -38,66 +38,65 @@ export default function EpisodeCDPlayer({
 
   // RAF for smooth progress updates
   const rafId = useRef<number | null>(null);
+  const playGenRef = useRef<number>(0); // generation token to guard async events
 
   const current = () => howlsRef.current[index];
 
   // Build/teardown Howl objects when tracks change
   useEffect(() => {
+    // hard stop any prior audio, reset UI state
+    Howler.stop();
+              setIsPlaying(false);
+
     // cleanup old
     howlsRef.current.forEach((h) => {
       try {
         h.unload();
       } catch {}
     });
-    howlsRef.current = tracks.map((t, i) => {
-      return new Howl({
+
+    // init howls (bind events to keep isPlaying in sync)
+    howlsRef.current = tracks.map((t, i) =>
+      new Howl({
         src: [t.src],
-        html5: true, // good for longer files and accurate eventing
+        html5: true,
         preload: true,
-        onload: () => {
-          if (i === index) setDur(Math.max(howlsRef.current[i].duration() || 0, 0));
-        },
-        onend: () => {
-          if (i === index) handleNext();
-        },
         onplay: () => {
-          if (i === index) {
-            setIsPlaying(true);
-            startRaf();
-          }
+        setIsPlaying(true);
+          startRaf();
         },
         onpause: () => {
-          if (i === index) {
-            setIsPlaying(false);
-            stopRaf();
-            syncTimes();
-          }
+          setIsPlaying(false);
+          stopRaf();
         },
         onstop: () => {
-          if (i === index) {
-            setIsPlaying(false);
-            stopRaf();
-            syncTimes();
+          setIsPlaying(false);
+          stopRaf();
+        },
+        onend: () => {
+          // momentarily not playing; next() will flip it back on play
+        setIsPlaying(false);
+          // Auto-advance to next track
+          stopAll();
+          const nxt = (i + 1) % howlsRef.current.length;
+          const h = howlsRef.current[nxt];
+          if (h) {
+            if (h.state() !== "loaded") {
+              h.once("load", () => { h.seek(0); h.play(); });
+              h.load();
+            } else {
+              h.seek(0);
+              h.play();
+            }
           }
         },
-      });
-    });
-
-    // initial duration (if metadata is ready)
-    setTimeout(() => {
-      const h = current();
-      setDur(h?.duration() || 0);
-      setCurTime((h?.seek() as number) || 0);
-    }, 0);
-
+      })
+    );
     return () => {
+      Howler.stop();
+      setIsPlaying(false);
+      howlsRef.current.forEach((h) => h.unload());
       stopRaf();
-      howlsRef.current.forEach((h) => {
-        try {
-          h.unload();
-        } catch {}
-      });
-      howlsRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.map((t) => t.src).join("|")]);
@@ -135,37 +134,86 @@ export default function EpisodeCDPlayer({
     setDur(h?.duration() || 0);
   }
 
+  // Tokenized end handler to prevent stale callbacks
+  const handleTrackEnd = (endedIdx: number, genAtRegistration: number) => {
+    if (endedIdx !== index) return;
+    if (genAtRegistration !== playGenRef.current) return; // stale callback => ignore
+    // Auto-advance to next track
+    Howler.stop();
+    const nxt = (index + 1) % howlsRef.current.length;
+    play(nxt);
+  };
+
+  // Rock-solid play function
+  const play = (i = index) => {
+    if (!howlsRef.current.length) return;
+    stopAll();
+    if (i !== index) setIndex(i);
+    const h = howlsRef.current[i];
+    if (!h) return;
+    if (h.state() !== "loaded") {
+      h.once("load", () => { h.seek(0); h.play(); }); // onplay will set isPlaying
+      h.load();
+    } else {
+      h.seek(0);
+      h.play();
+    }
+  };
+
+  // Global stop to prevent rogue tracks
+  const stopAll = () => {
+    Howler.stop();          // guarantees no stragglers
+    setIsPlaying(false);    // reflect UI state
+    stopRaf();
+    syncTimes();
+  };
+
   // Controls (CD-mode: no scrubbing)
   function handlePlayPause() {
     const h = current();
     if (!h) return;
     if (h.playing()) {
-      h.pause();
+      h.pause(); // onpause will set isPlaying false
     } else {
-      h.play();
+      stopAll();     // sets isPlaying=false
+      h.seek(0);
+      h.play();      // onplay -> isPlaying=true
     }
   }
 
   function handleNext() {
-    const old = current();
-    if (old?.playing()) old.stop();
-    setIndex((i) => {
-      const next = (i + 1) % Math.max(howlsRef.current.length, 1);
-      setTimeout(() => howlsRef.current[next]?.play(), 0);
-      return next;
+    stopAll();
+    setIndex((prev) => {
+      const nxt = (prev + 1) % howlsRef.current.length;
+      const h = howlsRef.current[nxt];
+      if (h) {
+        if (h.state() !== "loaded") {
+          h.once("load", () => { h.seek(0); h.play(); });
+          h.load();
+        } else {
+          h.seek(0);
+          h.play();
+        }
+      }
+      return nxt;
     });
   }
 
   function handlePrev() {
-    const old = current();
-    if (old?.playing()) old.stop();
-    setIndex((i) => {
-      const prev = (i - 1 + Math.max(howlsRef.current.length, 1)) % Math.max(
-        howlsRef.current.length,
-        1
-      );
-      setTimeout(() => howlsRef.current[prev]?.play(), 0);
-      return prev;
+    stopAll();
+    setIndex((prev) => {
+      const prv = (prev - 1 + howlsRef.current.length) % howlsRef.current.length;
+      const h = howlsRef.current[prv];
+      if (h) {
+        if (h.state() !== "loaded") {
+          h.once("load", () => { h.seek(0); h.play(); });
+          h.load();
+        } else {
+          h.seek(0);
+          h.play();
+        }
+      }
+      return prv;
     });
   }
 
@@ -203,66 +251,41 @@ export default function EpisodeCDPlayer({
         </div>
       </div>
 
-      <div className="progress-container">
-        <div className="time-display">
-          <span>{formatTime(curTime)}</span>
-          <span>{formatTime(dur)}</span>
+        <div className="progress-container">
+          <div className="time-display">
+          <span>{formatTime(curTime)} / {formatTime(dur)}</span>
+          </div>
         </div>
-        
-        {/* Non-draggable timeline (display only) */}
-        <div className="timeline">
-          <div
-            className="progress"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
 
-      <div className="controls">
-        <button 
-          className="control-btn skip-btn" 
+        <div className="controls">
+          <button 
+            className="control-btn skip-btn" 
           onClick={handlePrev}
-          title="Previous Track"
-        >
-          ⏮
-        </button>
-        
-        <button 
-          className="control-btn skip-btn" 
-          onClick={handleSkipBack}
-          title={`Back ${skipSeconds}s`}
-        >
-          -{skipSeconds}s
-        </button>
+            title="Previous Track"
+          >
+            ⏮
+          </button>
 
-        <button 
-          className="control-btn play-btn" 
+          <button 
+            className="control-btn play-btn" 
           onClick={handlePlayPause}
-          title={isPlaying ? "Pause" : "Play"}
-        >
-          {isPlaying ? '⏸' : '▶️'}
-        </button>
+            title={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? '⏸' : '▶️'}
+          </button>
 
-        <button 
-          className="control-btn skip-btn" 
-          onClick={handleSkipForward}
-          title={`Forward ${skipSeconds}s`}
-        >
-          +{skipSeconds}s
-        </button>
-
-        <button 
-          className="control-btn skip-btn" 
+          <button 
+            className="control-btn skip-btn" 
           onClick={handleNext}
-          title="Next Track"
-        >
-          ⏭
-        </button>
-      </div>
+            title="Next Track"
+          >
+            ⏭
+          </button>
+        </div>
 
       <div className="mt-3 text-xs text-neutral-500">
         <div>Tracks: {tracks.length}</div>
-        <div>CD Mode: No manual scrubbing. Use ±{skipSeconds}s or Next/Prev.</div>
+        <div>CD Mode: Simple controls only.</div>
       </div>
     </div>
   );
