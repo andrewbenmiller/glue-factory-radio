@@ -11,7 +11,6 @@ interface ShowListProps {
 
 const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSelect, onTrackSelect }) => {
   const [expandedShows, setExpandedShows] = useState<Set<number>>(new Set());
-
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);

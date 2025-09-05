@@ -49,8 +49,12 @@ function App() {
     console.log('🎵 App: Track selected - Show:', showIndex, 'Track:', trackIndex);
     console.log('🎵 App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
     
-    // Update both show and track indices
-    setCurrentShowIndex(showIndex);
+    // Only update show index if it's different from current show
+    if (showIndex !== currentShowIndex) {
+      setCurrentShowIndex(showIndex);
+    }
+    
+    // Always update track index
     setCurrentTrackIndex(trackIndex);
     
     console.log('🎵 App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);

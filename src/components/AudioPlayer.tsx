@@ -107,7 +107,28 @@ export default function EpisodeCDPlayer({
   useEffect(() => {
     const newIndex = Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0));
     if (newIndex !== index) {
+      console.log('🎵 AudioPlayer: initialIndex changed, updating to track:', newIndex);
+      // Stop any current audio first
+      stopAll();
       setIndex(newIndex);
+      // Auto-play the selected track after a brief delay to ensure state is updated
+        setTimeout(() => {
+        if (howlsRef.current.length > 0 && howlsRef.current[newIndex]) {
+          console.log('🎵 AudioPlayer: Auto-playing selected track:', newIndex);
+          const h = howlsRef.current[newIndex];
+          if (!h) return;
+          if (h.state() !== "loaded") {
+            h.once("load", () => { 
+              h.seek(0); 
+              h.play(); 
+            });
+            h.load();
+          } else {
+            h.seek(0);
+            h.play();
+          }
+        }
+      }, 100); // Delay to ensure all state updates are complete
     }
   }, [initialIndex, tracks.length, index]);
 
