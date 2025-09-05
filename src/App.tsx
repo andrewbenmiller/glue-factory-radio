@@ -49,10 +49,11 @@ function App() {
     console.log('🎵 App: Track selected - Show:', showIndex, 'Track:', trackIndex);
     console.log('🎵 App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
     
-    // Update the track index
+    // Update both show and track indices
+    setCurrentShowIndex(showIndex);
     setCurrentTrackIndex(trackIndex);
     
-    console.log('🎵 App: Updated currentTrackIndex to:', trackIndex);
+    console.log('🎵 App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);
   };
   
   // Handle track navigation from AudioPlayer
@@ -127,6 +128,7 @@ function App() {
         <AudioPlayer
           tracks={currentTracks}
           initialIndex={currentTrackIndex}
+          showName={shows[validShowIndex]?.title || "CD Mode"}
         />
         
         <ShowList

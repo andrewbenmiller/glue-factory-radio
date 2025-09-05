@@ -157,6 +157,31 @@
   transform: scale(0.95);
 }
 
+.dropdown-button {
+  background: black;
+  color: white;
+  border: 1px solid black;
+  border-radius: 0;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dropdown-button:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: none;
+}
+
+.dropdown-button:active {
+  transform: scale(0.95);
+}
+
 /* Tracks Dropdown Styles */
 .tracks-dropdown {
   margin-top: 15px;

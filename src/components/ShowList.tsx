@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ShowList.css';
 import { Show } from '../services/api';
 
@@ -10,6 +10,8 @@ interface ShowListProps {
 }
 
 const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSelect, onTrackSelect }) => {
+  const [expandedShows, setExpandedShows] = useState<Set<number>>(new Set());
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -19,6 +21,24 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Unknown date';
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const toggleShowExpansion = (showIndex: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent show selection when clicking dropdown
+    setExpandedShows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(showIndex)) {
+        newSet.delete(showIndex);
+      } else {
+        newSet.add(showIndex);
+      }
+      return newSet;
+    });
+  };
+
+  const handleTrackClick = (showIndex: number, trackIndex: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent show selection when clicking track
+    onTrackSelect(showIndex, trackIndex);
   };
 
   return (
@@ -35,6 +55,13 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
               <h4 className="show-item-title">{show.title}</h4>
               <div className="show-item-controls">
                 <span className="show-item-duration">{formatDuration(show.total_duration)}</span>
+                <button 
+                  className="dropdown-button"
+                  onClick={(e) => toggleShowExpansion(index, e)}
+                  title={expandedShows.has(index) ? "Hide tracks" : "Show tracks"}
+                >
+                  {expandedShows.has(index) ? '▼' : '▶'}
+                </button>
               </div>
             </div>
             {show.description && (
@@ -45,6 +72,30 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
               <span className="show-item-number">#{index + 1}</span>
               <span className="show-item-tracks">🎵 {show.total_tracks} tracks</span>
             </div>
+            
+            {/* Track listing dropdown */}
+            {expandedShows.has(index) && (
+              <div className="tracks-dropdown">
+                <div className="tracks-header">
+                  <h5>🎵 Tracks in this Show</h5>
+                </div>
+                <div className="tracks-list">
+                  {show.tracks.map((track, trackIndex) => (
+                    <div
+                      key={track.id}
+                      className="track-item"
+                      onClick={(e) => handleTrackClick(index, trackIndex, e)}
+                    >
+                      <div className="track-info">
+                        <span className="track-number">{trackIndex + 1}</span>
+                        <span className="track-title">{track.title}</span>
+                        <span className="track-duration">{formatDuration(track.duration)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

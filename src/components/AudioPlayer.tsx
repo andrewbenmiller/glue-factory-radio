@@ -10,6 +10,7 @@ type Props = {
   className?: string;
   // Skip amount for +/- controls (seconds)
   skipSeconds?: number;
+  showName?: string;
 };
 
 function formatTime(sec: number) {
@@ -24,6 +25,7 @@ export default function EpisodeCDPlayer({
   initialIndex = 0,
   className = "",
   skipSeconds = 10,
+  showName = "CD Mode",
 }: Props) {
   // Howler instances, one per track
   const howlsRef = useRef<Howl[]>([]);
@@ -100,6 +102,14 @@ export default function EpisodeCDPlayer({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.map((t) => t.src).join("|")]);
+
+  // When initialIndex changes (from external track selection), update our index
+  useEffect(() => {
+    const newIndex = Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0));
+    if (newIndex !== index) {
+      setIndex(newIndex);
+    }
+  }, [initialIndex, tracks.length, index]);
 
   // When index changes, sync duration/time and play state
   useEffect(() => {
@@ -241,13 +251,12 @@ export default function EpisodeCDPlayer({
     <div className={`audio-player ${className}`}>
       <div className="player-info">
         <div className="show-info">
-          <h3>CD Mode</h3>
+          <h3>{showName}</h3>
           <p>Track {index + 1} of {tracks.length}</p>
         </div>
         
-        <div className="track-info">
-          <h4>{title}</h4>
-          <p>Track {index + 1}</p>
+        <div className="track-info" style={{ textAlign: 'center' }}>
+          <h4 className="track-title" style={{ textAlign: 'center' }}>{title}</h4>
         </div>
       </div>
 
@@ -271,7 +280,7 @@ export default function EpisodeCDPlayer({
           onClick={handlePlayPause}
             title={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? '⏸' : '▶️'}
+            {isPlaying ? '⏸' : '▶'}
           </button>
 
           <button 
@@ -282,11 +291,6 @@ export default function EpisodeCDPlayer({
             ⏭
           </button>
         </div>
-
-      <div className="mt-3 text-xs text-neutral-500">
-        <div>Tracks: {tracks.length}</div>
-        <div>CD Mode: Simple controls only.</div>
-      </div>
     </div>
   );
 }
