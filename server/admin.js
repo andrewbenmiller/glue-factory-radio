@@ -117,6 +117,7 @@ function setupUploadForm() {
 // Add Track Form
 function setupAddTrackForm() {
     const form = document.getElementById('addTrackForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
     
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -143,6 +144,12 @@ function setupAddTrackForm() {
         if (!audioFile || audioFile.size === 0) {
             showStatus('Please select an audio file', 'error');
             return;
+        }
+
+        // prevent double submit
+        if (submitBtn) { 
+            submitBtn.disabled = true; 
+            submitBtn.textContent = 'Uploading...'; 
         }
 
         try {
@@ -172,15 +179,31 @@ function setupAddTrackForm() {
             form.reset();
             closeAddTrackModal();
             
-            // Refresh shows list
-            loadShows();
-            loadStats();
+            // Refresh and refill expanded rows so the spinner disappears
+            await loadShows();
+            await loadStats();
+            const showIdNum = Number(formData.get('showId'));
+            if (expandedShows.has(showIdNum)) {
+                await loadShowTracks(showIdNum);
+            }
             
         } catch (error) {
             console.error('Track upload error:', error);
             showStatus(`❌ Track upload failed: ${error.message}`, 'error');
+        } finally {
+            if (submitBtn) { 
+                submitBtn.disabled = false; 
+                submitBtn.textContent = 'Add Track'; 
+            }
         }
     });
+}
+
+// Helper: load tracks for all expanded shows
+async function loadAllExpandedTracks() {
+    for (const expandedShowId of expandedShows) {
+        await loadShowTracks(expandedShowId);
+    }
 }
 
 // Load Shows
@@ -202,6 +225,8 @@ async function loadShows() {
 
         shows = await response.json();
         renderShowsTable();
+        // critical: fill in the "Loading tracks…" placeholders we just rendered
+        await loadAllExpandedTracks();
         
     } catch (error) {
         console.error('Error loading shows:', error);
@@ -426,27 +451,26 @@ function setupEventDelegation() {
         const button = e.target.closest('button');
         if (!button) return;
 
-
-
         const action = button.dataset.action;
         if (!action) return;
 
-        // Handle buttons that are directly in the tracks section (like Add Track)
+        // Actions that live outside .action-buttons (e.g., add-track in header, retry-tracks in error state)
         if (action === 'add-track') {
-            const showId = parseInt(button.dataset.showId);
-    
+            const showId = Number(button.dataset.showId);
             addTrackToShow(showId);
+            return;
+        }
+        if (action === 'retry-tracks') {
+            const showId = Number(button.dataset.showId);
+            loadShowTracks(showId);
             return;
         }
 
         // Handle buttons that are in action-buttons containers
         const actionButtons = button.closest('.action-buttons');
-        if (!actionButtons) {
-    
-            return;
-        }
+        if (!actionButtons) return;
 
-        const showId = parseInt(actionButtons.dataset.showId);
+        const showId = Number(actionButtons.dataset.showId);
         
 
 
@@ -613,7 +637,7 @@ async function toggleShowStatus(showId, currentStatus) {
         
         // Clear expanded shows to prevent spinning wheel issues
         expandedShows.clear();
-        loadShows();
+        await loadShows();
         
     } catch (error) {
         console.error('Toggle error:', error);
@@ -650,8 +674,8 @@ async function confirmDelete() {
         showStatus('✅ Show and all tracks permanently deleted from database and storage', 'success');
         closeDeleteModal();
         expandedShows.clear(); // Clear all expanded shows
-        loadShows();
-        loadStats();
+        await loadShows();
+        await loadStats();
         
     } catch (error) {
         console.error('Delete error:', error);
@@ -672,8 +696,9 @@ async function restoreShow(showId) {
 
         showStatus('✅ Show restored successfully', 'success');
         expandedShows.clear(); // Clear all expanded shows
-        loadShows();
-        loadStats();
+        await loadShows();
+        await loadStats();
+        // if you ever stop clearing expandedShows, also do: await loadAllExpandedTracks();
         
     } catch (error) {
         console.error('Restore error:', error);
