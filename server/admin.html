@@ -513,12 +513,18 @@
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete "<span id="deleteShowTitle"></span>"?</p>
-            <p><strong>This will also delete all associated tracks!</strong></p>
+            <h3>⚠️ PERMANENT DELETE</h3>
+            <p>Are you sure you want to permanently delete "<span id="deleteShowTitle"></span>"?</p>
+            <p><strong>⚠️ WARNING: This will:</strong></p>
+            <ul>
+                <li>Remove the show from the database</li>
+                <li>Delete ALL associated tracks from the database</li>
+                <li>Delete ALL audio files from storage</li>
+                <li><strong>This action cannot be undone!</strong></li>
+            </ul>
             <div class="modal-buttons">
                 <button type="button" class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-                <button type="button" class="btn-confirm" onclick="confirmDelete()">Delete Show</button>
+                <button type="button" class="btn-confirm" onclick="confirmDelete()">🗑️ PERMANENTLY DELETE</button>
             </div>
         </div>
     </div>

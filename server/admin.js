@@ -520,7 +520,7 @@ function closeAddTrackModal() {
 
 // Delete Track
 async function deleteTrack(showId, trackId, trackTitle) {
-    if (confirm(`Are you sure you want to delete track "${trackTitle}"?`)) {
+    if (confirm(`⚠️ PERMANENT DELETE: Are you sure you want to permanently delete track "${trackTitle}"?\n\nThis will remove the track from the database AND delete the audio file from storage. This action cannot be undone.`)) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/shows/${showId}/tracks/${trackId}`, {
                 method: 'DELETE'
@@ -530,7 +530,7 @@ async function deleteTrack(showId, trackId, trackTitle) {
                 throw new Error(`Delete failed: ${response.status}`);
             }
 
-            showStatus('✅ Track deleted successfully', 'success');
+            showStatus('✅ Track permanently deleted from database and storage', 'success');
             
             // Refresh the tracks section for the specific show
             if (expandedShows.has(showId)) {
@@ -647,7 +647,7 @@ async function confirmDelete() {
             throw new Error(`Delete failed: ${response.status}`);
         }
 
-        showStatus('✅ Show deleted successfully', 'success');
+        showStatus('✅ Show and all tracks permanently deleted from database and storage', 'success');
         closeDeleteModal();
         expandedShows.clear(); // Clear all expanded shows
         loadShows();
