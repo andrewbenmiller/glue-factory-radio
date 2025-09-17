@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
-import AudioPlayer, { Track } from './components/AudioPlayer';
+import AudioPlayer, { Track, AudioPlayerHandle } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import { apiService, Show } from './services/api';
 import logo from './logo.png'; // Import the PNG logo
 
 function App() {
+  const playerRef = useRef<AudioPlayerHandle | null>(null);
   const [shows, setShows] = useState<Show[]>([]);
   const [currentShowIndex, setCurrentShowIndex] = useState(0);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -49,13 +50,16 @@ function App() {
     console.log('🎵 App: Track selected - Show:', showIndex, 'Track:', trackIndex);
     console.log('🎵 App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
     
-    // Only update show index if it's different from current show
-    if (showIndex !== currentShowIndex) {
-      setCurrentShowIndex(showIndex);
-    }
-    
-    // Always update track index
+    // 1) Switch show/track state so UI reflects selection
+    if (showIndex !== currentShowIndex) setCurrentShowIndex(showIndex);
     setCurrentTrackIndex(trackIndex);
+
+    // 2) MOST IMPORTANT: start playback in the same user click
+    //    This satisfies autoplay policies reliably.
+    //    We also pass the target index explicitly.
+    requestAnimationFrame(() => {
+      playerRef.current?.playFromUI(trackIndex);
+    });
     
     console.log('🎵 App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);
   };
@@ -130,6 +134,8 @@ function App() {
       
       <main className="App-main">
         <AudioPlayer
+          key={shows[validShowIndex]?.id ?? validShowIndex}  // force remount on show change
+          ref={playerRef}
           tracks={currentTracks}
           initialIndex={currentTrackIndex}
           showName={shows[validShowIndex]?.title || "CD Mode"}

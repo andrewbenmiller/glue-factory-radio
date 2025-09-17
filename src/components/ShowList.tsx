@@ -55,11 +55,11 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
               <div className="show-item-controls">
                 <span className="show-item-duration">{formatDuration(show.total_duration)}</span>
                 <button 
-                  className="dropdown-button"
+                  className={`dropdown-button ${expandedShows.has(index) ? 'rotated' : ''}`}
                   onClick={(e) => toggleShowExpansion(index, e)}
                   title={expandedShows.has(index) ? "Hide tracks" : "Show tracks"}
                 >
-                  {expandedShows.has(index) ? '▼' : '▶'}
+                  +
                 </button>
               </div>
             </div>
@@ -68,7 +68,7 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
             )}
             <div className="show-item-meta">
               <span className="show-item-date">{formatDate(show.created_date)}</span>
-              <span className="show-item-number">#{index + 1}</span>
+              <span className="show-item-number">#{shows.length - index}</span>
               <span className="show-item-tracks">🎵 {show.total_tracks} tracks</span>
             </div>
             

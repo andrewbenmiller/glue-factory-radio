@@ -78,14 +78,13 @@
 }
 
 .show-item-duration {
-  background: black;
-  color: white;
+  background: transparent;
+  color: black;
   padding: 4px 12px;
   border-radius: 0;
   font-size: 0.9rem;
   font-weight: 500;
   white-space: nowrap;
-  border: 1px solid black;
 }
 
 .show-item-description {
@@ -109,21 +108,19 @@
 }
 
 .show-item-number {
-  background: black;
-  color: white;
+  background: transparent;
+  color: black;
   padding: 2px 8px;
   border-radius: 0;
   font-weight: 500;
-  border: 1px solid black;
 }
 
 .show-item-tracks {
-  background: black;
-  color: white;
+  background: transparent;
+  color: black;
   padding: 2px 8px;
   border-radius: 0;
   font-weight: 500;
-  border: 1px solid black;
 }
 
 .show-item-controls {
@@ -133,9 +130,8 @@
 }
 
 .expand-button {
-  background: black;
-  color: white;
-  border: 1px solid black;
+  background: transparent;
+  color: black;
   border-radius: 0;
   width: 24px;
   height: 24px;
@@ -149,7 +145,7 @@
 }
 
 .expand-button:hover {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.05);
   transform: none;
 }
 
@@ -158,24 +154,28 @@
 }
 
 .dropdown-button {
-  background: black;
-  color: white;
-  border: 1px solid black;
+  background: transparent;
+  color: black;
+  border: none;
   border-radius: 0;
-  width: 24px;
-  height: 24px;
+  width: 48px;
+  height: 48px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  transition: all 0.2s ease;
+  font-size: 32px;
+  font-weight: bold;
+  transition: transform 0.3s ease;
   flex-shrink: 0;
 }
 
 .dropdown-button:hover {
-  background: rgba(0, 0, 0, 0.8);
   transform: none;
+}
+
+.dropdown-button.rotated {
+  transform: rotate(45deg);
 }
 
 .dropdown-button:active {
@@ -227,15 +227,14 @@
 }
 
 .track-number {
-  background: black;
-  color: white;
+  background: transparent;
+  color: black;
   padding: 2px 6px;
   border-radius: 0;
   font-size: 0.75rem;
   font-weight: 600;
   min-width: 20px;
   text-align: center;
-  border: 1px solid black;
 }
 
 .track-title {
@@ -246,14 +245,13 @@
 }
 
 .track-duration {
-  background: black;
-  color: white;
+  background: transparent;
+  color: black;
   padding: 2px 8px;
   border-radius: 0;
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
-  border: 1px solid black;
 }
 
 

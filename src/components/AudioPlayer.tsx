@@ -1,271 +1,204 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect, useRef, useState,
+  forwardRef, useImperativeHandle, useCallback
+} from "react";
 import { Howl, Howler } from "howler";
 import './AudioPlayer.css';
 
 export type Track = { src: string; title?: string };
 
+export type AudioPlayerHandle = {
+  playFromUI: (i?: number) => void;  // must be called in a user click
+  pause: () => void;
+};
+
 type Props = {
   tracks: Track[];
   initialIndex?: number;
   className?: string;
-  // Skip amount for +/- controls (seconds)
-  skipSeconds?: number;
   showName?: string;
 };
 
-function formatTime(sec: number) {
-  if (!isFinite(sec) || sec < 0) sec = 0;
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-export default function EpisodeCDPlayer({
-  tracks,
-  initialIndex = 0,
-  className = "",
-  skipSeconds = 10,
-  showName = "CD Mode",
-}: Props) {
-  // Howler instances, one per track
+const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode" },
+  ref
+) {
   const howlsRef = useRef<Howl[]>([]);
   const [index, setIndex] = useState(
     Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0))
   );
+
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // UI timing
-  const [curTime, setCurTime] = useState(0);
-  const [dur, setDur] = useState(0);
+  const playGenRef = useRef(0);
 
-  // RAF for smooth progress updates
-  const rafId = useRef<number | null>(null);
-  const playGenRef = useRef<number>(0); // generation token to guard async events
+  // Local helper: same as the imperative one, but callable inside the component
+  function playFromGesture(target = index) {
+    playGenRef.current += 1;
+    const token = playGenRef.current;
 
-  const current = () => howlsRef.current[index];
-
-  // Build/teardown Howl objects when tracks change
-  useEffect(() => {
-    // hard stop any prior audio, reset UI state
     Howler.stop();
-              setIsPlaying(false);
+    setIsPlaying(false);
+    if (target !== index) setIndex(target);
 
-    // cleanup old
-    howlsRef.current.forEach((h) => {
-      try {
-        h.unload();
-      } catch {}
-    });
+    const h = howlsRef.current[target];
+    if (!h) return;
 
-    // init howls (bind events to keep isPlaying in sync)
-    howlsRef.current = tracks.map((t, i) =>
-      new Howl({
-        src: [t.src],
-        html5: true,
-        preload: true,
-        onplay: () => {
-        setIsPlaying(true);
-          startRaf();
-        },
-        onpause: () => {
-          setIsPlaying(false);
-          stopRaf();
-        },
-        onstop: () => {
-          setIsPlaying(false);
-          stopRaf();
-        },
-        onend: () => {
-          // momentarily not playing; next() will flip it back on play
-        setIsPlaying(false);
-          // Auto-advance to next track
-          stopAll();
-          const nxt = (i + 1) % howlsRef.current.length;
-          const h = howlsRef.current[nxt];
-          if (h) {
-            if (h.state() !== "loaded") {
-              h.once("load", () => { h.seek(0); h.play(); });
-              h.load();
-            } else {
-              h.seek(0);
-              h.play();
-            }
-          }
-        },
-      })
-    );
+    const id = h.play();
+
+    const onReady = () => {
+      if (token !== playGenRef.current) return;
+      h.seek(0, id);
+      h.once("end", () => { if (token === playGenRef.current) next(); });
+    };
+
+    if (h.state() !== "loaded") { h.once("load", onReady); h.load(); }
+    else { onReady(); }
+
+    try { (Howler as any).ctx?.resume?.(); } catch {}
+  }
+
+  const current = useCallback(() => howlsRef.current[index], [index]);
+
+  // Build/unload Howls when tracks change
+  useEffect(() => {
+    Howler.stop();
+    setIsPlaying(false);
+    howlsRef.current.forEach((h) => { try { h.unload(); } catch {} });
+
+    howlsRef.current = tracks.map((t, i) => new Howl({
+      src: [t.src],
+      // Prefer WebAudio (html5:false) for gesture-friendly control.
+      // If you MUST use html5:true, this still works but you may see iOS differences.
+      html5: false,
+      preload: true,
+      onplay: () => { 
+        setIsPlaying(true); 
+      },
+      onpause: () => { 
+        setIsPlaying(false); 
+      },
+      onstop: () => { 
+        setIsPlaying(false); 
+      },
+    }));
+
+    const clamped = Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0));
+    setIndex(clamped);
+
     return () => {
       Howler.stop();
-      setIsPlaying(false);
-      howlsRef.current.forEach((h) => h.unload());
-      stopRaf();
+      howlsRef.current.forEach((h) => { try { h.unload(); } catch {} });
+      howlsRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.map((t) => t.src).join("|")]);
 
-  // When initialIndex changes (from external track selection), update our index
+  // If only the selected track within the same show changes,
+  // just update index (we will call playFromUI from the click).
   useEffect(() => {
     const newIndex = Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0));
-    if (newIndex !== index) {
-      console.log('🎵 AudioPlayer: initialIndex changed, updating to track:', newIndex);
-      // Stop any current audio first
-      stopAll();
+    if (newIndex !== index && tracks.length > 0) {
+      // Stop current playback
+      Howler.stop();
+      setIsPlaying(false);
+      
+      // Update index
       setIndex(newIndex);
-      // Auto-play the selected track after a brief delay to ensure state is updated
-        setTimeout(() => {
-        if (howlsRef.current.length > 0 && howlsRef.current[newIndex]) {
-          console.log('🎵 AudioPlayer: Auto-playing selected track:', newIndex);
-          const h = howlsRef.current[newIndex];
-          if (!h) return;
-          if (h.state() !== "loaded") {
-            h.once("load", () => { 
-              h.seek(0); 
-              h.play(); 
-            });
-            h.load();
-          } else {
-            h.seek(0);
-            h.play();
-          }
-        }
-      }, 100); // Delay to ensure all state updates are complete
     }
-  }, [initialIndex, tracks.length, index]);
-
-  // When index changes, sync duration/time and play state
-  useEffect(() => {
-    const h = current();
-    stopRaf();
-    setDur(h?.duration() || 0);
-    setCurTime((h?.seek() as number) || 0);
-    setIsPlaying(h?.playing() || false);
-    if (h?.playing()) startRaf();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialIndex]);
+
+  const next = useCallback(() => {
+    if (!howlsRef.current.length) return;
+    const nxt = (index + 1) % howlsRef.current.length;
+    
+    playGenRef.current += 1;
+    const token = playGenRef.current;
+    
+    // Stop all sounds first to prevent double playback
+    Howler.stop();
+    setIsPlaying(false);
+    
+    setIndex(nxt);
+    const h = howlsRef.current[nxt];
+    if (!h) return;
+    
+    const start = () => {
+      if (token !== playGenRef.current) return;
+      try { h.stop(); } catch {}
+      h.seek(0);
+      h.once("end", () => { if (token === playGenRef.current) next(); });
+      h.play();
+    };
+    if (h.state() !== "loaded") { h.once("load", start); h.load(); } else { start(); }
   }, [index]);
 
-  function startRaf() {
-    stopRaf();
-    rafId.current = requestAnimationFrame(step);
-  }
-  function stopRaf() {
-    if (rafId.current) cancelAnimationFrame(rafId.current);
-    rafId.current = null;
-  }
-  function step() {
-    const h = current();
-    if (h && h.playing()) {
-      setCurTime((h.seek() as number) || 0);
-      setDur(h.duration() || 0);
-      rafId.current = requestAnimationFrame(step);
-    }
-  }
-  function syncTimes() {
-    const h = current();
-    setCurTime((h?.seek() as number) || 0);
-    setDur(h?.duration() || 0);
-  }
+  // Imperative API: must be called in the user click handler
+  useImperativeHandle(ref, () => ({
+    playFromUI: (i?: number) => {
+      const target = typeof i === "number" ? i : index;
+      if (!howlsRef.current[target]) return;
 
-  // Tokenized end handler to prevent stale callbacks
-  const handleTrackEnd = (endedIdx: number, genAtRegistration: number) => {
-    if (endedIdx !== index) return;
-    if (genAtRegistration !== playGenRef.current) return; // stale callback => ignore
-    // Auto-advance to next track
-    Howler.stop();
-    const nxt = (index + 1) % howlsRef.current.length;
-    play(nxt);
-  };
+      playGenRef.current += 1;
+      const token = playGenRef.current;
 
-  // Rock-solid play function
-  const play = (i = index) => {
+      // Stop everything, switch index
+      Howler.stop();
+      setIsPlaying(false);
+      if (target !== index) setIndex(target);
+
+      const h = howlsRef.current[target];
+
+      // 1) Start immediately in the click (gesture)
+      const id = h.play();
+
+      // 2) When metadata is ready, snap to 0 and wire end
+      const onReady = () => {
+        if (token !== playGenRef.current) return;
+        // no stop/replay; just seek and wire 'end'
+        h.seek(0, id);
+        h.once("end", () => { if (token === playGenRef.current) next(); });
+      };
+
+      if (h.state() !== "loaded") {
+        h.once("load", onReady);
+        h.load();
+      } else {
+        onReady();
+      }
+
+      // Kick the Howler context just in case
+      try { (Howler as any).ctx?.resume?.(); } catch {}
+    },
+    pause: () => current()?.pause()
+  }), [index, current, next]);
+
+  function prev() {
     if (!howlsRef.current.length) return;
-    stopAll();
-    if (i !== index) setIndex(i);
-    const h = howlsRef.current[i];
+    const prv = (index - 1 + howlsRef.current.length) % howlsRef.current.length;
+    
+    playGenRef.current += 1;
+    const token = playGenRef.current;
+    
+    // Stop all sounds first to prevent double playback
+    Howler.stop();
+    setIsPlaying(false);
+    
+    setIndex(prv);
+    const h = howlsRef.current[prv];
     if (!h) return;
-    if (h.state() !== "loaded") {
-      h.once("load", () => { h.seek(0); h.play(); }); // onplay will set isPlaying
-      h.load();
-    } else {
+    
+    const start = () => {
+      if (token !== playGenRef.current) return;
+      try { h.stop(); } catch {}
       h.seek(0);
+      h.once("end", () => { if (token === playGenRef.current) next(); });
       h.play();
-    }
-  };
-
-  // Global stop to prevent rogue tracks
-  const stopAll = () => {
-    Howler.stop();          // guarantees no stragglers
-    setIsPlaying(false);    // reflect UI state
-    stopRaf();
-    syncTimes();
-  };
-
-  // Controls (CD-mode: no scrubbing)
-  function handlePlayPause() {
-    const h = current();
-    if (!h) return;
-    if (h.playing()) {
-      h.pause(); // onpause will set isPlaying false
-    } else {
-      stopAll();     // sets isPlaying=false
-      h.seek(0);
-      h.play();      // onplay -> isPlaying=true
-    }
+    };
+    if (h.state() !== "loaded") { h.once("load", start); h.load(); } else { start(); }
   }
 
-  function handleNext() {
-    stopAll();
-    setIndex((prev) => {
-      const nxt = (prev + 1) % howlsRef.current.length;
-      const h = howlsRef.current[nxt];
-      if (h) {
-        if (h.state() !== "loaded") {
-          h.once("load", () => { h.seek(0); h.play(); });
-          h.load();
-        } else {
-          h.seek(0);
-          h.play();
-        }
-      }
-      return nxt;
-    });
-  }
-
-  function handlePrev() {
-    stopAll();
-    setIndex((prev) => {
-      const prv = (prev - 1 + howlsRef.current.length) % howlsRef.current.length;
-      const h = howlsRef.current[prv];
-      if (h) {
-        if (h.state() !== "loaded") {
-          h.once("load", () => { h.seek(0); h.play(); });
-          h.load();
-        } else {
-          h.seek(0);
-          h.play();
-        }
-      }
-      return prv;
-    });
-  }
-
-  function handleSkipForward() {
-    const h = current();
-    if (!h) return;
-    const t = Math.min((h.seek() as number) + skipSeconds, h.duration() || 0);
-    h.seek(t);
-    syncTimes();
-  }
-
-  function handleSkipBack() {
-    const h = current();
-    if (!h) return;
-    const t = Math.max((h.seek() as number) - skipSeconds, 0);
-    h.seek(t);
-    syncTimes();
-  }
-
-  // Non-draggable progress bar (display only)
-  const pct = dur > 0 ? Math.min(Math.max((curTime / dur) * 100, 0), 100) : 0;
   const title = tracks[index]?.title ?? `Track ${index + 1}`;
 
   return (
@@ -275,43 +208,25 @@ export default function EpisodeCDPlayer({
           <h3>{showName}</h3>
           <p>Track {index + 1} of {tracks.length}</p>
         </div>
-        
         <div className="track-info" style={{ textAlign: 'center' }}>
           <h4 className="track-title" style={{ textAlign: 'center' }}>{title}</h4>
         </div>
       </div>
 
-        <div className="progress-container">
-          <div className="time-display">
-          <span>{formatTime(curTime)} / {formatTime(dur)}</span>
-          </div>
-        </div>
 
         <div className="controls">
-          <button 
-            className="control-btn skip-btn" 
-          onClick={handlePrev}
-            title="Previous Track"
-          >
-            ⏮
-          </button>
-
+        <button className="control-btn skip-btn" onClick={prev} title="Previous Track">⏮</button>
           <button 
             className="control-btn play-btn" 
-          onClick={handlePlayPause}
+          onClick={() => (isPlaying ? current()?.pause() : playFromGesture(index))}
             title={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? '⏸' : '▶'}
+          {isPlaying ? '⏸' : '▶'}
           </button>
-
-          <button 
-            className="control-btn skip-btn" 
-          onClick={handleNext}
-            title="Next Track"
-          >
-            ⏭
-          </button>
-        </div>
+        <button className="control-btn skip-btn" onClick={next} title="Next Track">⏭</button>
+      </div>
     </div>
   );
-}
+});
+
+export default AudioPlayer;
