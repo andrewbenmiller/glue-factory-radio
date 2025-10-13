@@ -11,7 +11,7 @@ function App() {
   const [shows, setShows] = useState<Show[]>([]);
   const [currentShowIndex, setCurrentShowIndex] = useState(0);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(true);
+  // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
