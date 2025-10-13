@@ -206,7 +206,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       <div className="player-info">
         <div className="show-info">
           <h3>{showName}</h3>
-          <p>Track {index + 1} of {tracks.length}</p>
+          <p className="track-count">Track {index + 1} of {tracks.length}</p>
         </div>
         <div className="track-info" style={{ textAlign: 'center' }}>
           <h4 className="track-title" style={{ textAlign: 'center' }}>{title}</h4>

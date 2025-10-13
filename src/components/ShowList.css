@@ -1,21 +1,22 @@
 .show-list {
   background: transparent;
-  border: 1px solid black;
+  border: none;
   border-radius: 0;
   padding: 30px;
   box-shadow: none;
   max-width: 600px;
   margin: 20px auto;
   font-family: Helvetica, Arial, sans-serif;
-  color: black;
+  color: #FFA500;
+  font-weight: bold;
 }
 
 .show-list-title {
   font-size: 1.8rem;
-  color: black;
+  color: #FFA500;
   margin: 0 0 25px 0;
   text-align: center;
-  font-weight: 600;
+  font-weight: bold;
 }
 
 .shows-container {
@@ -26,7 +27,7 @@
 
 .show-item {
   background: transparent;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
   border-radius: 0;
   padding: 20px;
   cursor: pointer;
@@ -44,7 +45,7 @@
   background: rgba(0, 0, 0, 0.05);
   transform: none;
   box-shadow: none;
-  border-color: black;
+  border-color: #FFA500;
 }
 
 .show-item:hover::before {
@@ -52,7 +53,7 @@
 }
 
 .show-item.active {
-  border-color: black;
+  border-color: #FFA500;
   background: rgba(0, 0, 0, 0.1);
   box-shadow: none;
 }
@@ -70,7 +71,7 @@
 
 .show-item-title {
   font-size: 1.3rem;
-  color: black;
+  color: #FFA500;
   margin: 0;
   font-weight: 600;
   flex: 1;
@@ -79,16 +80,16 @@
 
 .show-item-duration {
   background: transparent;
-  color: black;
+  color: #FFA500;
   padding: 4px 12px;
   border-radius: 0;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: bold;
   white-space: nowrap;
 }
 
 .show-item-description {
-  color: black;
+  color: #FFA500;
   margin: 0 0 15px 0;
   line-height: 1.5;
   font-size: 0.95rem;
@@ -99,28 +100,28 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.85rem;
-  color: black;
+  color: #FFA500;
 }
 
 .show-item-date {
   font-style: italic;
-  color: black;
+  color: #FFA500;
 }
 
 .show-item-number {
   background: transparent;
-  color: black;
+  color: #FFA500;
   padding: 2px 8px;
   border-radius: 0;
-  font-weight: 500;
+  font-weight: bold;
 }
 
 .show-item-tracks {
   background: transparent;
-  color: black;
+  color: #FFA500;
   padding: 2px 8px;
   border-radius: 0;
-  font-weight: 500;
+  font-weight: bold;
 }
 
 .show-item-controls {
@@ -131,7 +132,7 @@
 
 .expand-button {
   background: transparent;
-  color: black;
+  color: #FFA500;
   border-radius: 0;
   width: 24px;
   height: 24px;
@@ -155,7 +156,7 @@
 
 .dropdown-button {
   background: transparent;
-  color: black;
+  color: #FFA500;
   border: none;
   border-radius: 0;
   width: 48px;
@@ -188,12 +189,12 @@
   padding: 15px;
   background: transparent;
   border-radius: 0;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
 }
 
 .tracks-header h5 {
   margin: 0 0 12px 0;
-  color: black;
+  color: #FFA500;
   font-size: 1rem;
   font-weight: 600;
 }
@@ -208,14 +209,14 @@
   background: transparent;
   padding: 10px 12px;
   border-radius: 0;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
   transition: all 0.2s ease;
   margin-bottom: 8px;
 }
 
 .track-item:hover {
   background: rgba(0, 0, 0, 0.05);
-  border-color: black;
+  border-color: #FFA500;
   transform: none;
 }
 
@@ -228,29 +229,29 @@
 
 .track-number {
   background: transparent;
-  color: black;
+  color: #FFA500;
   padding: 2px 6px;
   border-radius: 0;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: bold;
   min-width: 20px;
   text-align: center;
 }
 
 .track-title {
   font-weight: 600;
-  color: black;
+  color: #FFA500;
   flex: 1;
   font-size: 0.9rem;
 }
 
 .track-duration {
   background: transparent;
-  color: black;
+  color: #FFA500;
   padding: 2px 8px;
   border-radius: 0;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: bold;
   white-space: nowrap;
 }
 
@@ -259,7 +260,7 @@
 .no-shows {
   text-align: center;
   padding: 40px 20px;
-  color: #666;
+  color: #FFA500;
 }
 
 .no-shows p {
@@ -270,7 +271,7 @@
 .no-shows p:first-child {
   font-size: 1.3rem;
   font-weight: 500;
-  color: #333;
+  color: #FFA500;
 }
 
 /* Mobile responsiveness */

@@ -127,13 +127,11 @@ function App() {
     <>
       <BackgroundManager />
       
-      <header className="App-header">
-        <div className="logo-container">
-          <div className="logo-image-container">
-            <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
-          </div>
+      <div className="logo-container">
+        <div className="logo-image-container">
+          <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
         </div>
-      </header>
+      </div>
       
       <main className="App-main">
         <AudioPlayer

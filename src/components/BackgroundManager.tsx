@@ -40,10 +40,9 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
       
       setBackgroundImages(activeImages);
       
-      // Select a random background image
+      // Use the first image from the backend (no random selection)
       if (activeImages.length > 0) {
-        const randomIndex = Math.floor(Math.random() * activeImages.length);
-        const selectedImage = activeImages[randomIndex];
+        const selectedImage = activeImages[0];
         console.log('🖼️ Selected image:', selectedImage);
         setCurrentImage(selectedImage);
       } else {
@@ -61,17 +60,6 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
     fetchBackgroundImages();
   }, []);
 
-  // Change background image every 30 seconds
-  useEffect(() => {
-    if (backgroundImages.length > 1) {
-      const interval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * backgroundImages.length);
-        setCurrentImage(backgroundImages[randomIndex]);
-      }, 30000); // 30 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [backgroundImages]);
 
   // Show loading indicator
   if (isLoading) {
@@ -122,8 +110,7 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        zIndex: -1,
-        transition: 'background-image 1s ease-in-out'
+        zIndex: -1
       }}
     />
   );

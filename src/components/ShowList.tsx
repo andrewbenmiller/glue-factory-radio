@@ -69,7 +69,7 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
             <div className="show-item-meta">
               <span className="show-item-date">{formatDate(show.created_date)}</span>
               <span className="show-item-number">#{shows.length - index}</span>
-              <span className="show-item-tracks">🎵 {show.total_tracks} tracks</span>
+              <span className="show-item-tracks">{show.total_tracks} tracks</span>
             </div>
             
             {/* Track listing dropdown */}

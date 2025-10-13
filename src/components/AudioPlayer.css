@@ -1,9 +1,9 @@
 .audio-player {
   background: transparent;
-  border: 1px solid black;
+  border: none;
   border-radius: 0;
   padding: 30px;
-  color: black;
+  color: #FFA500;
   box-shadow: none;
   max-width: 600px;
   margin: 0 auto;
@@ -20,12 +20,11 @@
   font-size: 2rem;
   margin: 0 0 10px 0;
   font-weight: 700;
-  color: black;
+  color: #FFA500;
 }
 
 .show-info {
   font-size: 1rem;
-  opacity: 0.8;
   font-weight: 300;
   text-align: center;
 }
@@ -51,13 +50,17 @@
   font-size: 1.3rem;
   margin: 0 0 5px 0;
   font-weight: 600;
-  color: black;
+  color: #FFA500;
+}
+
+.track-count {
+  font-weight: bold;
+  margin: 5px 0;
 }
 
 .track-info {
   font-size: 0.9rem;
-  opacity: 0.8;
-  color: black;
+  color: #FFA500;
   font-weight: 300;
   text-align: center !important;
 }
@@ -78,7 +81,7 @@
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
   position: relative;
   z-index: 1000;
   pointer-events: auto;
@@ -92,7 +95,7 @@
   border-radius: 0;
   background: black;
   cursor: pointer;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
 }
 
 .progress-bar.seeking {
@@ -105,7 +108,7 @@
   border-radius: 0;
   background: black;
   cursor: pointer;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
 }
 
 .controls {
@@ -117,8 +120,8 @@
 }
 
 .control-btn {
-  background: rgba(0, 0, 0, 0.1);
-  border: 1px solid black;
+  background: #FFA500;
+  border: 1px solid #FFA500;
   border-radius: 0;
   width: 180px;
   height: 180px;
@@ -132,7 +135,7 @@
 }
 
 .control-btn:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: #e6940a;
   transform: scale(1.05);
 }
 
@@ -150,11 +153,12 @@
   width: 180px;
   height: 180px;
   font-size: 4.5rem;
-  background: rgba(0, 0, 0, 0.15);
+  background: #FFA500;
+  color: black;
 }
 
 .play-btn:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: #e6940a;
 }
 
 .volume-container {
@@ -178,7 +182,7 @@
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
 }
 
 .volume-slider::-webkit-slider-thumb {
@@ -189,7 +193,7 @@
   border-radius: 0;
   background: black;
   cursor: pointer;
-  border: 1px solid black;
+  border: 1px solid #FFA500;
 }
 
 .auto-play-toggle {
@@ -276,7 +280,7 @@
   width: 100%;
   height: 8px;
   background: rgba(0, 0, 0, 0.1);
-  border: 1px solid black;
+  border: 1px solid #FFA500;
   border-radius: 0;
   cursor: pointer;
   position: relative;
@@ -298,7 +302,7 @@
   width: 16px;
   height: 16px;
   background: white;
-  border: 2px solid black;
+  border: 2px solid #FFA500;
   border-radius: 0;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -316,21 +320,20 @@
   font-size: 1.5rem;
   margin: 0 0 5px 0;
   font-weight: 600;
-  color: black;
+  color: #FFA500;
 }
 
 .show-info p {
   font-size: 0.9rem;
-  opacity: 0.8;
   margin: 0;
-  color: black;
+  color: #FFA500;
 }
 
 .track-info h4 {
   font-size: 1.2rem;
-  margin: 10px 0 5px 0;
+  margin: 7px 0 5px 0;
   font-weight: 600;
-  color: black;
+  color: #FFA500;
   text-align: center !important;
 }
 
@@ -338,12 +341,11 @@
   text-align: center !important;
   display: block !important;
   width: 100% !important;
-  margin: 0 auto !important;
+  margin: 5px auto 5px auto !important;
 }
 
 .track-info p {
   font-size: 0.9rem;
-  opacity: 0.8;
   margin: 0;
-  color: black;
+  color: #FFA500;
 }
