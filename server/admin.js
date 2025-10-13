@@ -24,12 +24,9 @@ function setupTabNavigation() {
     const tabs = document.querySelectorAll('.nav-tab');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    console.log('🎯 Setting up tab navigation. Found tabs:', tabs.length, 'Found tab contents:', tabContents.length);
-
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const targetTab = tab.getAttribute('data-tab');
-            console.log('🎯 Tab clicked:', targetTab);
             
             // Update active tab
             tabs.forEach(t => t.classList.remove('active'));
@@ -37,26 +34,18 @@ function setupTabNavigation() {
             
             // Show target content
             tabContents.forEach(content => {
-                console.log('🎯 Checking content:', content.id, 'vs target:', targetTab);
                 content.classList.remove('active');
                 if (content.id === targetTab) {
                     content.classList.add('active');
-                    console.log('🎯 Showing tab content:', content.id);
-                    console.log('🎯 Content element:', content);
-                    console.log('🎯 Content classes:', content.className);
-                    console.log('🎯 Content style display:', content.style.display);
                 }
             });
 
             // Load data for the tab
             if (targetTab === 'manage') {
-                console.log('🎯 Loading shows...');
                 loadShows();
             } else if (targetTab === 'backgrounds') {
-                console.log('🎯 Loading background images...');
                 loadBackgroundImages();
             } else if (targetTab === 'stats') {
-                console.log('🎯 Loading stats...');
                 loadStats();
             }
         });
@@ -777,7 +766,6 @@ async function restoreShow(showId) {
 
 // Load Background Images
 async function loadBackgroundImages() {
-    console.log('🖼️ loadBackgroundImages called');
     const container = document.getElementById('backgroundImagesContainer');
     
     if (!container) {
@@ -785,18 +773,14 @@ async function loadBackgroundImages() {
         return;
     }
     
-    console.log('🖼️ Container found, fetching images...');
-    
     try {
         const response = await fetch(`${API_BASE_URL}/api/upload/background-images`);
-        console.log('🖼️ Response status:', response.status);
         
         if (!response.ok) {
             throw new Error(`Failed to fetch background images: ${response.status}`);
         }
 
         const images = await response.json();
-        console.log('🖼️ Images received:', images.length);
         
         if (images.length === 0) {
             container.innerHTML = `
