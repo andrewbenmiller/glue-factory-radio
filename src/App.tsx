@@ -65,15 +65,15 @@ function App() {
     console.log('🎵 App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);
   };
   
-  // Handle track navigation from AudioPlayer
-  const handleTrackChange = (newTrackIndex: number) => {
-    setCurrentTrackIndex(newTrackIndex);
-  };
+  // Handle track navigation from AudioPlayer (currently unused but kept for future use)
+  // const handleTrackChange = (newTrackIndex: number) => {
+  //   setCurrentTrackIndex(newTrackIndex);
+  // };
   
-  // Handle auto-play toggle
-  const handleAutoPlayToggle = () => {
-    setAutoPlay(!autoPlay);
-  };
+  // Handle auto-play toggle (currently unused but kept for future use)
+  // const handleAutoPlayToggle = () => {
+  //   setAutoPlay(!autoPlay);
+  // };
   
   // Loading state
   if (isLoading) {

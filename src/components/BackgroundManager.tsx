@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
 import './BackgroundManager.css';
 
 interface BackgroundImage {
@@ -17,7 +16,7 @@ interface BackgroundManagerProps {
 }
 
 const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' }) => {
-  const [backgroundImages, setBackgroundImages] = useState<BackgroundImage[]>([]);
+  const [, setBackgroundImages] = useState<BackgroundImage[]>([]);
   const [currentImage, setCurrentImage] = useState<BackgroundImage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
