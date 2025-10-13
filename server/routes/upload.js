@@ -83,7 +83,7 @@ const upload = multer({
 // Configure multer for image uploads
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadsDir = path.join(__dirname, '../uploads/images');
+    const uploadsDir = path.join(__dirname, '../uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
@@ -349,7 +349,7 @@ router.post('/background-image', imageUpload.single('image'), async (req, res) =
     const size = imageFile.size;
     
     // Upload to cloud storage (R2)
-    const filePath = path.join(__dirname, '../uploads/images', filename);
+    const filePath = path.join(__dirname, '../uploads', filename);
     const storageResult = await cloudStorage.uploadFile(filePath, `images/${filename}`);
     
     if (!storageResult.success) {
@@ -406,7 +406,7 @@ router.get('/background-images', (req, res) => {
       // Add full URLs to each image
       const imagesWithUrls = images.map(image => ({
         ...image,
-        url: `https://glue-factory-radio-production.up.railway.app/uploads/images/${image.filename}`
+        url: `https://glue-factory-radio-production.up.railway.app/uploads/${image.filename}`
       }));
 
       res.json(imagesWithUrls);
