@@ -2,7 +2,7 @@
   background: transparent;
   border: none;
   border-radius: 0;
-  padding: 30px;
+  padding: 0 30px 30px 30px;
   color: #FFA500;
   box-shadow: none;
   max-width: 600px;
@@ -341,7 +341,7 @@
   text-align: center !important;
   display: block !important;
   width: 100% !important;
-  margin: 5px auto 5px auto !important;
+  margin: 10px auto 5px auto !important;
 }
 
 .track-info p {

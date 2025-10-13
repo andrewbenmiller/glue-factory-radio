@@ -65,7 +65,7 @@
 .show-item-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 10px;
 }
 
@@ -212,12 +212,18 @@
   border: 1px solid #FFA500;
   transition: all 0.2s ease;
   margin-bottom: 8px;
+  cursor: pointer;
 }
 
 .track-item:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(230, 148, 10, 0.1);
   border-color: #FFA500;
-  transform: none;
+  transform: scale(1.02);
+}
+
+.track-item:active {
+  transform: scale(0.98);
+  background: rgba(230, 148, 10, 0.2);
 }
 
 .track-info {
