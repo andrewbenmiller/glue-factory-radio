@@ -202,13 +202,21 @@ function initializeSQLiteDatabase() {
       file_size INTEGER NOT NULL,
       upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
       is_active BOOLEAN DEFAULT TRUE,
-      display_order INTEGER DEFAULT 0
+      display_order INTEGER DEFAULT 0,
+      url TEXT
     )
   `, (err) => {
     if (err) {
       console.error('Error creating background_images table:', err.message);
     } else {
       console.log('✅ Background images table ready');
+    }
+  });
+
+  // Add url column if it doesn't exist (for existing databases)
+  db.run(`ALTER TABLE background_images ADD COLUMN url TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding url column:', err.message);
     }
   });
 
@@ -353,13 +361,21 @@ function initializePostgreSQLDatabase() {
       file_size INTEGER NOT NULL,
       upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       is_active BOOLEAN DEFAULT TRUE,
-      display_order INTEGER DEFAULT 0
+      display_order INTEGER DEFAULT 0,
+      url TEXT
     )
   `, (err) => {
     if (err) {
       console.error('Error creating background_images table:', err.message);
     } else {
       console.log('✅ Background images table ready');
+    }
+  });
+
+  // Add url column if it doesn't exist (for existing databases)
+  db.run(`ALTER TABLE background_images ADD COLUMN url TEXT`, (err) => {
+    if (err && !err.message.includes('already exists')) {
+      console.error('Error adding url column:', err.message);
     }
   });
 

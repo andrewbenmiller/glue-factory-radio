@@ -359,11 +359,11 @@ router.post('/background-image', imageUpload.single('image'), async (req, res) =
 
     // Insert image into database
     const query = `
-      INSERT INTO background_images (filename, original_name, file_size)
-      VALUES (?, ?, ?)
+      INSERT INTO background_images (filename, original_name, file_size, url)
+      VALUES (?, ?, ?, ?)
     `;
     
-    db.run(query, [filename, originalName, size], function(err) {
+    db.run(query, [filename, originalName, size, storageResult.url], function(err) {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ error: 'Failed to save image to database' });
@@ -402,10 +402,10 @@ router.get('/background-images', (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch background images' });
       }
 
-      // Add full URLs to each image
+      // Use stored URLs or fallback to constructed URL
       const imagesWithUrls = images.map(image => ({
         ...image,
-        url: `https://glue-factory-radio-production.up.railway.app/uploads/${image.filename}`
+        url: image.url || `https://glue-factory-radio-production.up.railway.app/uploads/${image.filename}`
       }));
 
       res.json(imagesWithUrls);
