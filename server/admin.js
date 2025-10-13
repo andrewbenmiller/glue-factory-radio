@@ -31,6 +31,11 @@ function setupTabNavigation() {
             const targetTab = tab.getAttribute('data-tab');
             console.log('🎯 Tab clicked:', targetTab);
             
+            // Test: Show alert for backgrounds tab
+            if (targetTab === 'backgrounds') {
+                alert('Background Images tab clicked!');
+            }
+            
             // Update active tab
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
