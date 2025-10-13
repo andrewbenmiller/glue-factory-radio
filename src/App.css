@@ -1,14 +1,17 @@
 .App {
   min-height: 100vh;
-  background: white;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  z-index: 1;
 }
 
 .App-header {
   text-align: center;
   padding: 30px 20px;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   color: #333;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .logo-container {
@@ -53,7 +56,11 @@
   padding: 40px 20px;
   max-width: 1200px;
   margin: 0 auto;
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .App-footer {

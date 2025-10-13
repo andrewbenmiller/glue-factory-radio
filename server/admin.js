@@ -43,6 +43,8 @@ function setupTabNavigation() {
             // Load data for the tab
             if (targetTab === 'manage') {
                 loadShows();
+            } else if (targetTab === 'backgrounds') {
+                loadBackgroundImages();
             } else if (targetTab === 'stats') {
                 loadStats();
             }
@@ -112,6 +114,62 @@ function setupUploadForm() {
             uploadBtn.textContent = 'Create Show';
         }
     });
+
+    // Background image upload form
+    const backgroundUploadForm = document.getElementById('backgroundUploadForm');
+    const backgroundUploadBtn = document.getElementById('backgroundUploadBtn');
+
+    if (backgroundUploadForm) {
+        backgroundUploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(backgroundUploadForm);
+            const imageFile = formData.get('image');
+
+            if (!imageFile) {
+                showStatus('Please select an image file', 'error');
+                return;
+            }
+
+            // Check file type
+            if (!imageFile.type.startsWith('image/jpeg') && !imageFile.name.toLowerCase().match(/\.(jpg|jpeg)$/)) {
+                showStatus('Only JPG/JPEG images are allowed', 'error');
+                return;
+            }
+
+            // Disable upload button and show loading
+            backgroundUploadBtn.disabled = true;
+            backgroundUploadBtn.textContent = 'Uploading...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/upload/background-image`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Background image upload failed: ${response.status}`);
+                }
+
+                const result = await response.json();
+                showStatus(`✅ Successfully uploaded background image: ${result.image.original_name}`, 'success');
+                
+                // Reset form
+                backgroundUploadForm.reset();
+                
+                // Refresh background images list
+                loadBackgroundImages();
+            } catch (error) {
+                console.error('Background upload error:', error);
+                showStatus(`❌ Upload failed: ${error.message}`, 'error');
+            } finally {
+                // Re-enable upload button
+                backgroundUploadBtn.disabled = false;
+                backgroundUploadBtn.textContent = 'Upload Background Image';
+            }
+        });
+    }
 }
 
 // Add Track Form
@@ -703,6 +761,69 @@ async function restoreShow(showId) {
     } catch (error) {
         console.error('Restore error:', error);
         showStatus(`❌ Restore failed: ${error.message}`, 'error');
+    }
+}
+
+// Load Background Images
+async function loadBackgroundImages() {
+    const container = document.getElementById('backgroundImagesContainer');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/upload/background-images`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch background images: ${response.status}`);
+        }
+
+        const images = await response.json();
+        
+        if (images.length === 0) {
+            container.innerHTML = `
+                <h3>Current Background Images</h3>
+                <div class="loading">
+                    <p>No background images uploaded yet.</p>
+                    <p>Upload some JPG images to get started!</p>
+                </div>
+            `;
+            return;
+        }
+
+        const imagesHtml = images.map(image => `
+            <div class="background-image-card">
+                <img src="${image.url}" alt="${image.original_name}" class="background-image-preview">
+                <div class="background-image-info">
+                    <div class="background-image-name">${image.original_name}</div>
+                    <div class="background-image-meta">
+                        ${(image.file_size / 1024 / 1024).toFixed(2)} MB • 
+                        Uploaded: ${new Date(image.upload_date).toLocaleDateString()}
+                    </div>
+                    <div class="background-image-actions">
+                        <button class="btn-toggle ${image.is_active ? 'btn-toggle-active' : 'btn-toggle-inactive'}" 
+                                onclick="toggleBackgroundImage(${image.id}, ${image.is_active})">
+                            ${image.is_active ? 'Active' : 'Inactive'}
+                        </button>
+                        <button class="btn-delete" onclick="deleteBackgroundImage(${image.id}, '${image.original_name}')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <h3>Current Background Images</h3>
+            <div class="background-images-grid">
+                ${imagesHtml}
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Error loading background images:', error);
+        container.innerHTML = `
+            <h3>Current Background Images</h3>
+            <div class="loading">
+                <p>❌ Error loading background images: ${error.message}</p>
+            </div>
+        `;
     }
 }
 

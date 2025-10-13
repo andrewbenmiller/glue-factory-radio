@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import AudioPlayer, { Track, AudioPlayerHandle } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
+import BackgroundManager from './components/BackgroundManager';
 import { apiService, Show } from './services/api';
 import logo from './logo.png'; // Import the PNG logo
 
@@ -124,6 +125,8 @@ function App() {
   
   return (
     <>
+      <BackgroundManager />
+      
       <header className="App-header">
         <div className="logo-container">
           <div className="logo-image-container">

@@ -80,6 +80,42 @@ const upload = multer({
   }
 });
 
+// Configure multer for image uploads
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadsDir = path.join(__dirname, '../uploads/images');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const timestamp = Date.now();
+    const originalName = file.originalname.replace(/\s+/g, '_');
+    const filename = `${timestamp}_${originalName}`;
+    cb(null, filename);
+  }
+});
+
+const imageUpload = multer({
+  storage: imageStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for images
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow JPG/JPEG images
+    const allowedMimeTypes = /image\/(jpeg|jpg)/;
+    const allowedExtensions = /\.(jpg|jpeg)$/i;
+    
+    if (allowedMimeTypes.test(file.mimetype) || allowedExtensions.test(file.originalname)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG/JPEG images are allowed'), false);
+    }
+  }
+});
+
 // Upload audio track to existing show
 router.post('/track', upload.single('audio'), async (req, res) => {
   try {
@@ -294,6 +330,90 @@ router.post('/show', upload.single('audio'), async (req, res) => {
   } catch (error) {
     console.error('Show creation error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload background image
+router.post('/background-image', imageUpload.single('image'), async (req, res) => {
+  try {
+    console.log('🖼️ Background image upload request received:', { file: req.file });
+    
+    const imageFile = req.file;
+
+    if (!imageFile) {
+      return res.status(400).json({ error: 'Image file is required' });
+    }
+
+    const filename = imageFile.filename;
+    const originalName = imageFile.originalname;
+    const size = imageFile.size;
+    
+    // Upload to cloud storage (R2)
+    const filePath = path.join(__dirname, '../uploads/images', filename);
+    const storageResult = await cloudStorage.uploadFile(filePath, `images/${filename}`);
+    
+    if (!storageResult.success) {
+      console.error('Cloud storage upload failed:', storageResult.error);
+      return res.status(500).json({ error: 'Failed to upload image to storage' });
+    }
+
+    // Insert image into database
+    const query = `
+      INSERT INTO background_images (filename, original_name, file_size)
+      VALUES (?, ?, ?)
+      RETURNING id
+    `;
+    
+    db.run(query, [filename, originalName, size], function(err, result) {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Failed to save image to database' });
+      }
+
+      const imageId = result.rows[0].id;
+
+      // Get the created image
+      db.get('SELECT * FROM background_images WHERE id = ?', [imageId], (err, image) => {
+        if (err) {
+          return res.status(500).json({ error: 'Image uploaded but failed to retrieve' });
+        }
+
+        res.json({
+          message: 'Background image uploaded successfully',
+          image: {
+            ...image,
+            url: storageResult.url
+          }
+        });
+      });
+    });
+
+  } catch (error) {
+    console.error('Background image upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all background images
+router.get('/background-images', (req, res) => {
+  try {
+    db.all('SELECT * FROM background_images WHERE is_active = true ORDER BY upload_date DESC', [], (err, images) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Failed to fetch background images' });
+      }
+
+      // Add full URLs to each image
+      const imagesWithUrls = images.map(image => ({
+        ...image,
+        url: `https://glue-factory-radio-production.up.railway.app/uploads/images/${image.filename}`
+      }));
+
+      res.json(imagesWithUrls);
+    });
+  } catch (error) {
+    console.error('Error fetching background images:', error);
+    res.status(500).json({ error: 'Cannot fetch background images' });
   }
 });
 

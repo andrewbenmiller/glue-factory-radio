@@ -438,6 +438,7 @@
             <ul class="nav-tabs">
                 <li class="nav-tab active" data-tab="upload">📤 Create New Show</li>
                 <li class="nav-tab" data-tab="manage">📋 Manage Shows</li>
+                <li class="nav-tab" data-tab="backgrounds">🖼️ Background Images</li>
                 <li class="nav-tab" data-tab="stats">📊 Statistics</li>
             </ul>
         </div>
@@ -487,6 +488,35 @@
                 </div>
             </div>
 
+
+        <!-- Background Images Tab -->
+        <div id="backgrounds" class="tab-content">
+            <h2>🖼️ Background Images</h2>
+            <p>Upload JPG images to be used as random fullscreen backgrounds on the frontend.</p>
+            
+            <div class="upload-section">
+                <h3>Upload New Background Image</h3>
+                <form id="backgroundUploadForm">
+                    <div class="form-group">
+                        <label for="backgroundImage">Background Image (JPG only) *</label>
+                        <input type="file" id="backgroundImage" name="image" accept="image/jpeg,image/jpg" required>
+                        <small>Only JPG/JPEG images are allowed. Maximum file size: 10MB</small>
+                    </div>
+                    
+                    <button type="submit" class="upload-button" id="backgroundUploadBtn">
+                        Upload Background Image
+                    </button>
+                </form>
+            </div>
+
+            <div id="backgroundImagesContainer">
+                <h3>Current Background Images</h3>
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading background images...</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Stats Tab -->
         <div id="stats" class="tab-content">
@@ -684,6 +714,59 @@
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        /* Background Images Styles */
+        .background-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .background-image-card {
+            border: 1px solid black;
+            border-radius: 0;
+            overflow: hidden;
+            background: white;
+        }
+
+        .background-image-preview {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+
+        .background-image-info {
+            padding: 15px;
+        }
+
+        .background-image-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: black;
+        }
+
+        .background-image-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .background-image-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-toggle-active {
+            background: black;
+            color: white;
+        }
+
+        .btn-toggle-inactive {
+            background: transparent;
+            color: black;
         }
     </style>
     <script src="admin.js"></script>

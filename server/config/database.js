@@ -193,6 +193,25 @@ function initializeSQLiteDatabase() {
     }
   });
 
+  // Background images table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS background_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      file_size INTEGER NOT NULL,
+      upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      is_active BOOLEAN DEFAULT TRUE,
+      display_order INTEGER DEFAULT 0
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating background_images table:', err.message);
+    } else {
+      console.log('✅ Background images table ready');
+    }
+  });
+
   // Create indexes for better performance
   db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`, (err) => {
     if (err) {
@@ -322,6 +341,25 @@ function initializePostgreSQLDatabase() {
       console.error('Error creating playlist_items table:', err.message);
     } else {
       console.log('✅ Playlist items table ready');
+    }
+  });
+
+  // Background images table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS background_images (
+      id SERIAL PRIMARY KEY,
+      filename TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      file_size INTEGER NOT NULL,
+      upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      is_active BOOLEAN DEFAULT TRUE,
+      display_order INTEGER DEFAULT 0
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating background_images table:', err.message);
+    } else {
+      console.log('✅ Background images table ready');
     }
   });
 
