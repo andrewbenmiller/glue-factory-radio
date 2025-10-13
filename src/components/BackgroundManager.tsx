@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import './BackgroundManager.css';
 
 interface BackgroundImage {
   id: number;
@@ -23,6 +24,7 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
   // Fetch background images from the backend
   const fetchBackgroundImages = async () => {
     try {
+      console.log('🖼️ Fetching background images...');
       setIsLoading(true);
       const response = await fetch('https://glue-factory-radio-production.up.railway.app/api/upload/background-images');
       
@@ -31,14 +33,21 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
       }
       
       const images: BackgroundImage[] = await response.json();
+      console.log('🖼️ Received images:', images);
+      
       const activeImages = images.filter(img => img.is_active);
+      console.log('🖼️ Active images:', activeImages);
       
       setBackgroundImages(activeImages);
       
       // Select a random background image
       if (activeImages.length > 0) {
         const randomIndex = Math.floor(Math.random() * activeImages.length);
-        setCurrentImage(activeImages[randomIndex]);
+        const selectedImage = activeImages[randomIndex];
+        console.log('🖼️ Selected image:', selectedImage);
+        setCurrentImage(selectedImage);
+      } else {
+        console.log('🖼️ No active images found');
       }
     } catch (error) {
       console.error('Error fetching background images:', error);
@@ -64,9 +73,40 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
     }
   }, [backgroundImages]);
 
-  // Don't render anything if loading or no images
-  if (isLoading || !currentImage) {
-    return null;
+  // Show loading indicator
+  if (isLoading) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 10,
+        right: 10,
+        background: 'rgba(0,0,0,0.7)',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '5px',
+        zIndex: 9999
+      }}>
+        🖼️ Loading backgrounds...
+      </div>
+    );
+  }
+
+  // Show no images message
+  if (!currentImage) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 10,
+        right: 10,
+        background: 'rgba(0,0,0,0.7)',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '5px',
+        zIndex: 9999
+      }}>
+        🖼️ No background images found
+      </div>
+    );
   }
 
   return (
