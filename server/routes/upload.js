@@ -361,16 +361,15 @@ router.post('/background-image', imageUpload.single('image'), async (req, res) =
     const query = `
       INSERT INTO background_images (filename, original_name, file_size)
       VALUES (?, ?, ?)
-      RETURNING id
     `;
     
-    db.run(query, [filename, originalName, size], function(err, result) {
+    db.run(query, [filename, originalName, size], function(err) {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ error: 'Failed to save image to database' });
       }
 
-      const imageId = result.rows[0].id;
+      const imageId = this.lastID;
 
       // Get the created image
       db.get('SELECT * FROM background_images WHERE id = ?', [imageId], (err, image) => {
