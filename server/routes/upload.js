@@ -381,7 +381,7 @@ router.post('/background-image', imageUpload.single('image'), async (req, res) =
           message: 'Background image uploaded successfully',
           image: {
             ...image,
-            url: storageResult.url
+            url: `https://glue-factory-radio-production.up.railway.app/api/images/${filename}`
           }
         });
       });
@@ -402,10 +402,10 @@ router.get('/background-images', (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch background images' });
       }
 
-      // Use stored URLs or fallback to constructed URL
+      // Use proxy route for images (similar to audio files)
       const imagesWithUrls = images.map(image => ({
         ...image,
-        url: image.url || `https://glue-factory-radio-production.up.railway.app/uploads/${image.filename}`
+        url: `https://glue-factory-radio-production.up.railway.app/api/images/${image.filename}`
       }));
 
       res.json(imagesWithUrls);

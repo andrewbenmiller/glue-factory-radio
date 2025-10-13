@@ -83,6 +83,48 @@ app.options("/api/audio/:filename", (req, res) => {
   res.sendStatus(200);
 });
 
+// Image proxy route for R2 files
+app.get("/api/images/:filename", async (req, res) => {
+  const { filename } = req.params;
+  
+  // Add CORS headers for images
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
+  
+  try {
+    const cloudStorage = require('./services/cloudStorage');
+    
+    if (!cloudStorage.isConfigured()) {
+      return res.status(500).json({ error: 'Cloud storage not configured' });
+    }
+
+    // Construct the key for the image in R2
+    const key = `uploads/images/${filename}`;
+    
+    const { GetObjectCommand } = require('@aws-sdk/client-s3');
+    const command = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+    });
+    
+    const response = await cloudStorage.s3Client.send(command);
+    
+    // Set appropriate headers for images
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Length', response.ContentLength);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    
+    // Stream the image data
+    response.Body.pipe(res);
+    
+  } catch (error) {
+    console.error('Error serving image from R2:', error);
+    res.status(404).json({ error: 'Image not found' });
+  }
+});
+
 // Audio proxy route for R2 files
 app.get("/api/audio/:filename", async (req, res) => {
   const { filename } = req.params;
