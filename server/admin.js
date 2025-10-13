@@ -31,21 +31,20 @@ function setupTabNavigation() {
             const targetTab = tab.getAttribute('data-tab');
             console.log('🎯 Tab clicked:', targetTab);
             
-            // Test: Show alert for backgrounds tab
-            if (targetTab === 'backgrounds') {
-                alert('Background Images tab clicked!');
-            }
-            
             // Update active tab
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             
             // Show target content
             tabContents.forEach(content => {
+                console.log('🎯 Checking content:', content.id, 'vs target:', targetTab);
                 content.classList.remove('active');
                 if (content.id === targetTab) {
                     content.classList.add('active');
                     console.log('🎯 Showing tab content:', content.id);
+                    console.log('🎯 Content element:', content);
+                    console.log('🎯 Content classes:', content.className);
+                    console.log('🎯 Content style display:', content.style.display);
                 }
             });
 
