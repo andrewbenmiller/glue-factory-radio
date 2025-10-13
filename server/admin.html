@@ -88,13 +88,18 @@
         }
 
         .tab-content.active {
-            display: block;
+            display: block !important;
         }
 
         /* Temporary debug styling for backgrounds tab */
         #backgrounds {
             background-color: #f0f0f0 !important;
             border: 2px solid red !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 999 !important;
         }
 
         /* Upload Form Styles */
@@ -499,6 +504,12 @@
         <div id="backgrounds" class="tab-content">
             <h2>🖼️ Background Images</h2>
             <p>Upload JPG images to be used as random fullscreen backgrounds on the frontend.</p>
+            
+            <!-- DEBUG: This should always be visible -->
+            <div style="background: yellow; padding: 20px; margin: 10px 0; border: 3px solid red;">
+                <h3>DEBUG: If you can see this, the tab content is working!</h3>
+                <p>This is a test to make sure the content is visible.</p>
+            </div>
             
             <div class="upload-section">
                 <h3>Upload New Background Image</h3>
