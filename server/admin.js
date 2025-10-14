@@ -919,6 +919,32 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Delete background image
+async function deleteBackgroundImage(imageId, imageName) {
+    if (confirm(`⚠️ PERMANENT DELETE: Are you sure you want to permanently delete background image "${imageName}"?\n\nThis will remove the image from the database AND delete the file from storage. This action cannot be undone.`)) {
+        try {
+            showStatus('🔄 Deleting background image...', 'info');
+            
+            const response = await fetch(`${API_BASE_URL}/api/upload/background/${imageId}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete background image');
+            }
+            
+            // Reload background images to reflect the deletion
+            await loadBackgroundImages();
+            showStatus('✅ Background image permanently deleted from database and storage', 'success');
+            
+        } catch (error) {
+            console.error('Error deleting background image:', error);
+            showStatus(`❌ Background image delete failed: ${error.message}`, 'error');
+        }
+    }
+}
+
 // Close modals when clicking outside
 window.onclick = function(event) {
     const editModal = document.getElementById('editModal');

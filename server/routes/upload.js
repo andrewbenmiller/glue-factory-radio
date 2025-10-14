@@ -466,4 +466,56 @@ router.use((error, req, res, next) => {
   });
 });
 
+// DELETE background image (hard delete - removes from database and cloud storage)
+router.delete('/background/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('🗑️ Background image delete request for ID:', id);
+    
+    // First, get the image info to delete from cloud storage
+    db.get('SELECT * FROM background_images WHERE id = ?', [id], async (err, image) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Failed to fetch image info' });
+      }
+      
+      if (!image) {
+        return res.status(404).json({ error: 'Background image not found' });
+      }
+      
+      console.log('📋 Image to delete:', image);
+      
+      // Delete from cloud storage (R2)
+      try {
+        const cloudStorage = require('../services/cloudStorage');
+        const deleteResult = await cloudStorage.deleteFile(image.filename);
+        if (!deleteResult.success) {
+          console.error('Error deleting file from R2:', deleteResult.error);
+          // Continue with database deletion even if cloud deletion fails
+        } else {
+          console.log('✅ File deleted from R2:', image.filename);
+        }
+      } catch (deleteErr) {
+        console.error('Error deleting file from R2:', deleteErr);
+        // Continue with database deletion even if cloud deletion fails
+      }
+      
+      // Hard delete the image from database
+      db.run('DELETE FROM background_images WHERE id = ?', [id], function(err) {
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ error: 'Failed to delete image from database' });
+        }
+        
+        console.log('✅ Background image deleted from database');
+        res.json({ message: 'Background image deleted successfully' });
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error deleting background image:', error);
+    res.status(500).json({ error: 'Failed to delete background image' });
+  }
+});
+
 module.exports = router;
