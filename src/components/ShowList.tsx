@@ -42,7 +42,6 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
 
   return (
     <div className="show-list">
-      <h3 className="show-list-title">Available Shows</h3>
       <div className="shows-container">
         {shows.map((show, index) => (
           <div
@@ -75,9 +74,6 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
             {/* Track listing dropdown */}
             {expandedShows.has(index) && (
               <div className="tracks-dropdown">
-                <div className="tracks-header">
-                  <h5>🎵 Tracks in this Show</h5>
-                </div>
                 <div className="tracks-list">
                   {show.tracks.map((track, trackIndex) => (
                     <div
@@ -86,8 +82,7 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
                       onClick={(e) => handleTrackClick(index, trackIndex, e)}
                     >
                       <div className="track-info">
-                        <span className="track-number">{trackIndex + 1}</span>
-                        <span className="track-title">{track.title}</span>
+                        <span className="track-title">{trackIndex + 1}. {track.title}</span>
                         <span className="track-duration">{formatDuration(track.duration)}</span>
                       </div>
                     </div>
