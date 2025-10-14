@@ -1,6 +1,5 @@
 .show-list {
   background: transparent;
-  border: 1px solid white;
   border-radius: 0;
   padding: 30px;
   box-shadow: none;
@@ -138,8 +137,8 @@
 
 .expand-button {
   background: transparent;
-  color: black;
-  border-radius: 0;
+  color: #FF5F1F;
+  border-radius: 4px;
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -151,10 +150,6 @@
   flex-shrink: 0;
 }
 
-.expand-button:hover {
-  background: rgba(0, 0, 0, 0.05);
-  transform: none;
-}
 
 .expand-button:active {
   transform: scale(0.95);
@@ -162,27 +157,28 @@
 
 .dropdown-button {
   background: transparent;
-  color: black;
+  color: #FF5F1F;
   border: none;
-  border-radius: 0;
-  width: 48px;
-  height: 48px;
+  border-radius: 50%;
+  width: 59px;
+  height: 59px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 43px;
   font-weight: bold;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
   flex-shrink: 0;
 }
 
-.dropdown-button:hover {
-  transform: none;
+
+.dropdown-button:not(.rotated) {
+  font-size: 46px;
 }
 
 .dropdown-button.rotated {
-  transform: rotate(45deg);
+  transform: translateY(2px);
 }
 
 .dropdown-button:active {
@@ -213,17 +209,16 @@
 
 .track-item {
   background: transparent;
-  padding: 10px 12px;
+  padding: 6px 12px;
   border-radius: 0;
-  border: 1px solid black;
+  border: none;
   transition: all 0.2s ease;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   cursor: pointer;
 }
 
 .track-item:hover {
   background: gray;
-  border-color: black;
   transform: scale(1.02);
 }
 

@@ -58,7 +58,7 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
                   onClick={(e) => toggleShowExpansion(index, e)}
                   title={expandedShows.has(index) ? "Hide tracks" : "Show tracks"}
                 >
-                  +
+                  {expandedShows.has(index) ? '−' : '●'}
                 </button>
               </div>
             </div>
