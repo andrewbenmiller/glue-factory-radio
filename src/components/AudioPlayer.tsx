@@ -36,37 +36,65 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   const playGenRef = useRef(0);
 
-  // Local helper: same as the imperative one, but callable inside the component
-  function playFromGesture(target = index) {
+  // Mobile-safe play function
+  async function playFromGesture(target = index) {
     playGenRef.current += 1;
     const token = playGenRef.current;
 
-    // Aggressive audio context resume for mobile
-    try { 
-      (Howler as any).ctx?.resume?.(); 
-      // Also try to resume any existing audio context
-      if ((Howler as any).ctx && (Howler as any).ctx.state === 'suspended') {
-        (Howler as any).ctx.resume();
+    const ctx = (Howler as any).ctx;
+    try {
+      if (ctx && ctx.state === 'suspended') {
+        await ctx.resume();
+        console.log('AudioContext resumed');
+        // Play a 1-sample silent buffer to fully unlock iOS
+        const node = ctx.createBufferSource();
+        node.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+        node.connect(ctx.destination);
+        node.start(0);
+        node.disconnect();
       }
-    } catch {}
+    } catch (e) {
+      console.warn('resume failed', e);
+    }
 
-    Howler.stop();
+    // Stop only the current track, not global Howler
+    const currentHowl = howlsRef.current[index];
+    currentHowl?.stop();
     setIsPlaying(false);
+
     if (target !== index) setIndex(target);
 
     const h = howlsRef.current[target];
-    if (!h) return;
-
-    const id = h.play();
+    if (!h) return console.warn('No howl found for target', target);
 
     const onReady = () => {
       if (token !== playGenRef.current) return;
-      h.seek(0, id);
-      h.once("end", () => { if (token === playGenRef.current) next(); });
+      try {
+        const id = h.play();
+        console.log('play id', id);
+        h.seek(0, id);
+        h.once("end", () => { if (token === playGenRef.current) next(); });
+      } catch (e) {
+        console.error('play threw', e);
+        // Fallback: recreate with html5:true
+        console.warn('Play error, retrying with html5:true', e);
+        const fallbackHowl = new Howl({ 
+          src: h._src, 
+          html5: true, 
+          preload: true,
+          mobileAutoEnable: true 
+        });
+        howlsRef.current[target] = fallbackHowl;
+        fallbackHowl.play();
+      }
     };
 
-    if (h.state() !== "loaded") { h.once("load", onReady); h.load(); }
-    else { onReady(); }
+    if (h.state() !== "loaded") { 
+      h.once("load", onReady); 
+      h.load(); 
+    } else { 
+      onReady(); 
+    }
   }
 
   const current = useCallback(() => howlsRef.current[index], [index]);
@@ -79,9 +107,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
     howlsRef.current = tracks.map((t, i) => new Howl({
       src: [t.src],
-      // Prefer WebAudio (html5:false) for gesture-friendly control.
-      // If you MUST use html5:true, this still works but you may see iOS differences.
-      html5: false,
+      // Use html5:true for mobile compatibility, html5:false for desktop
+      html5: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
       preload: true,
       // Mobile-specific configuration
       mobileAutoEnable: true,
