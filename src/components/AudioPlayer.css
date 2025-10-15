@@ -288,7 +288,7 @@
   }
 }
 
-/* Small mobile devices - horizontal button layout - v3 - CACHE BUST */
+/* Small mobile devices - horizontal button layout - v4 - ISOLATED */
 @media (max-width: 480px) {
   .audio-player {
     padding: 15px;
@@ -298,14 +298,19 @@
   }
   
   .controls {
+    /* Reset all inherited styles */
+    all: unset;
+    /* Create isolated flexbox container */
+    display: flex !important;
     flex-direction: row !important;
     justify-content: space-between !important;
+    align-items: center !important;
     gap: 15px !important;
-    flex-wrap: nowrap !important;
     width: calc(100vw - 88px) !important;
     margin: 0 auto !important;
-    display: flex !important;
-    align-items: center !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
   }
   
   .control-btn {
