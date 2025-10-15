@@ -396,7 +396,7 @@ router.post('/background-image', imageUpload.single('image'), async (req, res) =
 // Get all background images
 router.get('/background-images', (req, res) => {
   try {
-    db.all('SELECT * FROM background_images WHERE is_active = true ORDER BY upload_date DESC', [], (err, images) => {
+    db.all('SELECT * FROM background_images ORDER BY upload_date DESC', [], (err, images) => {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ error: 'Failed to fetch background images' });
