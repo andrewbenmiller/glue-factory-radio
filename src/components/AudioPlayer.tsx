@@ -41,6 +41,15 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     playGenRef.current += 1;
     const token = playGenRef.current;
 
+    // Aggressive audio context resume for mobile
+    try { 
+      (Howler as any).ctx?.resume?.(); 
+      // Also try to resume any existing audio context
+      if ((Howler as any).ctx && (Howler as any).ctx.state === 'suspended') {
+        (Howler as any).ctx.resume();
+      }
+    } catch {}
+
     Howler.stop();
     setIsPlaying(false);
     if (target !== index) setIndex(target);
@@ -58,8 +67,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
     if (h.state() !== "loaded") { h.once("load", onReady); h.load(); }
     else { onReady(); }
-
-    try { (Howler as any).ctx?.resume?.(); } catch {}
   }
 
   const current = useCallback(() => howlsRef.current[index], [index]);
@@ -76,6 +83,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       // If you MUST use html5:true, this still works but you may see iOS differences.
       html5: false,
       preload: true,
+      // Mobile-specific configuration
+      mobileAutoEnable: true,
+      xhr: {
+        method: 'GET',
+        headers: {},
+        withCredentials: false
+      },
       onplay: () => { 
         setIsPlaying(true); 
       },
