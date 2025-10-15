@@ -298,7 +298,7 @@
   .controls {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 15px;
     width: 100%;
   }
   
