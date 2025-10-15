@@ -288,7 +288,7 @@
   }
 }
 
-/* Small mobile devices - horizontal button layout */
+/* Small mobile devices - horizontal button layout - v2 */
 @media (max-width: 480px) {
   .audio-player {
     padding: 15px;
@@ -300,6 +300,7 @@
     justify-content: center;
     gap: 15px;
     flex-wrap: nowrap;
+    margin: 0 -15px;
   }
   
   .control-btn {
