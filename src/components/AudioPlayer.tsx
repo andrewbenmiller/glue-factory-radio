@@ -81,8 +81,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         const fallbackHowl = new Howl({ 
           src: [tracks[target].src], 
           html5: true, 
-          preload: true,
-          mobileAutoEnable: true 
+          preload: true
         });
         howlsRef.current[target] = fallbackHowl;
         fallbackHowl.play();
