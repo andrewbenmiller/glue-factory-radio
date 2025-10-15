@@ -297,11 +297,11 @@
   
   .controls {
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-between;
     gap: 15px;
     flex-wrap: nowrap;
-    margin: 0 -15px;
     width: 100%;
+    padding: 0 15px;
   }
   
   .control-btn {
