@@ -79,7 +79,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         // Fallback: recreate with html5:true
         console.warn('Play error, retrying with html5:true', e);
         const fallbackHowl = new Howl({ 
-          src: h._src, 
+          src: [tracks[target].src], 
           html5: true, 
           preload: true,
           mobileAutoEnable: true 
