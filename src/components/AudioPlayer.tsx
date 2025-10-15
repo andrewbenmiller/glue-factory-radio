@@ -109,8 +109,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       // Use html5:true for mobile compatibility, html5:false for desktop
       html5: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
       preload: true,
-      // Mobile-specific configuration
-      mobileAutoEnable: true,
       xhr: {
         method: 'GET',
         headers: {},
