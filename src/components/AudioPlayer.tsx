@@ -220,17 +220,20 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
         <div className="controls">
         <button className="control-btn skip-btn" onClick={prev} title="Previous Track">
-          <img src={prevIcon} alt="Previous" style={{width: '48px', height: '48px'}} />
+          <span className="desktop-icon">⏮</span>
+          <img src={prevIcon} alt="Previous" className="mobile-icon" style={{width: '48px', height: '48px'}} />
         </button>
           <button 
             className="control-btn play-btn" 
           onClick={() => (isPlaying ? current()?.pause() : playFromGesture(index))}
             title={isPlaying ? "Pause" : "Play"}
           >
-          <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? "Pause" : "Play"} style={{width: '48px', height: '48px'}} />
+          <span className="desktop-icon">{isPlaying ? '⏸' : '▶'}</span>
+          <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? "Pause" : "Play"} className="mobile-icon" style={{width: '48px', height: '48px'}} />
           </button>
         <button className="control-btn skip-btn" onClick={next} title="Next Track">
-          <img src={nextIcon} alt="Next" style={{width: '48px', height: '48px'}} />
+          <span className="desktop-icon">⏭</span>
+          <img src={nextIcon} alt="Next" className="mobile-icon" style={{width: '48px', height: '48px'}} />
         </button>
       </div>
     </div>

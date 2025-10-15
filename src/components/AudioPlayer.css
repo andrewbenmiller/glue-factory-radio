@@ -288,6 +288,15 @@
   }
 }
 
+/* Show desktop icons by default, hide mobile icons */
+.desktop-icon {
+  display: inline;
+}
+
+.mobile-icon {
+  display: none;
+}
+
 /* FRESH START - Simple mobile buttons */
 @media (max-width: 480px) {
   .audio-player {
@@ -311,6 +320,15 @@
     font-size: 2rem;
     -webkit-appearance: none;
     appearance: none;
+  }
+  
+  /* On mobile: hide desktop icons, show mobile icons */
+  .desktop-icon {
+    display: none;
+  }
+  
+  .mobile-icon {
+    display: inline;
   }
 }
 
