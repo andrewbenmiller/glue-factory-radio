@@ -288,79 +288,29 @@
   }
 }
 
-/* Small mobile devices - horizontal button layout - v4 - ISOLATED */
+/* FRESH START - Simple mobile buttons */
 @media (max-width: 480px) {
   .audio-player {
     padding: 15px;
     margin: 10px;
-    max-width: none;
-    text-align: left;
   }
   
   .controls {
-    /* Reset all inherited styles */
-    all: unset;
-    /* Create isolated flexbox container */
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    gap: 15px !important;
-    width: calc(100vw - 88px) !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
   }
   
-  .control-btn {
-    width: 100px !important;
-    height: 100px !important;
-    font-size: 2.5rem !important;
-    min-width: 0;
-    flex-shrink: 0;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    border: none !important;
-    background: #FF5F1F !important;
-    color: black !important;
-    font-family: inherit !important;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  .play-btn {
-    width: 100px !important;
-    height: 100px !important;
-    font-size: 2.5rem !important;
-    min-width: 0;
-    flex-shrink: 0;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    border: none !important;
-    background: #FF5F1F !important;
-    color: black !important;
-    font-family: inherit !important;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  .show-title {
-    font-size: 1.4rem;
-  }
-  
-  .track-info h4 {
-    font-size: 1rem;
-  }
-  
-  .track-title {
-    font-size: 0.9rem;
+  .control-btn, .play-btn {
+    width: 100px;
+    height: 100px;
+    background: #FF5F1F;
+    color: black;
+    border: none;
+    font-size: 2rem;
+    -webkit-appearance: none;
+    appearance: none;
   }
 }
 
