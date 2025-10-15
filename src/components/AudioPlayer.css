@@ -274,6 +274,47 @@
   }
 }
 
+/* Small mobile devices - horizontal button layout */
+@media (max-width: 480px) {
+  .audio-player {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .controls {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  
+  .control-btn {
+    width: calc(25% - 6px);
+    height: 80px;
+    font-size: 2rem;
+    min-width: 0;
+  }
+  
+  .play-btn {
+    width: calc(25% - 6px);
+    height: 80px;
+    font-size: 2rem;
+    min-width: 0;
+  }
+  
+  .show-title {
+    font-size: 1.4rem;
+  }
+  
+  .track-info h4 {
+    font-size: 1rem;
+  }
+  
+  .track-title {
+    font-size: 0.9rem;
+  }
+}
+
 /* New timeline-based progress bar */
 .timeline {
   width: 100%;
