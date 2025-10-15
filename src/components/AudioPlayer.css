@@ -288,7 +288,7 @@
   }
 }
 
-/* Small mobile devices - horizontal button layout - v2 */
+/* Small mobile devices - horizontal button layout - v3 - CACHE BUST */
 @media (max-width: 480px) {
   .audio-player {
     padding: 15px;
@@ -301,21 +301,22 @@
     gap: 15px;
     flex-wrap: nowrap;
     margin: 0 -15px;
+    width: 100%;
   }
   
   .control-btn {
-    width: 100px;
-    height: 100px;
-    font-size: 2.5rem;
+    width: 100px !important;
+    height: 100px !important;
+    font-size: 2.5rem !important;
     min-width: 0;
     flex-shrink: 0;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border: none;
-    background: #FF5F1F;
-    color: black;
-    font-family: inherit;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    border: none !important;
+    background: #FF5F1F !important;
+    color: black !important;
+    font-family: inherit !important;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -323,18 +324,18 @@
   }
   
   .play-btn {
-    width: 100px;
-    height: 100px;
-    font-size: 2.5rem;
+    width: 100px !important;
+    height: 100px !important;
+    font-size: 2.5rem !important;
     min-width: 0;
     flex-shrink: 0;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border: none;
-    background: #FF5F1F;
-    color: black;
-    font-family: inherit;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    border: none !important;
+    background: #FF5F1F !important;
+    color: black !important;
+    font-family: inherit !important;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
