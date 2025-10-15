@@ -215,15 +215,15 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
 
         <div className="controls">
-        <button className="control-btn skip-btn" onClick={prev} title="Previous Track">◀◀</button>
+        <button className="control-btn skip-btn" onClick={prev} title="Previous Track">PREV</button>
           <button 
             className="control-btn play-btn" 
           onClick={() => (isPlaying ? current()?.pause() : playFromGesture(index))}
             title={isPlaying ? "Pause" : "Play"}
           >
-          {isPlaying ? '⏸' : '▶'}
+          {isPlaying ? 'PAUSE' : 'PLAY'}
           </button>
-        <button className="control-btn skip-btn" onClick={next} title="Next Track">▶▶</button>
+        <button className="control-btn skip-btn" onClick={next} title="Next Track">NEXT</button>
       </div>
     </div>
   );
