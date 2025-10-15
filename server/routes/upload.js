@@ -466,6 +466,59 @@ router.use((error, req, res, next) => {
   });
 });
 
+// PUT toggle background image active status (ensures only one is active at a time)
+router.put('/background/:id/toggle', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+    console.log('🔄 Background image toggle request for ID:', id, 'is_active:', is_active);
+    
+    // If we're activating this image, deactivate all others first
+    if (is_active) {
+      db.run('UPDATE background_images SET is_active = false', [], (err) => {
+        if (err) {
+          console.error('Error deactivating other images:', err);
+          return res.status(500).json({ error: 'Failed to deactivate other images' });
+        }
+        
+        // Now activate the selected image
+        db.run('UPDATE background_images SET is_active = true WHERE id = ?', [id], function(err) {
+          if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: 'Failed to activate image' });
+          }
+          
+          if (this.changes === 0) {
+            return res.status(404).json({ error: 'Background image not found' });
+          }
+          
+          console.log('✅ Background image activated, others deactivated');
+          res.json({ message: 'Background image activated successfully' });
+        });
+      });
+    } else {
+      // If we're deactivating, just update this image
+      db.run('UPDATE background_images SET is_active = false WHERE id = ?', [id], function(err) {
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ error: 'Failed to deactivate image' });
+        }
+        
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Background image not found' });
+        }
+        
+        console.log('✅ Background image deactivated');
+        res.json({ message: 'Background image deactivated successfully' });
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error toggling background image:', error);
+    res.status(500).json({ error: 'Failed to toggle background image' });
+  }
+});
+
 // DELETE background image (hard delete - removes from database and cloud storage)
 router.delete('/background/:id', async (req, res) => {
   try {

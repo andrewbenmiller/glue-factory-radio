@@ -794,7 +794,7 @@ async function loadBackgroundImages() {
         }
 
         const imagesHtml = images.map(image => `
-            <div class="background-image-card">
+            <div class="background-image-card ${image.is_active ? 'background-image-active' : ''}">
                 <img src="${image.url}" alt="${image.original_name}" class="background-image-preview">
                 <div class="background-image-info">
                     <div class="background-image-name">${image.original_name}</div>
@@ -805,7 +805,7 @@ async function loadBackgroundImages() {
                     <div class="background-image-actions">
                         <button class="btn-toggle ${image.is_active ? 'btn-toggle-active' : 'btn-toggle-inactive'}" 
                                 onclick="toggleBackgroundImage(${image.id}, ${image.is_active})">
-                            ${image.is_active ? 'Active' : 'Inactive'}
+                            ${image.is_active ? 'De-activate' : 'Make active'}
                         </button>
                         <button class="btn-delete" onclick="deleteBackgroundImage(${image.id}, '${image.original_name}')">
                             Delete
@@ -917,6 +917,37 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Toggle background image active status
+async function toggleBackgroundImage(imageId, currentStatus) {
+    const newStatus = !currentStatus;
+    const action = newStatus ? 'activate' : 'deactivate';
+    
+    try {
+        showStatus(`🔄 ${action === 'activate' ? 'Activating' : 'Deactivating'} background image...`, 'info');
+        
+        const response = await fetch(`${API_BASE_URL}/api/upload/background/${imageId}/toggle`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ is_active: newStatus })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Failed to ${action} background image`);
+        }
+        
+        // Reload background images to reflect the changes
+        await loadBackgroundImages();
+        showStatus(`✅ Background image ${action}d successfully`, 'success');
+        
+    } catch (error) {
+        console.error(`Error ${action}ing background image:`, error);
+        showStatus(`❌ Background image ${action} failed: ${error.message}`, 'error');
+    }
 }
 
 // Delete background image
