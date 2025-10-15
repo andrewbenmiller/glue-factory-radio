@@ -4,6 +4,10 @@ import React, {
 } from "react";
 import { Howl, Howler } from "howler";
 import './AudioPlayer.css';
+import prevIcon from '../assets/icons/prev-icon.svg';
+import playIcon from '../assets/icons/play-icon.svg';
+import pauseIcon from '../assets/icons/pause-icon.svg';
+import nextIcon from '../assets/icons/next-icon.svg';
 
 export type Track = { src: string; title?: string };
 
@@ -215,15 +219,19 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
 
         <div className="controls">
-        <button className="control-btn skip-btn" onClick={prev} title="Previous Track">PREV</button>
+        <button className="control-btn skip-btn" onClick={prev} title="Previous Track">
+          <img src={prevIcon} alt="Previous" style={{width: '24px', height: '24px'}} />
+        </button>
           <button 
             className="control-btn play-btn" 
           onClick={() => (isPlaying ? current()?.pause() : playFromGesture(index))}
             title={isPlaying ? "Pause" : "Play"}
           >
-          {isPlaying ? 'PAUSE' : 'PLAY'}
+          <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? "Pause" : "Play"} style={{width: '24px', height: '24px'}} />
           </button>
-        <button className="control-btn skip-btn" onClick={next} title="Next Track">NEXT</button>
+        <button className="control-btn skip-btn" onClick={next} title="Next Track">
+          <img src={nextIcon} alt="Next" style={{width: '24px', height: '24px'}} />
+        </button>
       </div>
     </div>
   );
