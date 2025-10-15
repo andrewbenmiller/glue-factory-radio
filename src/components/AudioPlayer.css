@@ -294,15 +294,18 @@
     padding: 15px;
     margin: 10px;
     max-width: none;
+    text-align: left;
   }
   
   .controls {
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 15px;
-    flex-wrap: nowrap;
-    width: calc(100vw - 88px);
-    margin: 0 auto;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    gap: 15px !important;
+    flex-wrap: nowrap !important;
+    width: calc(100vw - 88px) !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
   }
   
   .control-btn {
