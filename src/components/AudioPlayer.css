@@ -293,6 +293,7 @@
   .audio-player {
     padding: 15px;
     margin: 10px;
+    max-width: none;
   }
   
   .controls {
@@ -300,7 +301,7 @@
     justify-content: space-between;
     gap: 15px;
     flex-wrap: nowrap;
-    width: calc(100vw - 74px);
+    width: calc(100vw - 88px);
     margin: 0 auto;
   }
   
