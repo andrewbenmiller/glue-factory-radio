@@ -300,8 +300,8 @@
     justify-content: space-between;
     gap: 15px;
     flex-wrap: nowrap;
-    width: 100%;
-    padding: 0 15px;
+    width: calc(100vw - 74px);
+    margin: 0 auto;
   }
   
   .control-btn {
