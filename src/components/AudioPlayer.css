@@ -303,8 +303,8 @@
   }
   
   .control-btn, .play-btn {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
     background: #FF5F1F;
     color: black;
     border: none;
