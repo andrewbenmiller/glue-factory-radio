@@ -12,18 +12,24 @@ function extractTrackNameFromFilename(filename) {
   // Remove file extension
   let trackName = path.parse(filename).name;
   
-  // Replace underscores and hyphens with spaces
-  trackName = trackName.replace(/[_-]/g, ' ');
+  // Replace underscores with spaces (but keep hyphens, colons, parentheses, brackets)
+  trackName = trackName.replace(/_/g, ' ');
   
-  // Remove leading numbers and dashes (e.g., "01 - " or "01-")
-  trackName = trackName.replace(/^\d+\s*[-.]?\s*/g, '');
+  // Remove leading numbers and optional separators (e.g., "01 - ", "01-", "01.")
+  trackName = trackName.replace(/^\d+\s*[-.\s]*\s*/g, '');
   
-  // Clean up multiple spaces
+  // Clean up multiple spaces (but preserve single spaces around preserved characters)
   trackName = trackName.replace(/\s+/g, ' ').trim();
   
-  // Capitalize first letter of each word
+  // Capitalize first letter of each word (but preserve special characters)
+  // Split by spaces, but be careful with words that contain preserved characters
   trackName = trackName.split(' ').map(word => {
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    // Skip capitalization if word is empty or just special characters
+    if (!word || /^[-:()\[\]]+$/.test(word)) {
+      return word;
+    }
+    // Capitalize first letter, keep the rest as-is to preserve special characters
+    return word.charAt(0).toUpperCase() + word.slice(1);
   }).join(' ');
   
   // If empty after cleaning, use the original filename without extension
