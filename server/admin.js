@@ -108,41 +108,168 @@ function setupUploadForm() {
             formData.set('trackTitle', trackTitle.trim());
         }
 
-        // Disable upload button and show loading
+        // Disable upload button and show progress
         uploadBtn.disabled = true;
         const fileCount = audioFiles.length;
-        uploadBtn.textContent = `Creating Show with ${fileCount} track${fileCount > 1 ? 's' : ''}...`;
+        uploadBtn.textContent = `Uploading ${fileCount} track${fileCount > 1 ? 's' : ''}...`;
+        
+        // Show progress indicator
+        const progressContainer = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressStatus = document.getElementById('progressStatus');
+        const currentFile = document.getElementById('currentFile');
+        const uploadSpeed = document.getElementById('uploadSpeed');
+        
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        progressStatus.textContent = 'Preparing upload...';
+        currentFile.textContent = 'Initializing...';
+        uploadSpeed.textContent = '';
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/upload/show`, {
-                method: 'POST',
-                body: formData
-            });
+        // Calculate total file size for progress tracking
+        let totalSize = 0;
+        Array.from(audioFiles).forEach(file => {
+            totalSize += file.size;
+        });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Show creation failed: ${response.status}`);
+        // Upload progress tracking variables
+        let uploadedBytes = 0;
+        let startTime = Date.now();
+        let lastUpdateTime = startTime;
+        let lastUploadedBytes = 0;
+
+        // Use XMLHttpRequest for progress tracking
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                uploadedBytes = e.loaded;
+                const percent = Math.round((e.loaded / e.total) * 100);
+                
+                // Update progress bar
+                progressBar.style.width = percent + '%';
+                progressPercent.textContent = percent + '%';
+                
+                // Calculate upload speed
+                const now = Date.now();
+                const timeDiff = (now - lastUpdateTime) / 1000; // seconds
+                if (timeDiff >= 0.5) { // Update speed every 0.5 seconds
+                    const bytesDiff = uploadedBytes - lastUploadedBytes;
+                    const speed = bytesDiff / timeDiff; // bytes per second
+                    const speedMBps = (speed / (1024 * 1024)).toFixed(2);
+                    const speedKBps = (speed / 1024).toFixed(0);
+                    
+                    if (speedMBps >= 1) {
+                        uploadSpeed.textContent = `${speedMBps} MB/s`;
+                    } else {
+                        uploadSpeed.textContent = `${speedKBps} KB/s`;
+                    }
+                    
+                    // Calculate ETA
+                    const remainingBytes = e.total - e.loaded;
+                    if (speed > 0) {
+                        const etaSeconds = Math.round(remainingBytes / speed);
+                        const etaMinutes = Math.floor(etaSeconds / 60);
+                        const etaSecs = etaSeconds % 60;
+                        if (etaMinutes > 0) {
+                            uploadSpeed.textContent += ` • ${etaMinutes}m ${etaSecs}s remaining`;
+                        } else {
+                            uploadSpeed.textContent += ` • ${etaSecs}s remaining`;
+                        }
+                    }
+                    
+                    lastUpdateTime = now;
+                    lastUploadedBytes = uploadedBytes;
+                }
+                
+                // Update status
+                const fileIndex = Math.floor((e.loaded / e.total) * fileCount);
+                if (fileIndex < fileCount) {
+                    progressStatus.textContent = `Uploading file ${fileIndex + 1} of ${fileCount}...`;
+                    currentFile.textContent = audioFiles[fileIndex] ? audioFiles[fileIndex].name : 'Processing...';
+                } else {
+                    progressStatus.textContent = 'Processing files...';
+                    currentFile.textContent = 'Creating tracks...';
+                }
             }
+        });
 
-            const result = await response.json();
-            const tracksCount = result.tracks ? result.tracks.length : 1;
-            showStatus(`✅ Successfully created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
-            
-            // Reset form
-            form.reset();
-            filePreview.style.display = 'none';
-            
-            // Refresh shows list
-            loadShows();
-            loadStats();
-            
-        } catch (error) {
-            console.error('Show creation error:', error);
-            showStatus(`❌ Show creation failed: ${error.message}`, 'error');
-        } finally {
+        // Handle completion
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    const tracksCount = result.tracks ? result.tracks.length : 1;
+                    
+                    // Show success
+                    progressBar.style.width = '100%';
+                    progressPercent.textContent = '100%';
+                    progressStatus.textContent = '✅ Upload complete!';
+                    currentFile.textContent = `Created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`;
+                    uploadSpeed.textContent = '';
+                    
+                    showStatus(`✅ Successfully created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
+                    
+                    // Reset form after a brief delay
+                    setTimeout(() => {
+                        form.reset();
+                        filePreview.style.display = 'none';
+                        progressContainer.style.display = 'none';
+                        uploadBtn.disabled = false;
+                        uploadBtn.textContent = 'Create Show';
+                        
+                        // Refresh shows list
+                        loadShows();
+                        loadStats();
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Error parsing response:', error);
+                    showStatus(`❌ Show creation failed: Invalid response`, 'error');
+                    progressContainer.style.display = 'none';
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Create Show';
+                }
+            } else {
+                // Handle error response
+                let errorMessage = `Show creation failed: ${xhr.status}`;
+                try {
+                    const errorData = JSON.parse(xhr.responseText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // If response isn't JSON, use status text
+                    errorMessage = xhr.statusText || errorMessage;
+                }
+                
+                showStatus(`❌ ${errorMessage}`, 'error');
+                progressContainer.style.display = 'none';
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Create Show';
+            }
+        });
+
+        // Handle errors
+        xhr.addEventListener('error', () => {
+            showStatus('❌ Upload failed: Network error', 'error');
+            progressContainer.style.display = 'none';
             uploadBtn.disabled = false;
             uploadBtn.textContent = 'Create Show';
-        }
+        });
+
+        // Handle abort
+        xhr.addEventListener('abort', () => {
+            showStatus('❌ Upload cancelled', 'error');
+            progressContainer.style.display = 'none';
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Create Show';
+        });
+
+        // Start upload
+        xhr.open('POST', `${API_BASE_URL}/api/upload/show`);
+        xhr.send(formData);
     });
 
     // Background image upload form
@@ -164,41 +291,41 @@ function setupUploadForm() {
             // Check file type
             if (!imageFile.type.startsWith('image/jpeg') && !imageFile.name.toLowerCase().match(/\.(jpg|jpeg)$/)) {
                 showStatus('Only JPG/JPEG images are allowed', 'error');
-                return;
-            }
+            return;
+        }
 
-            // Disable upload button and show loading
+        // Disable upload button and show loading
             backgroundUploadBtn.disabled = true;
             backgroundUploadBtn.textContent = 'Uploading...';
 
-            try {
+        try {
                 const response = await fetch(`${API_BASE_URL}/api/upload/background-image`, {
-                    method: 'POST',
-                    body: formData
-                });
+                method: 'POST',
+                body: formData
+            });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
+            if (!response.ok) {
+                const errorData = await response.json();
                     throw new Error(errorData.error || `Background image upload failed: ${response.status}`);
-                }
+            }
 
-                const result = await response.json();
+            const result = await response.json();
                 showStatus(`✅ Successfully uploaded background image: ${result.image.original_name}`, 'success');
-                
-                // Reset form
+            
+            // Reset form
                 backgroundUploadForm.reset();
                 
                 // Refresh background images list
                 loadBackgroundImages();
-            } catch (error) {
+        } catch (error) {
                 console.error('Background upload error:', error);
                 showStatus(`❌ Upload failed: ${error.message}`, 'error');
-            } finally {
+        } finally {
                 // Re-enable upload button
                 backgroundUploadBtn.disabled = false;
                 backgroundUploadBtn.textContent = 'Upload Background Image';
-            }
-        });
+        }
+    });
     }
 }
 
