@@ -20,10 +20,16 @@ function App() {
     const fetchShows = async () => {
       try {
         setIsLoading(true);
+        console.log('🎵 App: Fetching shows...');
         const fetchedShows = await apiService.getShows();
+        console.log('🎵 App: Fetched', fetchedShows.length, 'shows');
+        fetchedShows.forEach((show, idx) => {
+          console.log(`🎵 App: Show ${idx}: "${show.title}" with ${show.tracks?.length || 0} tracks`);
+        });
         setShows(fetchedShows);
         setError(null);
       } catch (err) {
+        console.error('🎵 App: Error fetching shows:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch shows');
       } finally {
         setIsLoading(false);
@@ -121,7 +127,10 @@ function App() {
   // Get tracks for current show
   const currentTracks = shows[validShowIndex] ? convertShowToTracks(shows[validShowIndex]) : [];
   
-  console.log('🎵 App: Final values - validShowIndex:', validShowIndex);
+  console.log('🎵 App: Final values - validShowIndex:', validShowIndex, 'tracks:', currentTracks.length);
+  if (currentTracks.length > 0) {
+    console.log('🎵 App: First track URL:', currentTracks[0].src);
+  }
   
   return (
     <>

@@ -38,6 +38,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   // Mobile-safe play function
   async function playFromGesture(target = index) {
+    console.log('🎵 AudioPlayer: playFromGesture called for target', target, 'current index', index);
     playGenRef.current += 1;
     const token = playGenRef.current;
 
@@ -45,7 +46,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     try {
       if (ctx && ctx.state === 'suspended') {
         await ctx.resume();
-        console.log('AudioContext resumed');
+        console.log('🎵 AudioPlayer: AudioContext resumed');
         // Play a 1-sample silent buffer to fully unlock iOS
         const node = ctx.createBufferSource();
         node.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
@@ -54,7 +55,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         node.disconnect();
       }
     } catch (e) {
-      console.warn('resume failed', e);
+      console.warn('🎵 AudioPlayer: resume failed', e);
     }
 
     // Stop only the current track, not global Howler
@@ -65,33 +66,51 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     if (target !== index) setIndex(target);
 
     const h = howlsRef.current[target];
-    if (!h) return console.warn('No howl found for target', target);
+    if (!h) {
+      console.error('🎵 AudioPlayer: No howl found for target', target, 'available:', howlsRef.current.length);
+      return;
+    }
+
+    const currentState = h.state();
+    console.log('🎵 AudioPlayer: Howl state for target', target, ':', currentState);
 
     const onReady = () => {
-      if (token !== playGenRef.current) return;
+      if (token !== playGenRef.current) {
+        console.log('🎵 AudioPlayer: Token mismatch, aborting play');
+        return;
+      }
       try {
         const id = h.play();
-        console.log('play id', id);
+        console.log('🎵 AudioPlayer: Play started with id', id);
         h.seek(0, id);
         h.once("end", () => { if (token === playGenRef.current) next(); });
       } catch (e) {
-        console.error('play threw', e);
+        console.error('🎵 AudioPlayer: play threw', e);
         // Fallback: recreate with html5:true
-        console.warn('Play error, retrying with html5:true', e);
+        console.warn('🎵 AudioPlayer: Play error, retrying with html5:true', e);
         const fallbackHowl = new Howl({ 
           src: [tracks[target].src], 
           html5: true, 
           preload: true
         });
         howlsRef.current[target] = fallbackHowl;
-        fallbackHowl.play();
+        fallbackHowl.once('load', () => {
+          console.log('🎵 AudioPlayer: Fallback howl loaded, playing');
+          fallbackHowl.play();
+        });
+        fallbackHowl.load();
       }
     };
 
-    if (h.state() !== "loaded") { 
-      h.once("load", onReady); 
+    if (currentState !== "loaded") { 
+      console.log('🎵 AudioPlayer: Howl not loaded, waiting for load event');
+      h.once("load", () => {
+        console.log('🎵 AudioPlayer: Load event fired, state now:', h.state());
+        onReady();
+      }); 
       h.load(); 
     } else { 
+      console.log('🎵 AudioPlayer: Howl already loaded, calling onReady immediately');
       onReady(); 
     }
   }
@@ -100,33 +119,52 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   // Build/unload Howls when tracks change
   useEffect(() => {
+    console.log('🎵 AudioPlayer: Building Howl instances for', tracks.length, 'tracks');
     Howler.stop();
     setIsPlaying(false);
     howlsRef.current.forEach((h) => { try { h.unload(); } catch {} });
 
-    howlsRef.current = tracks.map((t, i) => new Howl({
-      src: [t.src],
-      // Use html5:true for mobile compatibility, html5:false for desktop
-      html5: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
-      preload: true,
-      xhr: {
-        method: 'GET',
-        headers: {},
-        withCredentials: false
-      },
-      onplay: () => { 
-        setIsPlaying(true); 
-      },
-      onpause: () => { 
-        setIsPlaying(false); 
-      },
-      onstop: () => { 
-        setIsPlaying(false); 
-      },
-    }));
+    howlsRef.current = tracks.map((t, i) => {
+      const howl = new Howl({
+        src: [t.src],
+        // Use html5:true for mobile compatibility, html5:false for desktop
+        html5: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+        preload: true,
+        xhr: {
+          method: 'GET',
+          headers: {},
+          withCredentials: false
+        },
+        onload: () => {
+          console.log(`🎵 AudioPlayer: Track ${i} (${t.title || t.src}) loaded, state:`, howl.state());
+        },
+        onloaderror: (id, error) => {
+          console.error(`🎵 AudioPlayer: Track ${i} (${t.title || t.src}) load error:`, error);
+        },
+        onplay: () => { 
+          console.log(`🎵 AudioPlayer: Track ${i} started playing`);
+          setIsPlaying(true); 
+        },
+        onpause: () => { 
+          setIsPlaying(false); 
+        },
+        onstop: () => { 
+          setIsPlaying(false); 
+        },
+      });
+      
+      // Explicitly load the first track to ensure it's ready
+      if (i === 0) {
+        console.log(`🎵 AudioPlayer: Pre-loading first track, initial state:`, howl.state());
+        howl.load();
+      }
+      
+      return howl;
+    });
 
     const clamped = Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0));
     setIndex(clamped);
+    console.log('🎵 AudioPlayer: Set initial index to', clamped, 'out of', tracks.length, 'tracks');
 
     return () => {
       Howler.stop();
