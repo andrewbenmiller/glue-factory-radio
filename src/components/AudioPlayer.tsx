@@ -28,11 +28,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   ref
 ) {
   const howlsRef = useRef<Howl[]>([]);
+  const loadingRef = useRef<Set<number>>(new Set()); // Track which tracks are actively loading
   const [index, setIndex] = useState(
     Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0))
   );
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const playGenRef = useRef(0);
 
@@ -104,13 +106,38 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
     if (currentState !== "loaded") { 
       console.log('🎵 AudioPlayer: Howl not loaded, waiting for load event');
-      h.once("load", () => {
-        console.log('🎵 AudioPlayer: Load event fired, state now:', h.state());
-        onReady();
-      }); 
-      h.load(); 
+      setIsLoading(true); // Show loading indicator
+      
+      // Only set up load handler and call load() if not already loading
+      if (!loadingRef.current.has(target)) {
+        console.log('🎵 AudioPlayer: Initiating load for track', target);
+        loadingRef.current.add(target);
+        h.once("load", () => {
+          console.log('🎵 AudioPlayer: Load event fired, state now:', h.state());
+          setIsLoading(false);
+          onReady();
+        }); 
+        h.once("loaderror", () => {
+          console.error('🎵 AudioPlayer: Load error for track', target);
+          setIsLoading(false);
+        });
+        h.load();
+      } else {
+        console.log('🎵 AudioPlayer: Track already loading, waiting for existing load to complete');
+        // Track is already loading, just wait for it
+        h.once("load", () => {
+          console.log('🎵 AudioPlayer: Load event fired (from existing load), state now:', h.state());
+          setIsLoading(false);
+          onReady();
+        });
+        h.once("loaderror", () => {
+          console.error('🎵 AudioPlayer: Load error for track', target);
+          setIsLoading(false);
+        });
+      }
     } else { 
       console.log('🎵 AudioPlayer: Howl already loaded, calling onReady immediately');
+      setIsLoading(false);
       onReady(); 
     }
   }
@@ -122,13 +149,20 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     console.log('🎵 AudioPlayer: Building Howl instances for', tracks.length, 'tracks');
     Howler.stop();
     setIsPlaying(false);
+    setIsLoading(false);
     howlsRef.current.forEach((h) => { try { h.unload(); } catch {} });
 
+    loadingRef.current.clear(); // Reset loading tracking
+    
     howlsRef.current = tracks.map((t, i) => {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      // Use html5:true for first track and mobile to allow progressive loading
+      // This allows playback to start before the entire file is downloaded
+      const useHtml5 = isMobile || i === 0;
+      
       const howl = new Howl({
         src: [t.src],
-        // Use html5:true for mobile compatibility, html5:false for desktop
-        html5: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+        html5: useHtml5,
         preload: true,
         xhr: {
           method: 'GET',
@@ -137,9 +171,11 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         },
         onload: () => {
           console.log(`🎵 AudioPlayer: Track ${i} (${t.title || t.src}) loaded, state:`, howl.state());
+          loadingRef.current.delete(i); // Mark as no longer loading
         },
         onloaderror: (id, error) => {
           console.error(`🎵 AudioPlayer: Track ${i} (${t.title || t.src}) load error:`, error);
+          loadingRef.current.delete(i); // Mark as no longer loading even on error
         },
         onplay: () => { 
           console.log(`🎵 AudioPlayer: Track ${i} started playing`);
@@ -153,9 +189,22 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         },
       });
       
-      // Explicitly load the first track to ensure it's ready
+      // Aggressively load the first track immediately
       if (i === 0) {
-        console.log(`🎵 AudioPlayer: Pre-loading first track, initial state:`, howl.state());
+        console.log(`🎵 AudioPlayer: Aggressively pre-loading first track, initial state:`, howl.state());
+        loadingRef.current.add(i);
+        // Load immediately and set up error handling
+        howl.once("load", () => {
+          console.log(`🎵 AudioPlayer: First track pre-loaded successfully`);
+        });
+        howl.once("loaderror", (id, error) => {
+          console.error(`🎵 AudioPlayer: First track pre-load error:`, error);
+        });
+        howl.load();
+      } else if (i < 3) {
+        // Pre-load a couple more tracks in the background
+        console.log(`🎵 AudioPlayer: Pre-loading track ${i} in background`);
+        loadingRef.current.add(i);
         howl.load();
       }
       
@@ -170,6 +219,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       Howler.stop();
       howlsRef.current.forEach((h) => { try { h.unload(); } catch {} });
       howlsRef.current = [];
+      loadingRef.current.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.map((t) => t.src).join("|")]);
@@ -290,6 +340,12 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         </div>
         <div className="track-info" style={{ textAlign: 'center' }}>
           <h4 className="track-title" style={{ textAlign: 'center' }}>{title}</h4>
+          {isLoading && (
+            <div className="loading-indicator" style={{ marginTop: '10px' }}>
+              <div className="spinner" style={{ borderTopColor: '#FF5F1F' }}></div>
+              <span style={{ color: '#FF5F1F', fontSize: '0.9rem' }}>Loading track...</span>
+            </div>
+          )}
         </div>
       </div>
 
