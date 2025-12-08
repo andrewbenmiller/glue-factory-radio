@@ -7,6 +7,33 @@ const db = require('../config/database');
 const mp3Duration = require('mp3-duration');
 const cloudStorage = require('../services/cloudStorage');
 
+// Function to extract track name from filename
+function extractTrackNameFromFilename(filename) {
+  // Remove file extension
+  let trackName = path.parse(filename).name;
+  
+  // Replace underscores and hyphens with spaces
+  trackName = trackName.replace(/[_-]/g, ' ');
+  
+  // Remove leading numbers and dashes (e.g., "01 - " or "01-")
+  trackName = trackName.replace(/^\d+\s*[-.]?\s*/g, '');
+  
+  // Clean up multiple spaces
+  trackName = trackName.replace(/\s+/g, ' ').trim();
+  
+  // Capitalize first letter of each word
+  trackName = trackName.split(' ').map(word => {
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(' ');
+  
+  // If empty after cleaning, use the original filename without extension
+  if (!trackName) {
+    trackName = path.parse(filename).name;
+  }
+  
+  return trackName;
+}
+
 // Function to extract audio duration from MP3 files using metadata
 async function extractAudioDuration(filePath) {
   try {
@@ -227,101 +254,152 @@ router.post('/track', upload.single('audio'), async (req, res) => {
   }
 });
 
-// Create new show with first track
-router.post('/show', upload.single('audio'), async (req, res) => {
+// Create new show with tracks (supports single or bulk upload)
+router.post('/show', upload.array('audio', 50), async (req, res) => {
   try {
-    console.log('📤 Show creation request received:', { body: req.body, file: req.file });
+    console.log('📤 Show creation request received:', { 
+      body: req.body, 
+      files: req.files,
+      filesCount: req.files ? req.files.length : 0
+    });
     
     const { title, description, trackTitle } = req.body;
-    const audioFile = req.file;
+    const audioFiles = req.files || [];
 
-    if (!title || !trackTitle || !audioFile) {
-      return res.status(400).json({ error: 'Show title, track title, and audio file are required' });
+    if (!title) {
+      return res.status(400).json({ error: 'Show title is required' });
     }
 
-    console.log('📁 File details:', { 
-      filename: audioFile.filename, 
-      originalname: audioFile.originalname, 
-      mimetype: audioFile.mimetype,
-      size: audioFile.size 
-    });
-
-    // Extract duration from the uploaded file
-    const filePath = path.join(__dirname, '../uploads', audioFile.filename);
-    const duration = await extractAudioDuration(filePath);
-
-    // Upload to cloud storage (R2)
-    const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
-    
-    if (!storageResult.success) {
-      console.error('Cloud storage upload failed:', storageResult.error);
-      return res.status(500).json({ error: 'Failed to upload file to storage' });
+    // Support both single file (with trackTitle) and multiple files (names from filenames)
+    if (audioFiles.length === 0) {
+      return res.status(400).json({ error: 'At least one audio file is required' });
     }
 
     // Create the show first
     db.run(`
       INSERT INTO shows (title, description)
       VALUES (?, ?)
-      RETURNING id
-    `, [title, description], function(err, result) {
+    `, [title, description || ''], async function(err) {
       if (err) {
         console.error('Error creating show:', err);
         return res.status(500).json({ error: 'Failed to create show' });
       }
 
-      const showId = result.rows[0].id;
+      // Get the show ID - works for both SQLite (this.lastID) and PostgreSQL
+      let showId = this.lastID;
       
-      // Create the first track for this show
-      db.run(`
-        INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
-        VALUES (?, ?, ?, ?, ?, ?)
-        RETURNING id
-      `, [showId, trackTitle, audioFile.filename, audioFile.size, 1, duration], function(err, result) {
-        if (err) {
-          console.error('Error creating track:', err);
-          return res.status(500).json({ error: 'Failed to create track' });
-        }
-
-        const trackId = result.rows[0].id;
-
-        // Update show totals
-        db.run(`
-          UPDATE shows 
-          SET total_tracks = 1,
-              total_duration = ?
-          WHERE id = ?
-        `, [duration, showId], (err) => {
-          if (err) {
-            console.error('Error updating show totals:', err);
-          }
-          
-          // Get the created show with track
-          db.get(`
-            SELECT s.*, st.filename, st.duration, st.file_size
-            FROM shows s
-                          LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = true
-            WHERE s.id = ?
-          `, [showId], (err, result) => {
+      // If lastID is not available (PostgreSQL wrapper issue), query for it
+      if (!showId) {
+        await new Promise((resolve, reject) => {
+          db.get('SELECT id FROM shows WHERE title = ? ORDER BY created_date DESC LIMIT 1', [title], (err, row) => {
             if (err) {
-              return res.status(500).json({ error: 'Show created but failed to retrieve' });
+              reject(err);
+            } else {
+              showId = row ? row.id : null;
+              resolve();
             }
+          });
+        });
+      }
+      
+      if (!showId) {
+        return res.status(500).json({ error: 'Failed to get show ID after creation' });
+      }
+      const tracks = [];
+      let totalDuration = 0;
+      let trackOrder = 1;
 
-            res.json({
-              message: 'Show created successfully',
-              show: {
-                id: result.id,
-                title: result.title,
-                description: result.description,
-                created_date: result.created_date,
-                is_active: result.is_active,
-                total_duration: result.total_duration,
-                total_tracks: result.total_tracks,
-                filename: result.filename,
-                duration: result.duration,
-                file_size: result.file_size,
-                url: storageResult.url
+      // Process all uploaded files
+      for (const audioFile of audioFiles) {
+        try {
+          console.log('📁 Processing file:', { 
+            filename: audioFile.filename, 
+            originalname: audioFile.originalname
+          });
+
+          // Extract duration from the uploaded file
+          const filePath = path.join(__dirname, '../uploads', audioFile.filename);
+          const duration = await extractAudioDuration(filePath);
+          totalDuration += duration;
+
+          // Upload to cloud storage (R2)
+          const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
+          
+          if (!storageResult.success) {
+            console.error('Cloud storage upload failed for:', audioFile.filename);
+            continue; // Skip this file but continue with others
+          }
+
+          // Determine track title: use provided trackTitle for first file, or extract from filename
+          let trackTitleToUse;
+          if (trackOrder === 1 && trackTitle) {
+            // Use provided title for first track if given
+            trackTitleToUse = trackTitle;
+          } else {
+            // Extract track name from filename
+            trackTitleToUse = extractTrackNameFromFilename(audioFile.originalname);
+          }
+
+          // Insert track into database
+          await new Promise((resolve, reject) => {
+            db.run(`
+              INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `, [showId, trackTitleToUse, audioFile.filename, audioFile.size, trackOrder, duration], function(err) {
+              if (err) {
+                console.error('Error creating track:', err);
+                reject(err);
+              } else {
+                tracks.push({
+                  id: this.lastID,
+                  title: trackTitleToUse,
+                  filename: audioFile.filename,
+                  track_order: trackOrder,
+                  duration: duration
+                });
+                trackOrder++;
+                resolve();
               }
             });
+          });
+
+        } catch (fileError) {
+          console.error('Error processing file:', audioFile.filename, fileError);
+          // Continue with next file
+        }
+      }
+
+      // Update show totals
+      db.run(`
+        UPDATE shows 
+        SET total_tracks = ?,
+            total_duration = ?
+        WHERE id = ?
+      `, [tracks.length, totalDuration, showId], (err) => {
+        if (err) {
+          console.error('Error updating show totals:', err);
+        }
+        
+        // Get the created show
+        db.get(`
+          SELECT * FROM shows WHERE id = ?
+        `, [showId], (err, show) => {
+          if (err) {
+            return res.status(500).json({ error: 'Show created but failed to retrieve' });
+          }
+
+          res.json({
+            message: `Show created successfully with ${tracks.length} track(s)`,
+            show: {
+              id: show.id,
+              title: show.title,
+              description: show.description,
+              created_date: show.created_date,
+              is_active: show.is_active,
+              total_duration: show.total_duration,
+              total_tracks: show.total_tracks
+            },
+            tracks: tracks
           });
         });
       });

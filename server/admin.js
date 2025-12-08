@@ -56,6 +56,31 @@ function setupTabNavigation() {
 function setupUploadForm() {
     const form = document.getElementById('uploadForm');
     const uploadBtn = document.getElementById('uploadBtn');
+    const audioInput = document.getElementById('audio');
+    const filePreview = document.getElementById('filePreview');
+    const fileList = document.getElementById('fileList');
+
+    // Show file preview when files are selected
+    audioInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            filePreview.style.display = 'block';
+            fileList.innerHTML = '';
+            
+            Array.from(files).forEach((file, index) => {
+                const li = document.createElement('li');
+                li.style.padding = '5px 0';
+                li.style.borderBottom = '1px solid #dee2e6';
+                
+                // Extract track name from filename (preview)
+                const trackName = extractTrackNameFromFilename(file.name);
+                li.innerHTML = `<strong>${index + 1}.</strong> ${file.name} <em style="color: #666;">→ "${trackName}"</em>`;
+                fileList.appendChild(li);
+            });
+        } else {
+            filePreview.style.display = 'none';
+        }
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -64,26 +89,29 @@ function setupUploadForm() {
         const title = formData.get('title');
         const description = formData.get('description');
         const trackTitle = formData.get('trackTitle');
-        const audioFile = formData.get('audio');
+        const audioFiles = audioInput.files;
 
         if (!title.trim()) {
             showStatus('Please enter a show title', 'error');
             return;
         }
 
-        if (!trackTitle.trim()) {
-            showStatus('Please enter a track title', 'error');
+        if (!audioFiles || audioFiles.length === 0) {
+            showStatus('Please select at least one audio file', 'error');
             return;
         }
 
-        if (!audioFile || audioFile.size === 0) {
-            showStatus('Please select an audio file', 'error');
-            return;
+        // Add all files to FormData
+        // Note: trackTitle is optional - if provided, it will be used for the first track
+        // If not provided, all track names will be extracted from filenames
+        if (trackTitle && trackTitle.trim()) {
+            formData.set('trackTitle', trackTitle.trim());
         }
 
         // Disable upload button and show loading
         uploadBtn.disabled = true;
-        uploadBtn.textContent = 'Creating Show...';
+        const fileCount = audioFiles.length;
+        uploadBtn.textContent = `Creating Show with ${fileCount} track${fileCount > 1 ? 's' : ''}...`;
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/upload/show`, {
@@ -97,10 +125,12 @@ function setupUploadForm() {
             }
 
             const result = await response.json();
-            showStatus(`✅ Successfully created show: ${result.show.title}`, 'success');
+            const tracksCount = result.tracks ? result.tracks.length : 1;
+            showStatus(`✅ Successfully created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
             
             // Reset form
             form.reset();
+            filePreview.style.display = 'none';
             
             // Refresh shows list
             loadShows();
@@ -880,6 +910,33 @@ async function loadStats() {
             </div>
         `;
     }
+}
+
+// Extract track name from filename (frontend preview - matches backend logic)
+function extractTrackNameFromFilename(filename) {
+    // Remove file extension
+    let trackName = filename.replace(/\.[^/.]+$/, '');
+    
+    // Replace underscores and hyphens with spaces
+    trackName = trackName.replace(/[_-]/g, ' ');
+    
+    // Remove leading numbers and dashes (e.g., "01 - " or "01-")
+    trackName = trackName.replace(/^\d+\s*[-.]?\s*/g, '');
+    
+    // Clean up multiple spaces
+    trackName = trackName.replace(/\s+/g, ' ').trim();
+    
+    // Capitalize first letter of each word
+    trackName = trackName.split(' ').map(word => {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }).join(' ');
+    
+    // If empty after cleaning, use the original filename without extension
+    if (!trackName) {
+        trackName = filename.replace(/\.[^/.]+$/, '');
+    }
+    
+    return trackName;
 }
 
 // Utility Functions

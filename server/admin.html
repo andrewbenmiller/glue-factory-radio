@@ -460,15 +460,20 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="trackTitle">First Track Title *</label>
-                        <input type="text" id="trackTitle" name="trackTitle" required placeholder="Enter track title">
-                        <small>This will be the title of the first track in your show.</small>
+                        <label for="audio">Audio File(s) *</label>
+                        <input type="file" id="audio" name="audio" accept="audio/*" multiple>
+                        <small>Select one or multiple audio files. Track names will be extracted from filenames automatically.</small>
                     </div>
                     
                     <div class="form-group">
-                        <label for="audio">First Track Audio File *</label>
-                        <input type="file" id="audio" name="audio" accept="audio/*" required>
-                        <small>This will be the first track in your show. You can add more tracks later.</small>
+                        <label for="trackTitle">First Track Title (Optional)</label>
+                        <input type="text" id="trackTitle" name="trackTitle" placeholder="Enter custom title for first track">
+                        <small>If provided, this will be used for the first track. Otherwise, track names will be extracted from filenames.</small>
+                    </div>
+                    
+                    <div id="filePreview" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <strong>Selected Files:</strong>
+                        <ul id="fileList" style="margin-top: 10px; list-style: none; padding: 0;"></ul>
                     </div>
                     
                     <button type="submit" class="upload-button" id="uploadBtn">
