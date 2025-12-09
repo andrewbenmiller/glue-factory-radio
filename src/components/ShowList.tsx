@@ -37,7 +37,7 @@ const ShowList: React.FC<ShowListProps> = ({
     const buttonEl = event.currentTarget as HTMLElement;
     const cardEl = buttonEl.closest('.show-item') as HTMLElement | null;
 
-    // If we have a card, capture its position relative to the viewport
+    // If we have a card, capture its position relative to the document
     const prevTop = cardEl
       ? cardEl.getBoundingClientRect().top + window.scrollY
       : window.scrollY;
@@ -52,13 +52,12 @@ const ShowList: React.FC<ShowListProps> = ({
       return newSet;
     });
 
-    // On the next frame, adjust scroll so the card stays in place
+    // After React updates, nudge scroll so the card stays visually in place
     requestAnimationFrame(() => {
       if (!cardEl) return;
       const newTop = cardEl.getBoundingClientRect().top + window.scrollY;
       const delta = newTop - prevTop;
 
-      // Move the window by exactly the amount the card moved
       window.scrollTo({
         top: window.scrollY + delta,
       });
