@@ -10,16 +10,6 @@
   font-weight: bold;
 }
 
-.show-list-title {
-  font-size: 1.8rem;
-  color: black;
-  margin: 0 0 25px 0;
-  text-align: center;
-  font-weight: bold;
-  background: #FF5F1F;
-  padding: 12px 20px;
-  border-radius: 0;
-}
 
 .shows-container {
   display: flex;
@@ -299,10 +289,6 @@
     border-radius: 0;
   }
   
-  .show-list-title {
-    font-size: 1.5rem;
-  }
-  
   .show-item {
     padding: 15px;
   }
@@ -343,10 +329,6 @@
   .show-list {
     margin: 10px;
     padding: 15px;
-  }
-  
-  .show-list-title {
-    font-size: 1.3rem;
   }
   
   .show-item {
