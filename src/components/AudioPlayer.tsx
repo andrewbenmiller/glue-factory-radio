@@ -230,18 +230,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
             Track {index + 1} of {tracks.length}
           </p>
         </div>
-        <div className="track-info" style={{ textAlign: "center" }}>
-          <h4 className="track-title" style={{ textAlign: "center" }}>
-            {title}
-          </h4>
-          {isLoading && (
-            <div className="loading-indicator" style={{ marginTop: "10px" }}>
-              <div className="spinner" style={{ borderTopColor: "#FF5F1F" }} />
-              <span style={{ color: "#FF5F1F", fontSize: "0.9rem" }}>
-                Loading track...
-              </span>
-            </div>
-          )}
+        <div className="track-info" style={{ textAlign: 'center' }}>
+          <h4 className="track-title">{title}</h4>
         </div>
       </div>
 

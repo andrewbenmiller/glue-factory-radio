@@ -58,10 +58,12 @@
 }
 
 .track-info {
+  position: relative;
   font-size: 0.9rem;
-  color: #FF5F1F;
+  color: #ff5f1f;
   font-weight: 300;
   text-align: center !important;
+  min-height: 1.4em; /* keep a stable block height */
 }
 
 .time-display {
@@ -229,29 +231,6 @@
   accent-color: #667eea;
 }
 
-.loading-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-  font-size: 1rem;
-  opacity: 0.8;
-}
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
 .no-show {
   text-align: center;
@@ -400,6 +379,7 @@
   width: 100% !important;
   margin: 10px auto 5px auto !important;
 }
+
 
 .track-info p {
   font-size: 0.9rem;
