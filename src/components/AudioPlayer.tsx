@@ -37,6 +37,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   const [isLoading, setIsLoading] = useState(false);
 
   const playGenRef = useRef(0);
+  const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mobile-safe play function
   async function playFromGesture(target = index) {
@@ -104,9 +105,85 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       }
     };
 
+    // Check if this is HTML5 mode (first track or mobile)
+    const isHtml5 = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || target === 0;
+    
     if (currentState !== "loaded") { 
-      console.log('🎵 AudioPlayer: Howl not loaded, waiting for load event');
-      setIsLoading(true); // Show loading indicator
+      console.log('🎵 AudioPlayer: Howl not loaded, state:', currentState, 'HTML5 mode:', isHtml5);
+      
+      // For HTML5 mode, try playing immediately without waiting - browser will buffer
+      if (isHtml5) {
+        console.log('🎵 AudioPlayer: HTML5 mode - attempting immediate play (no wait for load)');
+        setIsLoading(true);
+        
+        // Try to play immediately - Howler will handle buffering
+        try {
+          // Ensure load has been called
+          if (currentState === "unloaded") {
+            console.log('🎵 AudioPlayer: Howl unloaded, calling load() first');
+            h.load();
+          }
+          
+          // Try playing - in HTML5 mode this should work even if not fully loaded
+          const playId = h.play();
+          if (playId) {
+            console.log('🎵 AudioPlayer: HTML5 play started immediately with id:', playId);
+            h.seek(0, playId);
+            
+            // Set up end handler
+            h.once("end", () => { if (token === playGenRef.current) next(); });
+            
+            // Monitor for when it actually starts playing
+            h.once("play", () => {
+              console.log('🎵 AudioPlayer: HTML5 track actually started playing');
+              setIsLoading(false);
+            });
+            
+            // Also listen for load in case play doesn't work immediately
+            h.once("load", () => {
+              console.log('🎵 AudioPlayer: HTML5 track loaded (after play attempt)');
+              setIsLoading(false);
+            });
+            
+            return; // Exit early, let browser handle buffering
+          } else {
+            console.warn('🎵 AudioPlayer: h.play() returned no playId');
+          }
+        } catch (e) {
+          console.warn('🎵 AudioPlayer: Immediate HTML5 play failed:', e);
+        }
+      }
+      
+      setIsLoading(true); // Show loading indicator for non-HTML5 or fallback
+      
+      // Clear any existing timeout
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
+      
+      // Set a timeout - if loading takes more than 10 seconds, try alternative approach
+      loadTimeoutRef.current = setTimeout(() => {
+        console.warn('🎵 AudioPlayer: Load timeout after 10s, trying alternative approach');
+        if (isHtml5) {
+          // For HTML5, try playing anyway - might work with partial buffer
+          try {
+            const playId = h.play();
+            if (playId) {
+              console.log('🎵 AudioPlayer: Timeout fallback - play started with id:', playId);
+              h.seek(0, playId);
+              setIsLoading(false);
+              h.once("end", () => { if (token === playGenRef.current) next(); });
+              loadTimeoutRef.current = null;
+              return;
+            }
+          } catch (e) {
+            console.error('🎵 AudioPlayer: Timeout fallback play also failed:', e);
+          }
+        }
+        setIsLoading(false);
+        loadTimeoutRef.current = null;
+      }, 10000);
       
       // Only set up load handler and call load() if not already loading
       if (!loadingRef.current.has(target)) {
@@ -114,11 +191,19 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         loadingRef.current.add(target);
         h.once("load", () => {
           console.log('🎵 AudioPlayer: Load event fired, state now:', h.state());
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+            loadTimeoutRef.current = null;
+          }
           setIsLoading(false);
           onReady();
         }); 
         h.once("loaderror", () => {
           console.error('🎵 AudioPlayer: Load error for track', target);
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+            loadTimeoutRef.current = null;
+          }
           setIsLoading(false);
         });
         h.load();
@@ -127,11 +212,19 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         // Track is already loading, just wait for it
         h.once("load", () => {
           console.log('🎵 AudioPlayer: Load event fired (from existing load), state now:', h.state());
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+            loadTimeoutRef.current = null;
+          }
           setIsLoading(false);
           onReady();
         });
         h.once("loaderror", () => {
           console.error('🎵 AudioPlayer: Load error for track', target);
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+            loadTimeoutRef.current = null;
+          }
           setIsLoading(false);
         });
       }
@@ -220,6 +313,10 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       howlsRef.current.forEach((h) => { try { h.unload(); } catch {} });
       howlsRef.current = [];
       loadingRef.current.clear();
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.map((t) => t.src).join("|")]);
