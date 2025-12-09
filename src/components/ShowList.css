@@ -187,11 +187,34 @@
 
 /* Tracks Dropdown Styles */
 .tracks-dropdown {
-  margin-top: 15px;
-  padding: 15px 0 40px 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    max-height 0.25s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  margin-top: 0;
+  padding: 0;
   background: transparent;
   border-radius: 0;
   border: none;
+}
+
+/* When expanded, let it grow and fade in */
+.tracks-dropdown.expanded {
+  max-height: 1000px; /* just needs to be larger than your expected content */
+  opacity: 1;
+  transform: translateY(0);
+  margin-top: 8px; /* optional spacing when open */
+  padding: 15px 0 40px 0;
+}
+
+/* Optional: keep collapsed state tight */
+.tracks-dropdown.collapsed {
+  margin-top: 0;
+  padding: 0;
 }
 
 .tracks-header h5 {
