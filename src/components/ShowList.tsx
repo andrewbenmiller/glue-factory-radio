@@ -75,7 +75,6 @@ const ShowList: React.FC<ShowListProps> = ({
 
   return (
     <div className="show-list">
-      <h3 className="show-list-title">Available Shows</h3>
       <div className="shows-container">
         {shows.map((show, index) => {
           const isExpanded = expandedShows.has(index);
