@@ -52,8 +52,8 @@
   display: none;
 }
 
-/* Remove bottom padding when show is expanded */
-.show-item:has(.tracks-dropdown) {
+/* Remove bottom padding only when dropdown is expanded */
+.show-item:has(.tracks-dropdown.expanded) {
   padding: 30px 40px 0 40px;
 }
 
