@@ -136,6 +136,24 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     startTrack(prv);
   }, [index, startTrack]);
 
+  const resumeOrStart = useCallback(() => {
+    const h = current();
+    if (!h) return;
+
+    const state = h.state();
+    const pos = (h.seek() as number) || 0;
+
+    // If we have a loaded track and we're somewhere in the middle,
+    // just resume from the current position
+    if (state === "loaded" && pos > 0) {
+      h.play();
+      setIsPlaying(true);
+    } else {
+      // Otherwise, start this track from the top
+      startTrack(index);
+    }
+  }, [current, startTrack, index]);
+
   // Build/unload Howls when the track list changes
   useEffect(() => {
     console.log("🎵 AudioPlayer: Building Howl instances for", tracks.length, "tracks");
@@ -241,7 +259,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
         <button
           className="control-btn play-btn"
-          onClick={() => (isPlaying ? pauseInternal() : startTrack(index))}
+          onClick={() => (isPlaying ? pauseInternal() : resumeOrStart())}
           title={isPlaying ? "Pause" : "Play"}
         >
           <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
