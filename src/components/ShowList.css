@@ -195,26 +195,20 @@
     max-height 0.25s ease,
     opacity 0.2s ease,
     transform 0.2s ease;
-  margin-top: 0;
-  padding: 0;
-  background: transparent;
-  border-radius: 0;
-  border: none;
 }
 
-/* When expanded, let it grow and fade in */
+/* When expanded, it smoothly opens */
 .tracks-dropdown.expanded {
-  max-height: 1000px; /* just needs to be larger than your expected content */
+  max-height: 1000px; /* just larger than your biggest track list */
   opacity: 1;
   transform: translateY(0);
-  margin-top: 8px; /* optional spacing when open */
+  margin-top: 8px;
   padding: 15px 0 40px 0;
 }
 
-/* Optional: keep collapsed state tight */
+/* Keep collapsed tight */
 .tracks-dropdown.collapsed {
   margin-top: 0;
-  padding: 0;
 }
 
 .tracks-header h5 {

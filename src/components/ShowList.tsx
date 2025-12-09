@@ -9,8 +9,14 @@ interface ShowListProps {
   onTrackSelect: (showIndex: number, trackIndex: number) => void;
 }
 
-const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSelect, onTrackSelect }) => {
+const ShowList: React.FC<ShowListProps> = ({
+  shows,
+  currentShowIndex,
+  onShowSelect,
+  onTrackSelect,
+}) => {
   const [expandedShows, setExpandedShows] = useState<Set<number>>(new Set());
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -22,12 +28,16 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
     return new Date(dateString).toLocaleDateString();
   };
 
-  const toggleShowExpansion = (showIndex: number, event: React.MouseEvent) => {
+  const toggleShowExpansion = (
+    showIndex: number,
+    event: React.MouseEvent
+  ) => {
     event.stopPropagation(); // Prevent show selection when clicking dropdown
 
+    // 🔒 Lock scroll position to avoid jump
     const prevScrollY = window.scrollY;
 
-    setExpandedShows(prev => {
+    setExpandedShows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(showIndex)) {
         newSet.delete(showIndex);
@@ -37,18 +47,24 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
       return newSet;
     });
 
+    // Restore scroll on next frame
     requestAnimationFrame(() => {
       window.scrollTo({ top: prevScrollY });
     });
   };
 
-  const handleTrackClick = (showIndex: number, trackIndex: number, event: React.MouseEvent) => {
+  const handleTrackClick = (
+    showIndex: number,
+    trackIndex: number,
+    event: React.MouseEvent
+  ) => {
     event.stopPropagation(); // Prevent show selection when clicking track
     onTrackSelect(showIndex, trackIndex);
   };
 
   return (
     <div className="show-list">
+      <h3 className="show-list-title">Available Shows</h3>
       <div className="shows-container">
         {shows.map((show, index) => {
           const isExpanded = expandedShows.has(index);
@@ -56,7 +72,9 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
           return (
             <div
               key={show.id}
-              className={`show-item ${index === currentShowIndex ? 'active' : ''}`}
+              className={`show-item ${
+                index === currentShowIndex ? 'active' : ''
+              }`}
               onClick={() => onShowSelect(index)}
             >
               <div className="show-item-header">
@@ -66,9 +84,11 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
                     {formatDuration(show.total_duration)}
                   </span>
                   <button
-                    className={`dropdown-button ${isExpanded ? 'rotated' : ''}`}
+                    className={`dropdown-button ${
+                      isExpanded ? 'rotated' : ''
+                    }`}
                     onClick={(e) => toggleShowExpansion(index, e)}
-                    title={isExpanded ? "Hide tracks" : "Show tracks"}
+                    title={isExpanded ? 'Hide tracks' : 'Show tracks'}
                   >
                     +
                   </button>
@@ -80,13 +100,23 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
               )}
 
               <div className="show-item-meta">
-                <span className="show-item-date">{formatDate(show.created_date)}</span>
-                <span className="show-item-number">#{shows.length - index}</span>
-                <span className="show-item-tracks">🎵 {show.total_tracks} tracks</span>
+                <span className="show-item-date">
+                  {formatDate(show.created_date)}
+                </span>
+                <span className="show-item-number">
+                  #{shows.length - index}
+                </span>
+                <span className="show-item-tracks">
+                  🎵 {show.total_tracks} tracks
+                </span>
               </div>
 
-              {/* Track listing dropdown – always rendered, animated via CSS */}
-              <div className={`tracks-dropdown ${isExpanded ? "expanded" : "collapsed"}`}>
+              {/* 🔽 Always rendered, animated via CSS */}
+              <div
+                className={`tracks-dropdown ${
+                  isExpanded ? 'expanded' : 'collapsed'
+                }`}
+              >
                 <div className="tracks-header">
                   <h5>🎵 Tracks in this Show</h5>
                 </div>
@@ -95,10 +125,14 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
                     <div
                       key={track.id}
                       className="track-item"
-                      onClick={(e) => handleTrackClick(index, trackIndex, e)}
+                      onClick={(e) =>
+                        handleTrackClick(index, trackIndex, e)
+                      }
                     >
                       <div className="track-info">
-                        <span className="track-number">{trackIndex + 1}</span>
+                        <span className="track-number">
+                          {trackIndex + 1}
+                        </span>
                         <span className="track-title">{track.title}</span>
                         <span className="track-duration">
                           {formatDuration(track.duration)}
@@ -112,6 +146,7 @@ const ShowList: React.FC<ShowListProps> = ({ shows, currentShowIndex, onShowSele
           );
         })}
       </div>
+
       {shows.length === 0 && (
         <div className="no-shows">
           <p>No shows uploaded yet.</p>
