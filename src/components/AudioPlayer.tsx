@@ -37,7 +37,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0))
   );
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Used to avoid race conditions when rapidly switching tracks
   const playGenRef = useRef(0);
@@ -51,86 +50,78 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   }
 
   /**
-   * Internal "next" used by both the Next button and the 'end' handler.
-   * (Does NOT rely on user gesture, but is allowed as a continuation.)
-   */
-  const nextInternal = useCallback(() => {
-    if (!howlsRef.current.length) return;
-    const currentIdx = index;
-    const nxt = (currentIdx + 1) % howlsRef.current.length;
-    startTrack(nxt);
-  }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /**
    * Core helper: load + play the given track index.
    * - Only this function calls load()/play() on Howl.
-   * - It ensures only ONE network request per track.
+   * - No loading spinner UI, just straight playback.
    */
-  const startTrack = useCallback((targetIndex: number) => {
-    if (!howlsRef.current.length) return;
-    if (targetIndex < 0 || targetIndex >= howlsRef.current.length) return;
+  const startTrack = useCallback(
+    (targetIndex: number) => {
+      if (!howlsRef.current.length) return;
+      if (targetIndex < 0 || targetIndex >= howlsRef.current.length) return;
 
-    playGenRef.current += 1;
-    const token = playGenRef.current;
+      playGenRef.current += 1;
+      const token = playGenRef.current;
 
-    stopAll();
-    if (targetIndex !== index) setIndex(targetIndex);
+      stopAll();
+      if (targetIndex !== index) setIndex(targetIndex);
 
-    const h = howlsRef.current[targetIndex];
-    if (!h) return;
+      const h = howlsRef.current[targetIndex];
+      if (!h) return;
 
-    const doPlay = () => {
-      if (token !== playGenRef.current) return;
-      try {
-        h.stop();
-      } catch {}
-      h.seek(0);
-      setIsLoading(false);
-      setIsPlaying(true);
+      const doPlay = () => {
+        if (token !== playGenRef.current) return;
+        try {
+          h.stop();
+        } catch {}
+        h.seek(0);
+        setIsPlaying(true);
 
-      h.once("end", () => {
-        if (token === playGenRef.current) {
-          // Inline next logic to avoid circular dependency
+        h.once("end", () => {
+          if (token !== playGenRef.current) return;
+          // Auto-advance like a CD player
           if (!howlsRef.current.length) return;
-          const currentIdx = index;
+          const currentIdx = targetIndex;
           const nxt = (currentIdx + 1) % howlsRef.current.length;
           startTrack(nxt);
-        }
-      });
+        });
 
-      h.play();
-    };
+        h.play();
+      };
 
-    const state = h.state();
-    if (state === "loaded") {
-      // Already loaded, just play
-      doPlay();
-    } else {
-      // Not loaded yet: load once, then play
-      setIsLoading(true);
-      h.once("load", () => {
-        if (token !== playGenRef.current) return;
+      const state = h.state();
+      if (state === "loaded") {
         doPlay();
-      });
-      h.once("loaderror", (_id, error) => {
-        console.error("🎵 AudioPlayer: load error for track", targetIndex, error);
-        if (token !== playGenRef.current) return;
-        setIsLoading(false);
-        setIsPlaying(false);
-      });
-      h.load();
-    }
-
-    // Make sure the Howler audio context is resumed (mobile-safe)
-    try {
-      const ctx = (Howler as any).ctx;
-      if (ctx && ctx.state === "suspended") {
-        ctx.resume();
+      } else {
+        h.once("load", () => {
+          if (token !== playGenRef.current) return;
+          doPlay();
+        });
+        h.once("loaderror", (_id, error) => {
+          console.error("🎵 AudioPlayer: load error for track", targetIndex, error);
+          if (token !== playGenRef.current) return;
+          setIsPlaying(false);
+        });
+        h.load();
       }
-    } catch (e) {
-      console.warn("🎵 AudioPlayer: ctx.resume failed", e);
-    }
-  }, [index]);
+
+      // Make sure the Howler audio context is resumed (mobile-safe)
+      try {
+        const ctx = (Howler as any).ctx;
+        if (ctx && ctx.state === "suspended") {
+          ctx.resume();
+        }
+      } catch (e) {
+        console.warn("🎵 AudioPlayer: ctx.resume failed", e);
+      }
+    },
+    [index]
+  );
+
+  const nextInternal = useCallback(() => {
+    if (!howlsRef.current.length) return;
+    const nxt = (index + 1) % howlsRef.current.length;
+    startTrack(nxt);
+  }, [index, startTrack]);
 
   const prevInternal = useCallback(() => {
     if (!howlsRef.current.length) return;
@@ -152,19 +143,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     howlsRef.current = tracks.map((t, i) => {
       const howl = new Howl({
         src: [t.src],
-        html5: true,        // Progressive HTTP streaming
-        preload: false,     // CRITICAL: no preloading; load on demand only
-        onplay: () => {
-          console.log(`🎵 AudioPlayer: Track ${i} started playing`);
-          setIsPlaying(true);
-          setIsLoading(false);
-        },
-        onpause: () => {
-          setIsPlaying(false);
-        },
-        onstop: () => {
-          setIsPlaying(false);
-        },
+        html5: true,   // Progressive HTTP streaming
+        preload: false // Load on demand only
       });
       return howl;
     });
@@ -175,7 +155,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     );
     setIndex(clamped);
     setIsPlaying(false);
-    setIsLoading(false);
 
     return () => {
       stopAll();
@@ -214,6 +193,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         const h = current();
         if (!h) return;
         h.pause();
+        setIsPlaying(false);
       },
     }),
     [index, current, startTrack]
@@ -230,8 +210,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
             Track {index + 1} of {tracks.length}
           </p>
         </div>
-        <div className="track-info" style={{ textAlign: 'center' }}>
-          <h4 className="track-title" style={{ textAlign: 'center' }}>
+        <div className="track-info" style={{ textAlign: "center" }}>
+          <h4 className="track-title" style={{ textAlign: "center" }}>
             {title}
           </h4>
         </div>
@@ -254,9 +234,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
         <button
           className="control-btn play-btn"
-          onClick={() =>
-            isPlaying ? current()?.pause() : startTrack(index)
-          }
+          onClick={() => (isPlaying ? current()?.pause() : startTrack(index))}
           title={isPlaying ? "Pause" : "Play"}
         >
           <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
