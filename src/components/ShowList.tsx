@@ -30,12 +30,17 @@ const ShowList: React.FC<ShowListProps> = ({
 
   const toggleShowExpansion = (
     showIndex: number,
-    event: React.MouseEvent
+    event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.stopPropagation(); // Prevent show selection when clicking dropdown
 
-    // 🔒 Lock scroll position to avoid jump
-    const prevScrollY = window.scrollY;
+    const buttonEl = event.currentTarget as HTMLElement;
+    const cardEl = buttonEl.closest('.show-item') as HTMLElement | null;
+
+    // If we have a card, capture its position relative to the viewport
+    const prevTop = cardEl
+      ? cardEl.getBoundingClientRect().top + window.scrollY
+      : window.scrollY;
 
     setExpandedShows((prev) => {
       const newSet = new Set(prev);
@@ -47,9 +52,16 @@ const ShowList: React.FC<ShowListProps> = ({
       return newSet;
     });
 
-    // Restore scroll on next frame
+    // On the next frame, adjust scroll so the card stays in place
     requestAnimationFrame(() => {
-      window.scrollTo({ top: prevScrollY });
+      if (!cardEl) return;
+      const newTop = cardEl.getBoundingClientRect().top + window.scrollY;
+      const delta = newTop - prevTop;
+
+      // Move the window by exactly the amount the card moved
+      window.scrollTo({
+        top: window.scrollY + delta,
+      });
     });
   };
 
