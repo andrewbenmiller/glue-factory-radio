@@ -32,34 +32,40 @@ const ShowList: React.FC<ShowListProps> = ({
     showIndex: number,
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
-    event.stopPropagation(); // Prevent show selection when clicking dropdown
+    event.stopPropagation();
 
-    const buttonEl = event.currentTarget as HTMLElement;
-    const cardEl = buttonEl.closest('.show-item') as HTMLElement | null;
+    // The show card container
+    const cardEl = (event.currentTarget as HTMLElement).closest(
+      ".show-item"
+    ) as HTMLElement | null;
 
-    // If we have a card, capture its position relative to the document
+    // Capture card's vertical position BEFORE expanding/collapsing
     const prevTop = cardEl
       ? cardEl.getBoundingClientRect().top + window.scrollY
       : window.scrollY;
 
+    // Toggle expanded state
     setExpandedShows((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(showIndex)) {
-        newSet.delete(showIndex);
-      } else {
-        newSet.add(showIndex);
-      }
-      return newSet;
+      const next = new Set(prev);
+      if (next.has(showIndex)) next.delete(showIndex);
+      else next.add(showIndex);
+      return next;
     });
 
-    // After React updates, nudge scroll so the card stays visually in place
+    // TWO-FRAME STABILIZATION — eliminates jitter & layout bounce
     requestAnimationFrame(() => {
-      if (!cardEl) return;
-      const newTop = cardEl.getBoundingClientRect().top + window.scrollY;
-      const delta = newTop - prevTop;
+      requestAnimationFrame(() => {
+        if (!cardEl) return;
 
-      window.scrollTo({
-        top: window.scrollY + delta,
+        // Card's new Y position after React + browser layout settle
+        const newTop = cardEl.getBoundingClientRect().top + window.scrollY;
+        const delta = newTop - prevTop;
+
+        // Scroll correction to maintain visual stability
+        window.scrollTo({
+          top: window.scrollY + delta,
+          behavior: "instant" as any
+        });
       });
     });
   };

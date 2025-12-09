@@ -175,20 +175,13 @@
   transform: scale(0.95);
 }
 
-/* Base dropdown: hidden by default */
 .tracks-dropdown {
   display: none;
 }
 
-/* Expanded: instantly visible */
 .tracks-dropdown.expanded {
   display: block;
   padding: 15px 0 40px 0;
-}
-
-/* Collapsed: explicitly hidden */
-.tracks-dropdown.collapsed {
-  display: none;
 }
 
 .tracks-header h5 {
