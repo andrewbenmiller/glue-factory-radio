@@ -147,11 +147,16 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       } catch {}
     });
 
-    howlsRef.current = tracks.map((t, i) => {
+    howlsRef.current = tracks.map((t) => {
       const howl = new Howl({
         src: [t.src],
         html5: true,   // Progressive HTTP streaming
-        preload: false // Load on demand only
+        preload: false, // Load on demand only
+
+        // Keep React state in sync with Howler playback events
+        onplay: () => setIsPlaying(true),
+        onpause: () => setIsPlaying(false),
+        onstop: () => setIsPlaying(false),
       });
       return howl;
     });
