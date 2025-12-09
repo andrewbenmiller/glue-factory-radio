@@ -106,7 +106,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     };
 
     // Check if this is HTML5 mode (first track or mobile)
-    const isHtml5 = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || target === 0;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isHtml5 = isMobile || target === 0; // First track uses HTML5 for progressive loading
     
     if (currentState !== "loaded") { 
       console.log('🎵 AudioPlayer: Howl not loaded, state:', currentState, 'HTML5 mode:', isHtml5);
@@ -249,14 +250,14 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     
     howlsRef.current = tracks.map((t, i) => {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      // Use html5:true for first track and mobile to allow progressive loading
+      // Use html5:true for mobile and first track (desktop) to allow progressive loading
       // This allows playback to start before the entire file is downloaded
       const useHtml5 = isMobile || i === 0;
       
       const howl = new Howl({
         src: [t.src],
         html5: useHtml5,
-        preload: true,
+        preload: false, // Don't preload - load on demand only to save bandwidth
         xhr: {
           method: 'GET',
           headers: {},
@@ -282,24 +283,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         },
       });
       
-      // Aggressively load the first track immediately
-      if (i === 0) {
-        console.log(`🎵 AudioPlayer: Aggressively pre-loading first track, initial state:`, howl.state());
-        loadingRef.current.add(i);
-        // Load immediately and set up error handling
-        howl.once("load", () => {
-          console.log(`🎵 AudioPlayer: First track pre-loaded successfully`);
-        });
-        howl.once("loaderror", (id, error) => {
-          console.error(`🎵 AudioPlayer: First track pre-load error:`, error);
-        });
-        howl.load();
-      } else if (i < 3) {
-        // Pre-load a couple more tracks in the background
-        console.log(`🎵 AudioPlayer: Pre-loading track ${i} in background`);
-        loadingRef.current.add(i);
-        howl.load();
-      }
+      // Don't pre-load any tracks - load on demand only
+      // This saves bandwidth and processing power
       
       return howl;
     });
