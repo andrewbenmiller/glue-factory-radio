@@ -18,7 +18,7 @@
 }
 
 .show-item {
-  background: #FCFAF5;
+  background-color: #ffffff;
   border: none;
   border-radius: 0;
   padding: 30px 40px 40px 40px;
@@ -34,7 +34,7 @@
 }
 
 .show-item:hover {
-  background: #FCFAF5;
+  background-color: #ffffff;
   transform: none;
   box-shadow: none;
 }
@@ -44,7 +44,7 @@
 }
 
 .show-item.active {
-  background: #FCFAF5;
+  background-color: #ffffff;
   box-shadow: none;
 }
 
@@ -182,6 +182,10 @@
 .tracks-dropdown.expanded {
   display: block;
   padding: 15px 0 40px 0;
+}
+
+.tracks-dropdown.collapsed {
+  display: none;
 }
 
 .tracks-header h5 {

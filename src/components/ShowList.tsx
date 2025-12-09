@@ -28,45 +28,13 @@ const ShowList: React.FC<ShowListProps> = ({
     return new Date(dateString).toLocaleDateString();
   };
 
-  const toggleShowExpansion = (
-    showIndex: number,
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const toggleShowExpansion = (showIndex: number, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-
-    // The show card container
-    const cardEl = (event.currentTarget as HTMLElement).closest(
-      ".show-item"
-    ) as HTMLElement | null;
-
-    // Capture card's vertical position BEFORE expanding/collapsing
-    const prevTop = cardEl
-      ? cardEl.getBoundingClientRect().top + window.scrollY
-      : window.scrollY;
-
-    // Toggle expanded state
-    setExpandedShows((prev) => {
+    setExpandedShows(prev => {
       const next = new Set(prev);
       if (next.has(showIndex)) next.delete(showIndex);
       else next.add(showIndex);
       return next;
-    });
-
-    // TWO-FRAME STABILIZATION — eliminates jitter & layout bounce
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!cardEl) return;
-
-        // Card's new Y position after React + browser layout settle
-        const newTop = cardEl.getBoundingClientRect().top + window.scrollY;
-        const delta = newTop - prevTop;
-
-        // Scroll correction to maintain visual stability
-        window.scrollTo({
-          top: window.scrollY + delta,
-          behavior: "instant" as any
-        });
-      });
     });
   };
 
