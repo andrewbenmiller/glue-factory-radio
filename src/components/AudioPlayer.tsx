@@ -43,6 +43,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   const current = useCallback(() => howlsRef.current[index], [index]);
 
+  const pauseInternal = useCallback(() => {
+    const h = current();
+    if (!h) return;
+    h.pause();
+    setIsPlaying(false);
+  }, [current]);
+
   /** Stop ALL audio immediately */
   function stopAll() {
     Howler.stop();
@@ -189,14 +196,9 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         const target = typeof i === "number" ? i : index;
         startTrack(target);
       },
-      pause: () => {
-        const h = current();
-        if (!h) return;
-        h.pause();
-        setIsPlaying(false);
-      },
+      pause: pauseInternal,
     }),
-    [index, current, startTrack]
+    [index, startTrack, pauseInternal]
   );
 
   const title = tracks[index]?.title ?? `Track ${index + 1}`;
@@ -234,7 +236,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
         <button
           className="control-btn play-btn"
-          onClick={() => (isPlaying ? current()?.pause() : startTrack(index))}
+          onClick={() => (isPlaying ? pauseInternal() : startTrack(index))}
           title={isPlaying ? "Pause" : "Play"}
         >
           <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
