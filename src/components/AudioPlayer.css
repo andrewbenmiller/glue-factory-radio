@@ -129,7 +129,7 @@
   color: black;
   font-size: 4.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,11 +144,10 @@
 
 .control-btn:hover {
   background: #d4450f;
-  transform: scale(1.05);
 }
 
 .control-btn:active {
-  transform: scale(0.95);
+  background: #b93a0d;
 }
 
 .control-btn:disabled {
