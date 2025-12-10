@@ -21,7 +21,7 @@
   background-color: #ffffff;
   border: none;
   border-radius: 0;
-  padding: 30px 40px 30px 40px;
+  padding: 35px 45px 35px 45px;
   cursor: pointer;
   transition: none;
   position: relative;
@@ -52,16 +52,12 @@
   display: none;
 }
 
-/* Remove bottom padding only when dropdown is expanded */
-.show-item:has(.tracks-dropdown.expanded) {
-  padding: 30px 40px 0 40px;
-}
 
 .show-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin: 0 5px 10px 5px;
 }
 
 .expand-arrow {
@@ -72,9 +68,9 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.3s ease;
-  width: 100%;
+  width: calc(100% - 10px);
   padding: 8px 0 3px 0;
-  margin: 20px 0 2px 0;
+  margin: 20px 5px 2px 5px;
 }
 
 .expand-arrow:hover {
@@ -119,7 +115,7 @@
 
 .show-item-description {
   color: black;
-  margin: 0 0 15px 0;
+  margin: 0 5px 15px 5px;
   line-height: 1.5;
   font-size: 0.95rem;
 }
@@ -130,6 +126,7 @@
   align-items: center;
   font-size: 0.85rem;
   color: black;
+  margin: 0 5px;
 }
 
 .show-item-number {
@@ -192,7 +189,8 @@
 
 .tracks-dropdown.expanded {
   display: block;
-  padding: 15px 0 30px 0;
+  padding: 15px 5px 0 5px;
+  margin: 0;
 }
 
 .tracks-dropdown.collapsed {
@@ -202,17 +200,18 @@
 .tracks-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 4px 0 8px;
+  gap: 3px;
+  padding: 4px 0 8px 0;
+  margin: 0;
 }
 
 .track-item {
   background: transparent;
-  padding: 6px 12px;
+  padding: 0;
   border-radius: 0;
   border: none;
   transition: all 0.2s ease;
-  margin-bottom: 0;
+  margin: 0;
   cursor: pointer;
 }
 
@@ -229,15 +228,17 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 6px;
+  margin: 0;
+  padding: 0;
 }
 
 .track-number {
   background: transparent;
   color: black;
   padding: 0;
+  margin: 0;
   border-radius: 0;
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: bold;
   min-width: 20px;
   text-align: center;
@@ -248,17 +249,20 @@
   font-weight: 600;
   color: black;
   flex: 1;
-  font-size: 0.9rem;
+  font-size: 13px;
   text-align: left !important;
   line-height: 1.4;
+  margin: 0;
+  padding: 0;
 }
 
 .track-duration {
   background: transparent;
   color: black;
   padding: 0;
+  margin: 0;
   border-radius: 0;
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
@@ -341,13 +345,13 @@
   }
   
   .tracks-dropdown {
-    padding: 12px;
+    padding: 15px 5px 0 5px;
   }
   
   .track-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
   }
   
 
@@ -372,6 +376,6 @@
   }
 
   .track-item {
-    padding: 6px 0;
+    padding: 0;
   }
 }
