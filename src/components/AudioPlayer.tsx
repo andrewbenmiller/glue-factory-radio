@@ -61,11 +61,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       if (!howlsRef.current.length) return;
       if (targetIndex < 0 || targetIndex >= howlsRef.current.length) return;
 
+      // Prevent old "end" handlers from firing
       playGenRef.current += 1;
       const token = playGenRef.current;
 
+      // Stop everything before starting another track
       stopAll();
-      if (targetIndex !== index) setIndex(targetIndex);
+      setIndex(targetIndex);
 
       const h = howlsRef.current[targetIndex];
       if (!h) return;
@@ -74,26 +76,46 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         if (token !== playGenRef.current) return;
 
         try {
-          h.stop();
+          h.stop(); // make sure the instance is clean before starting
         } catch {}
 
-        // CD-style: always start this track from the top
+        // CD-style: always start track from the top
         h.seek(0);
         setIsPlaying(true);
 
-        // ✅ NO AUTO-ADVANCE HERE – just stop when the track ends
+        // ───────────────────────────────────────────────
+        //       AUTO-ADVANCE THROUGH SHOW (NO LOOP)
+        // ───────────────────────────────────────────────
         h.once("end", () => {
           if (token !== playGenRef.current) return;
-          setIsPlaying(false);
+
+          const total = howlsRef.current.length;
+          if (!total) {
+            setIsPlaying(false);
+            return;
+          }
+
+          // Stop after the last track (NO looping)
+          if (targetIndex >= total - 1) {
+            setIsPlaying(false);
+            return;
+          }
+
+          // Otherwise advance to the next track
+          const nextIndex = targetIndex + 1;
+          startTrack(nextIndex);
         });
+        // ───────────────────────────────────────────────
 
         h.play();
       };
 
+      // If already loaded, play immediately
       const state = h.state();
       if (state === "loaded") {
         doPlay();
       } else {
+        // Load on demand then play
         h.once("load", () => {
           if (token !== playGenRef.current) return;
           doPlay();
@@ -106,7 +128,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         h.load();
       }
 
-      // Make sure the Howler audio context is resumed (mobile-safe)
+      // Ensure Howler audio context is unlocked (mobile-safe)
       try {
         const ctx = (Howler as any).ctx;
         if (ctx && ctx.state === "suspended") {
@@ -116,7 +138,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         console.warn("🎵 AudioPlayer: ctx.resume failed", e);
       }
     },
-    [index]
+    [tracks.length]  // only depends on track count
   );
 
   const nextInternal = useCallback(() => {
