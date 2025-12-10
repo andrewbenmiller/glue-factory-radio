@@ -20,16 +20,16 @@ function App() {
     const fetchShows = async () => {
       try {
         setIsLoading(true);
-        console.log('🎵 App: Fetching shows...');
+        console.log('App: Fetching shows...');
         const fetchedShows = await apiService.getShows();
-        console.log('🎵 App: Fetched', fetchedShows.length, 'shows');
+        console.log('App: Fetched', fetchedShows.length, 'shows');
         fetchedShows.forEach((show, idx) => {
-          console.log(`🎵 App: Show ${idx}: "${show.title}" with ${show.tracks?.length || 0} tracks`);
+          console.log(`App: Show ${idx}: "${show.title}" with ${show.tracks?.length || 0} tracks`);
         });
         setShows(fetchedShows);
         setError(null);
       } catch (err) {
-        console.error('🎵 App: Error fetching shows:', err);
+        console.error('App: Error fetching shows:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch shows');
       } finally {
         setIsLoading(false);
@@ -41,12 +41,12 @@ function App() {
   
   // Monitor state changes for debugging
   useEffect(() => {
-    console.log('🎵 App: State changed - Show:', currentShowIndex, 'Track:', currentTrackIndex);
+    console.log('App: State changed - Show:', currentShowIndex, 'Track:', currentTrackIndex);
   }, [currentShowIndex, currentTrackIndex]);
   
   // Handle show selection
   const handleShowChange = (newShowIndex: number) => {
-    console.log('🎵 App: Changing show to:', newShowIndex);
+    console.log('App: Changing show to:', newShowIndex);
 
     // If user clicks the *currently active* show, do nothing.
     // This prevents resetting the track index and stopping playback.
@@ -61,9 +61,9 @@ function App() {
   
   // Handle track selection from ShowList
   const handleTrackSelect = (showIndex: number, trackIndex: number) => {
-    console.log('🎵 App: handleTrackSelect CALLED!');
-    console.log('🎵 App: Track selected - Show:', showIndex, 'Track:', trackIndex);
-    console.log('🎵 App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
+    console.log('App: handleTrackSelect CALLED!');
+    console.log('App: Track selected - Show:', showIndex, 'Track:', trackIndex);
+    console.log('App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
     
     // 1) Switch show/track state so UI reflects selection
     if (showIndex !== currentShowIndex) setCurrentShowIndex(showIndex);
@@ -76,7 +76,7 @@ function App() {
       playerRef.current?.playFromUI(trackIndex);
     });
     
-    console.log('🎵 App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);
+    console.log('App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);
   };
   
   // Handle track navigation from AudioPlayer (currently unused but kept for future use)
@@ -135,9 +135,9 @@ function App() {
   // Get tracks for current show
   const currentTracks = shows[validShowIndex] ? convertShowToTracks(shows[validShowIndex]) : [];
   
-  console.log('🎵 App: Final values - validShowIndex:', validShowIndex, 'tracks:', currentTracks.length);
+  console.log('App: Final values - validShowIndex:', validShowIndex, 'tracks:', currentTracks.length);
   if (currentTracks.length > 0) {
-    console.log('🎵 App: First track URL:', currentTracks[0].src);
+    console.log('App: First track URL:', currentTracks[0].src);
   }
   
   return (

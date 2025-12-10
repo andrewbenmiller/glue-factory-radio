@@ -67,7 +67,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onUploadSuccess }) => {
 
   return (
     <div className="upload-form-container">
-      <h3>🎵 Upload New Show</h3>
+      <h3>Upload New Show</h3>
       
       <form onSubmit={handleSubmit} className="upload-form">
         <div className="form-group">

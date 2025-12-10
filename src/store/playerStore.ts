@@ -23,9 +23,9 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   }),
   
   setTrack: (trackIndex: number) => {
-    console.log('🎵 Zustand: setTrack called with:', trackIndex);
+    console.log('Zustand: setTrack called with:', trackIndex);
     set({ currentTrackIndex: trackIndex });
-    console.log('🎵 Zustand: setTrack completed');
+    console.log('Zustand: setTrack completed');
   },
   
   toggleAutoPlay: () => set((state) => ({ 

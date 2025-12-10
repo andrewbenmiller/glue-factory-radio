@@ -21,7 +21,7 @@
   background-color: #ffffff;
   border: none;
   border-radius: 0;
-  padding: 30px 40px 40px 40px;
+  padding: 30px 40px 30px 40px;
   cursor: pointer;
   transition: none;
   position: relative;
@@ -64,6 +64,37 @@
   margin-bottom: 10px;
 }
 
+.expand-arrow {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  width: 100%;
+  padding: 8px 0 3px 0;
+  margin: 20px 0 2px 0;
+}
+
+.expand-arrow:hover {
+  opacity: 0.7;
+}
+
+.expand-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.expand-arrow .triangle {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 14px solid #FF5F1F;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
 .show-item-title {
   font-size: 1.3rem;
   color: black;
@@ -71,16 +102,19 @@
   font-weight: 600;
   flex: 1;
   margin-right: 15px;
+  line-height: 1.4;
 }
 
 .show-item-duration {
   background: transparent;
   color: black;
-  padding: 4px 12px;
+  padding: 0;
   border-radius: 0;
-  font-size: 0.9rem;
-  font-weight: bold;
+  font-size: 1.3rem;
+  font-weight: 600;
   white-space: nowrap;
+  line-height: 1.4;
+  text-align: right;
 }
 
 .show-item-description {
@@ -98,15 +132,10 @@
   color: black;
 }
 
-.show-item-date {
-  font-style: italic;
-  color: black;
-}
-
 .show-item-number {
   background: transparent;
   color: black;
-  padding: 2px 8px;
+  padding: 0;
   border-radius: 0;
   font-weight: bold;
 }
@@ -114,35 +143,17 @@
 .show-item-tracks {
   background: transparent;
   color: black;
-  padding: 2px 8px;
+  padding: 0;
   border-radius: 0;
   font-weight: bold;
+  white-space: nowrap;
+  text-align: right;
 }
 
 .show-item-controls {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.expand-button {
-  background: transparent;
-  color: #FF5F1F;
-  border-radius: 4px;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-
-.expand-button:active {
-  transform: scale(0.95);
 }
 
 .dropdown-button {
@@ -156,23 +167,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 43px;
+  font-size: 46px;
   font-weight: bold;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
   flex-shrink: 0;
 }
 
-
-.dropdown-button:not(.rotated) {
-  font-size: 46px;
-}
-
 .dropdown-button.rotated {
-  transform: translateY(2px);
+  font-size: 43px;
+  transform: rotate(45deg) translateY(2px) !important;
 }
 
-.dropdown-button:active {
+.dropdown-button:active:not(.rotated) {
   transform: scale(0.95);
+}
+
+.dropdown-button.rotated:active {
+  transform: rotate(45deg) translateY(2px) scale(0.95) !important;
 }
 
 .tracks-dropdown {
@@ -181,18 +192,11 @@
 
 .tracks-dropdown.expanded {
   display: block;
-  padding: 15px 0 40px 0;
+  padding: 15px 0 30px 0;
 }
 
 .tracks-dropdown.collapsed {
   display: none;
-}
-
-.tracks-header h5 {
-  margin: 0 0 12px 0;
-  color: black;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 .tracks-list {
@@ -214,17 +218,15 @@
 
 .track-item:hover {
   background: gray;
-  transform: scale(1.02);
 }
 
 .track-item:active {
-  transform: scale(0.98);
   background: rgba(255, 95, 31, 0.35);
 }
 
 .track-info {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 6px;
@@ -233,12 +235,13 @@
 .track-number {
   background: transparent;
   color: black;
-  padding: 2px 6px;
+  padding: 0;
   border-radius: 0;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: bold;
   min-width: 20px;
   text-align: center;
+  line-height: 1.4;
 }
 
 .track-title {
@@ -247,15 +250,17 @@
   flex: 1;
   font-size: 0.9rem;
   text-align: left !important;
+  line-height: 1.4;
 }
 
 .track-duration {
   background: transparent;
   color: black;
-  padding: 2px 8px;
+  padding: 0;
   border-radius: 0;
-  font-size: 0.75rem;
-  font-weight: bold;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
   white-space: nowrap;
 }
 

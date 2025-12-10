@@ -121,7 +121,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           doPlay();
         });
         h.once("loaderror", (_id, error) => {
-          console.error("🎵 AudioPlayer: load error for track", targetIndex, error);
+          console.error("AudioPlayer: load error for track", targetIndex, error);
           if (token !== playGenRef.current) return;
           setIsPlaying(false);
         });
@@ -135,7 +135,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           ctx.resume();
         }
       } catch (e) {
-        console.warn("🎵 AudioPlayer: ctx.resume failed", e);
+        console.warn("AudioPlayer: ctx.resume failed", e);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -174,7 +174,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   // Build/unload Howls when the track list changes
   useEffect(() => {
-    console.log("🎵 AudioPlayer: Building Howl instances for", tracks.length, "tracks");
+    console.log("AudioPlayer: Building Howl instances for", tracks.length, "tracks");
 
     stopAll();
     howlsRef.current.forEach((h) => {

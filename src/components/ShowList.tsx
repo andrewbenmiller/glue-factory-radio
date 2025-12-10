@@ -23,10 +23,6 @@ const ShowList: React.FC<ShowListProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Unknown date';
-    return new Date(dateString).toLocaleDateString();
-  };
 
   const toggleShowExpansion = (showIndex: number, event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -72,15 +68,6 @@ const ShowList: React.FC<ShowListProps> = ({
                   <span className="show-item-duration">
                     {formatDuration(show.total_duration)}
                   </span>
-                  <button
-                    className={`dropdown-button ${
-                      isExpanded ? 'rotated' : ''
-                    }`}
-                    onClick={(e) => toggleShowExpansion(index, e)}
-                    title={isExpanded ? 'Hide tracks' : 'Show tracks'}
-                  >
-                    +
-                  </button>
                 </div>
               </div>
 
@@ -89,16 +76,23 @@ const ShowList: React.FC<ShowListProps> = ({
               )}
 
               <div className="show-item-meta">
-                <span className="show-item-date">
-                  {formatDate(show.created_date)}
-                </span>
                 <span className="show-item-number">
                   #{shows.length - index}
                 </span>
                 <span className="show-item-tracks">
-                  🎵 {show.total_tracks} tracks
+                  {show.total_tracks} tracks
                 </span>
               </div>
+
+              <button
+                className={`expand-arrow ${
+                  isExpanded ? 'rotated' : ''
+                }`}
+                onClick={(e) => toggleShowExpansion(index, e)}
+                title={isExpanded ? 'Hide tracks' : 'Show tracks'}
+              >
+                <span className="triangle"></span>
+              </button>
 
               {/* 🔽 Always rendered, animated via CSS */}
               <div
@@ -106,9 +100,6 @@ const ShowList: React.FC<ShowListProps> = ({
                   isExpanded ? 'expanded' : 'collapsed'
                 }`}
               >
-                <div className="tracks-header">
-                  <h5>🎵 Tracks in this Show</h5>
-                </div>
                 <div className="tracks-list">
                   {show.tracks.map((track, trackIndex) => (
                     <div
