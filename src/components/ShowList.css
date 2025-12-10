@@ -284,6 +284,18 @@
 }
 
 /* Mobile responsiveness */
+@media (max-width: 1024px) {
+  .show-item-header {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  .show-item-controls {
+    flex-direction: row !important;
+    flex-shrink: 0;
+  }
+}
+
 @media (max-width: 768px) {
   .show-list {
     margin: 20px;
@@ -299,19 +311,33 @@
     font-size: 1.2rem;
   }
   
+  .show-item-duration {
+    font-size: 1.2rem;
+  }
+  
   .show-item-header {
-    flex-direction: column;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
     gap: 10px;
   }
   
-  .show-item-duration {
-    align-self: flex-start;
+  .show-item-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .show-item-controls {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row !important;
+    flex-shrink: 0;
+    align-items: center;
     gap: 8px;
+  }
+  
+  .show-item-duration {
+    flex-shrink: 0;
   }
   
   .tracks-dropdown {
@@ -338,6 +364,10 @@
   }
   
   .show-item-title {
+    font-size: 1.1rem;
+  }
+  
+  .show-item-duration {
     font-size: 1.1rem;
   }
 
