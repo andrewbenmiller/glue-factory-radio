@@ -47,8 +47,16 @@ function App() {
   // Handle show selection
   const handleShowChange = (newShowIndex: number) => {
     console.log('🎵 App: Changing show to:', newShowIndex);
+
+    // If user clicks the *currently active* show, do nothing.
+    // This prevents resetting the track index and stopping playback.
+    if (newShowIndex === currentShowIndex) {
+      return;
+    }
+
+    // Only when switching to a different show:
     setCurrentShowIndex(newShowIndex);
-    setCurrentTrackIndex(0); // Reset to first track when changing shows
+    setCurrentTrackIndex(0); // jump to first track of the new show
   };
   
   // Handle track selection from ShowList

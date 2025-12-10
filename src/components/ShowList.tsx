@@ -59,7 +59,12 @@ const ShowList: React.FC<ShowListProps> = ({
               className={`show-item ${
                 index === currentShowIndex ? 'active' : ''
               }`}
-              onClick={() => onShowSelect(index)}
+              onClick={() => {
+                // Only trigger a show change if this is NOT the currently active show
+                if (index !== currentShowIndex) {
+                  onShowSelect(index);
+                }
+              }}
             >
               <div className="show-item-header">
                 <h4 className="show-item-title">{show.title}</h4>
