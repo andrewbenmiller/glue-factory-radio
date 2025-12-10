@@ -138,6 +138,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         console.warn("🎵 AudioPlayer: ctx.resume failed", e);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [tracks.length]  // only depends on track count
   );
 
