@@ -1,3 +1,7 @@
+/* ============================================
+   BASE STYLES (Desktop/Web)
+   ============================================ */
+
 .show-list {
   background: transparent;
   border-radius: 0;
@@ -10,13 +14,13 @@
   font-weight: bold;
 }
 
-
 .shows-container {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
+/* Show Item Container */
 .show-item {
   background-color: #ffffff;
   border: none;
@@ -52,7 +56,7 @@
   display: none;
 }
 
-
+/* Show Item Header */
 .show-item-header {
   display: flex;
   justify-content: space-between;
@@ -60,6 +64,71 @@
   margin: 0 5px 10px 5px;
 }
 
+.show-item-title {
+  font-size: 1.3rem;
+  color: black;
+  margin: 0;
+  font-weight: 600;
+  flex: 1;
+  margin-right: 15px;
+  line-height: 1.4;
+}
+
+.show-item-duration {
+  background: transparent;
+  color: black;
+  padding: 0;
+  border-radius: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.show-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Show Item Description */
+.show-item-description {
+  color: black;
+  margin: 0 5px 15px 5px;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* Show Item Meta */
+.show-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: black;
+  margin: 0 5px;
+}
+
+.show-item-number {
+  background: transparent;
+  color: black;
+  padding: 0;
+  border-radius: 0;
+  font-weight: bold;
+}
+
+.show-item-tracks {
+  background: transparent;
+  color: black;
+  padding: 0;
+  border-radius: 0;
+  font-weight: bold;
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Expand Arrow */
 .expand-arrow {
   background: transparent;
   border: none;
@@ -91,68 +160,112 @@
   transition: transform 0.3s ease;
 }
 
-.show-item-title {
-  font-size: 1.3rem;
-  color: black;
+/* Tracks Dropdown */
+.tracks-dropdown {
+  display: none;
+}
+
+.tracks-dropdown.expanded {
+  display: block;
+  padding: 15px 5px 0 5px;
   margin: 0;
-  font-weight: 600;
-  flex: 1;
-  margin-right: 15px;
-  line-height: 1.4;
 }
 
-.show-item-duration {
-  background: transparent;
-  color: black;
-  padding: 0;
-  border-radius: 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-  white-space: nowrap;
-  line-height: 1.4;
-  text-align: right;
+.tracks-dropdown.collapsed {
+  display: none;
 }
 
-.show-item-description {
-  color: black;
-  margin: 0 5px 15px 5px;
-  line-height: 1.5;
-  font-size: 0.95rem;
-}
-
-.show-item-meta {
+.tracks-list {
   display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* Track Items */
+.track-item {
+  background: transparent;
+  padding: 8px 0;
+  border-radius: 0;
+  border: none;
+  transition: all 0.2s ease;
+  margin: 0;
+  cursor: pointer;
+}
+
+.track-item:hover {
+  background: gray;
+}
+
+.track-item:active {
+  background: rgba(255, 95, 31, 0.35);
+}
+
+.track-info {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  color: black;
-  margin: 0 5px;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
 }
 
-.show-item-number {
+.track-number {
   background: transparent;
   color: black;
   padding: 0;
+  margin: 0;
   border-radius: 0;
+  font-size: 18px;
   font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1;
 }
 
-.show-item-tracks {
+.track-title {
+  font-weight: 600;
+  color: black;
+  flex: 1;
+  font-size: 18px;
+  text-align: left !important;
+  line-height: 1.4;
+  margin: 0 !important;
+  padding: 5px 0 5px 0;
+}
+
+.track-duration {
   background: transparent;
   color: black;
   padding: 0;
+  margin: 0;
   border-radius: 0;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
   white-space: nowrap;
-  text-align: right;
 }
 
-.show-item-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* No Shows State */
+.no-shows {
+  text-align: center;
+  padding: 40px 20px;
+  color: black;
 }
 
+.no-shows p {
+  margin: 10px 0;
+  font-size: 1.1rem;
+}
+
+.no-shows p:first-child {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: black;
+}
+
+/* Legacy dropdown button (unused but kept for reference) */
 .dropdown-button {
   background: transparent;
   color: #FF5F1F;
@@ -172,7 +285,7 @@
 
 .dropdown-button.rotated {
   font-size: 43px;
-  transform: rotate(45deg) translateY(2px) !important;
+  transform: rotate(45deg) translateY(2px);
 }
 
 .dropdown-button:active:not(.rotated) {
@@ -180,127 +293,29 @@
 }
 
 .dropdown-button.rotated:active {
-  transform: rotate(45deg) translateY(2px) scale(0.95) !important;
+  transform: rotate(45deg) translateY(2px) scale(0.95);
 }
 
-.tracks-dropdown {
-  display: none;
-}
+/* ============================================
+   MOBILE STYLES
+   ============================================ */
 
-.tracks-dropdown.expanded {
-  display: block;
-  padding: 15px 5px 0 5px;
-  margin: 0;
-}
-
-.tracks-dropdown.collapsed {
-  display: none;
-}
-
-.tracks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 4px 0 8px 0;
-  margin: 0;
-}
-
-.track-item {
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  border: none;
-  transition: all 0.2s ease;
-  margin: 0;
-  cursor: pointer;
-}
-
-.track-item:hover {
-  background: gray;
-}
-
-.track-item:active {
-  background: rgba(255, 95, 31, 0.35);
-}
-
-.track-info {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-}
-
-.track-number {
-  background: transparent;
-  color: black;
-  padding: 0;
-  margin: 0;
-  border-radius: 0;
-  font-size: 13px;
-  font-weight: bold;
-  min-width: 20px;
-  text-align: center;
-  line-height: 1.4;
-}
-
-.track-title {
-  font-weight: 600;
-  color: black;
-  flex: 1;
-  font-size: 13px;
-  text-align: left !important;
-  line-height: 1.4;
-  margin: 0;
-  padding: 0;
-}
-
-.track-duration {
-  background: transparent;
-  color: black;
-  padding: 0;
-  margin: 0;
-  border-radius: 0;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-
-
-
-.no-shows {
-  text-align: center;
-  padding: 40px 20px;
-  color: black;
-}
-
-.no-shows p {
-  margin: 10px 0;
-  font-size: 1.1rem;
-}
-
-.no-shows p:first-child {
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: black;
-}
-
-/* Mobile responsiveness */
+/* Tablet and below (max-width: 1024px) */
 @media (max-width: 1024px) {
   .show-item-header {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-direction: row;
+    flex-wrap: nowrap;
   }
   
   .show-item-controls {
-    flex-direction: row !important;
+    flex-direction: row;
     flex-shrink: 0;
   }
 }
 
+/* Mobile (max-width: 768px) */
 @media (max-width: 768px) {
+  /* Container adjustments */
   .show-list {
     margin: 20px;
     padding: 20px;
@@ -311,53 +326,69 @@
     padding: 15px;
   }
   
+  /* Typography adjustments */
   .show-item-title {
-    font-size: 1.2rem;
-  }
-  
-  .show-item-duration {
-    font-size: 1.2rem;
-  }
-  
-  .show-item-header {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 10px;
-  }
-  
-  .show-item-title {
+    font-size: 20px;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   
+  .show-item-duration {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  
+  /* Layout adjustments */
+  .show-item-header {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+  }
+  
   .show-item-controls {
-    flex-direction: row !important;
+    flex-direction: row;
     flex-shrink: 0;
     align-items: center;
     gap: 8px;
   }
   
-  .show-item-duration {
-    flex-shrink: 0;
-  }
-  
+  /* Tracks dropdown */
   .tracks-dropdown {
     padding: 15px 5px 0 5px;
   }
   
   .track-info {
     flex-direction: row;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
   }
   
-
+  /* Track typography - smaller on mobile */
+  .track-number,
+  .track-title,
+  .track-duration {
+    font-size: 13px;
+  }
+  
+  .track-title {
+    padding: 5px 0 5px 0;
+    text-align: left !important;
+    margin: 0 !important;
+    line-height: 1.4;
+  }
+  
+  /* Reduce spacing between tracks on mobile */
+  .track-item {
+    padding: 4px 0;
+  }
 }
 
+/* Small Mobile (max-width: 480px) */
 @media (max-width: 480px) {
+  /* Container adjustments */
   .show-list {
     margin: 10px;
     padding: 15px;
@@ -367,15 +398,35 @@
     padding: 12px;
   }
   
+  /* Typography adjustments */
   .show-item-title {
-    font-size: 1.1rem;
+    font-size: 20px;
   }
   
   .show-item-duration {
-    font-size: 1.1rem;
+    font-size: 20px;
   }
-
+  
+  /* Track items - reduced spacing on small mobile */
   .track-item {
-    padding: 0;
+    padding: 4px 0;
+  }
+  
+  /* Track typography - smaller on mobile */
+  .track-number,
+  .track-title,
+  .track-duration {
+    font-size: 13px;
+  }
+  
+  .track-title {
+    padding: 5px 0 5px 0;
+    text-align: left !important;
+    margin: 0 !important;
+    line-height: 1.4;
+  }
+  
+  .track-info {
+    align-items: center;
   }
 }
