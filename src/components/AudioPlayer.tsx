@@ -56,11 +56,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     setIsPlaying(false);
   }
 
-  /**
-   * Core helper: load + play the given track index.
-   * - Only this function calls load()/play() on Howl.
-   * - No loading spinner UI, just straight playback.
-   */
   const startTrack = useCallback(
     (targetIndex: number) => {
       if (!howlsRef.current.length) return;
@@ -77,19 +72,19 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
       const doPlay = () => {
         if (token !== playGenRef.current) return;
+
         try {
           h.stop();
         } catch {}
+
+        // CD-style: always start this track from the top
         h.seek(0);
         setIsPlaying(true);
 
+        // ✅ NO AUTO-ADVANCE HERE – just stop when the track ends
         h.once("end", () => {
           if (token !== playGenRef.current) return;
-          // Auto-advance like a CD player
-          if (!howlsRef.current.length) return;
-          const currentIdx = targetIndex;
-          const nxt = (currentIdx + 1) % howlsRef.current.length;
-          startTrack(nxt);
+          setIsPlaying(false);
         });
 
         h.play();
