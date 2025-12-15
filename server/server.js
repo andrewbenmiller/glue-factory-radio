@@ -128,64 +128,87 @@ app.get("/api/images/:filename", async (req, res) => {
 });
 
 // Audio proxy route for R2 files
+const { GetObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
+
 app.get("/api/audio/:filename", async (req, res) => {
   const { filename } = req.params;
-  
-  // Add CORS headers for audio files - MUST be set before any response
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Range');
-  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges');
-  
+
+  // CORS (keep if you need cross-origin web playback)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Range");
+  res.setHeader("Access-Control-Expose-Headers", "Content-Range, Accept-Ranges, Content-Length");
+
   try {
-    const cloudStorage = require('./services/cloudStorage');
-    
-    // Get the file stream from R2
-    const { GetObjectCommand } = require('@aws-sdk/client-s3');
-    const command = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: `uploads/${filename}`,
-    });
-    
-    const response = await cloudStorage.s3Client.send(command);
-    
-    // Handle range requests for audio streaming
+    const cloudStorage = require("./services/cloudStorage");
+    const Bucket = process.env.S3_BUCKET_NAME;
+    const Key = `uploads/${filename}`;
+
+    // We need the true total size for Content-Range math.
+    // R2/S3 doesn't always include ContentLength on ranged GetObject the way you want,
+    // so do a HEAD once.
+    const head = await cloudStorage.s3Client.send(
+      new HeadObjectCommand({ Bucket, Key })
+    );
+
+    const total = Number(head.ContentLength || 0);
+    const contentType = head.ContentType || "audio/mpeg";
+
     const range = req.headers.range;
-    if (range && response.ContentLength) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : response.ContentLength - 1;
-      const chunksize = (end - start) + 1;
-      
-      // Set headers for partial content
-      res.writeHead(206, {
-        'Content-Range': `bytes ${start}-${end}/${response.ContentLength}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': chunksize,
-        'Content-Type': 'audio/mpeg',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers': 'Range',
-        'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges'
-      });
-    } else {
-      // Set headers for full content
-      res.writeHead(200, {
-        'Content-Length': response.ContentLength,
-        'Content-Type': 'audio/mpeg',
-        'Accept-Ranges': 'bytes',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers': 'Range',
-        'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges'
-      });
+
+    // No range -> stream full file
+    if (!range) {
+      res.status(200);
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Length", total);
+      res.setHeader("Accept-Ranges", "bytes");
+
+      const obj = await cloudStorage.s3Client.send(
+        new GetObjectCommand({ Bucket, Key })
+      );
+
+      return obj.Body.pipe(res);
     }
-    
-    // Pipe the audio stream to the response
-    response.Body.pipe(res);
-    
+
+    // Parse range: "bytes=start-end"
+    const match = /^bytes=(\d+)-(\d*)$/.exec(range);
+    if (!match) {
+      // Malformed Range
+      res.status(416);
+      res.setHeader("Content-Range", `bytes */${total}`);
+      return res.end();
+    }
+
+    const start = parseInt(match[1], 10);
+    const end = match[2] ? parseInt(match[2], 10) : total - 1;
+
+    // Validate
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || start >= total) {
+      res.status(416);
+      res.setHeader("Content-Range", `bytes */${total}`);
+      return res.end();
+    }
+
+    const chunkSize = end - start + 1;
+
+    res.status(206);
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Content-Range", `bytes ${start}-${end}/${total}`);
+    res.setHeader("Content-Length", chunkSize);
+
+    // ✅ Critical: request the *range* from R2/S3
+    const obj = await cloudStorage.s3Client.send(
+      new GetObjectCommand({
+        Bucket,
+        Key,
+        Range: `bytes=${start}-${end}`,
+      })
+    );
+
+    return obj.Body.pipe(res);
   } catch (error) {
-    console.error('Error streaming audio file:', error);
+    console.error("Error streaming audio file:", error);
     res.status(404).json({ error: "Audio file not found" });
   }
 });
