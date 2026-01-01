@@ -9,6 +9,31 @@
       }
     }
   ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://gluefactoryradio.com/$1",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.gluefactoryradio.com"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/splash.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "gluefactoryradio.com"
+        }
+      ]
+    }
+  ],
   "routes": [
     {
       "src": "/splash-logo.png",
@@ -29,41 +54,6 @@
     {
       "src": "/(.*)",
       "dest": "/index.html"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/splash.html",
-      "has": [
-        {
-          "type": "host",
-          "value": "gluefactoryradio.com"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/splash.html",
-      "has": [
-        {
-          "type": "host",
-          "value": "gluefactoryradio.com"
-        }
-      ]
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "destination": "https://gluefactoryradio.com/$1",
-      "permanent": true,
-      "has": [
-        {
-          "type": "host",
-          "value": "www.gluefactoryradio.com"
-        }
-      ]
     }
   ]
 }
