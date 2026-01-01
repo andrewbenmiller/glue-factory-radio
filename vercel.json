@@ -26,31 +26,6 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/splash.html",
-      "has": [
-        {
-          "type": "host",
-          "value": "gluefactoryradio.com"
-        }
-      ]
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/:path*",
-      "destination": "https://gluefactoryradio.com/:path*",
-      "permanent": true,
-      "has": [
-        {
-          "type": "host",
-          "value": "www.gluefactoryradio.com"
-        }
-      ]
-    }
   ]
 }
 
