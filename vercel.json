@@ -11,6 +11,10 @@
   ],
   "routes": [
     {
+      "src": "/splash-logo.png",
+      "dest": "/splash-logo.png"
+    },
+    {
       "src": "/static/(.*)",
       "dest": "/static/$1"
     },
@@ -21,6 +25,18 @@
     {
       "src": "/(.*)",
       "dest": "/index.html"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/splash.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "gluefactoryradio.com"
+        }
+      ]
     }
   ]
 }
