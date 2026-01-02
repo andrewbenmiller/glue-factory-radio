@@ -24,7 +24,7 @@
   ],
   "rewrites": [
     {
-      "source": "/",
+      "source": "/(.*)",
       "destination": "/splash.html",
       "has": [
         {
@@ -35,13 +35,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/splash.html",
-      "has": [
-        {
-          "type": "host",
-          "value": "gluefactoryradio.com"
-        }
-      ]
+      "destination": "/index.html"
     }
   ],
   "routes": [
