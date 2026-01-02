@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && cp public/splash.html build/splash.html && cp public/splash-logo.png build/splash-logo.png",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

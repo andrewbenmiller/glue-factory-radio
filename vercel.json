@@ -24,6 +24,16 @@
   ],
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/splash.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "gluefactoryradio.com"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "destination": "/splash.html",
       "has": [
