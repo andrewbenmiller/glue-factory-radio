@@ -60,10 +60,6 @@
     {
       "src": "/(favicon\\.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg|.*\\.ico|manifest\\.json|robots\\.txt)",
       "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
     }
   ]
 }
