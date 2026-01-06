@@ -1,0 +1,57 @@
+import { useEffect, useState } from "react";
+import {
+  ICECAST_STATUS_URL,
+  ICECAST_STREAM_URL,
+  ICECAST_MOUNT_PATH,
+} from "../config/liveStream";
+import { parseIcecastLiveStatus } from "../utils/parseIcecastLiveStatus";
+
+export function useLiveStatus(pollMs = 15000) {
+  const [isLive, setIsLive] = useState(false);
+  const [nowPlaying, setNowPlaying] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: number | undefined;
+
+    async function tick() {
+      try {
+        setError(null);
+        const res = await fetch(ICECAST_STATUS_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+
+        const parsed = parseIcecastLiveStatus(
+          json,
+          ICECAST_MOUNT_PATH
+        );
+
+        if (!cancelled) {
+          setIsLive(parsed.isLive);
+          setNowPlaying(parsed.nowPlaying);
+        }
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? "Live status fetch failed");
+      } finally {
+        if (!cancelled) {
+          timer = window.setTimeout(tick, pollMs);
+        }
+      }
+    }
+
+    tick();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [pollMs]);
+
+  return {
+    isLive,
+    nowPlaying,
+    streamUrl: ICECAST_STREAM_URL,
+    error,
+  };
+}
+

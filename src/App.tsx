@@ -3,6 +3,7 @@ import './App.css';
 import AudioPlayer, { Track, AudioPlayerHandle } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import BackgroundManager from './components/BackgroundManager';
+import { LiveStreamTicker } from './components/LiveStreamTicker';
 import { apiService, Show } from './services/api';
 import logo from './logo.png'; // Import the PNG logo
 
@@ -143,6 +144,7 @@ function App() {
   return (
     <>
       <BackgroundManager />
+      <LiveStreamTicker />
       
       <div className="logo-container">
         <div className="logo-image-container">
@@ -151,6 +153,7 @@ function App() {
       </div>
       
       <main className="App-main">
+        
         <AudioPlayer
           key={shows[validShowIndex]?.id ?? validShowIndex}  // force remount on show change
           ref={playerRef}

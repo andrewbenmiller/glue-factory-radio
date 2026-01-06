@@ -1,6 +1,26 @@
 {
   "expo": {
     "name": "Glue Factory Radio",
-    "slug": "glue-factory-radio"
+    "slug": "glue-factory-radio",
+    "scheme": "gluefactoryradio",
+    "ios": {
+      "bundleIdentifier": "com.gluefactory.radio",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.gluefactory.radio"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6bca1bf1-f2f5-4215-9239-85db224e520a"
+      }
+    }
   }
 }

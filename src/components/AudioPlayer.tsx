@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { Howl, Howler } from "howler";
+import { useAudio } from "../audio/AudioProvider";
 import "./AudioPlayer.css";
 import prevIcon from "../assets/icons/prev-icon.svg";
 import playIcon from "../assets/icons/play-icon.svg";
@@ -32,6 +33,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   { tracks, initialIndex = 0, className = "", showName = "CD Mode" },
   ref
 ) {
+  const audio = useAudio();
   const howlsRef = useRef<Howl[]>([]);
   const [index, setIndex] = useState(
     Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0))
@@ -48,7 +50,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     if (!h) return;
     h.pause();
     setIsPlaying(false);
-  }, [current]);
+    audio.notifyTrackDidStop();
+  }, [current, audio]);
 
   /** Stop ALL audio immediately */
   function stopAll() {
@@ -67,6 +70,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
       // Stop everything before starting another track
       stopAll();
+      audio.notifyTrackWillPlay();
       setIndex(targetIndex);
 
       const h = howlsRef.current[targetIndex];
@@ -92,12 +96,14 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           const total = howlsRef.current.length;
           if (!total) {
             setIsPlaying(false);
+            audio.notifyTrackDidStop();
             return;
           }
 
           // Stop after the last track (NO looping)
           if (targetIndex >= total - 1) {
             setIsPlaying(false);
+            audio.notifyTrackDidStop();
             return;
           }
 
@@ -139,7 +145,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tracks.length]  // only depends on track count
+    [tracks.length, audio]  // only depends on track count
   );
 
   const nextInternal = useCallback(() => {

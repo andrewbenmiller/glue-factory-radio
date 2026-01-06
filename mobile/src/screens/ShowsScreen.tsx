@@ -1,95 +1,92 @@
-import React, { useEffect, useState } from 'react';
-import { View, FlatList, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { ShowItem } from '../components/ShowItem';
-import { Show } from '../types';
-import { apiService } from '../services/api';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, StyleSheet, Pressable, ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
+import { apiService } from "../services/api";
+import { Show } from "../types";
 
 export default function ShowsScreen() {
+  const router = useRouter();
   const [shows, setShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
-    loadShows();
+    (async () => {
+      try {
+        const data = await apiService.getShows();
+        setShows(data);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
-
-  const loadShows = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiService.getShows();
-      setShows(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load shows');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleShowPress = (show: Show) => {
-    router.push({
-      pathname: '/show/[id]',
-      params: { id: show.id.toString() },
-    });
-  };
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
-        <Text style={styles.loadingText}>Loading shows...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Error: {error}</Text>
+      <View style={styles.center}>
+        <ActivityIndicator />
+        <Text style={styles.muted}>Loading shows…</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <FlatList
         data={shows}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ShowItem show={item} onPress={handleShowPress} />
-        )}
         contentContainerStyle={styles.listContent}
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() => router.push(`/show/${item.id}`)}
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+          >
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {item.title}
+            </Text>
+
+            {!!item.description && (
+              <Text style={styles.cardDesc} numberOfLines={2}>
+                {item.description}
+              </Text>
+            )}
+
+            <View style={styles.metaRow}>
+              <Text style={styles.meta}>🎵 {item.total_tracks} tracks</Text>
+              <Text style={styles.meta}>{formatDuration(item.total_duration)}</Text>
+            </View>
+          </Pressable>
+        )}
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <Text style={styles.muted}>No shows yet.</Text>
+          </View>
+        }
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#d32f2f',
-    textAlign: 'center',
-    padding: 16,
-  },
-});
+function formatDuration(totalSeconds: number) {
+  const mins = Math.floor(totalSeconds / 60);
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return hrs > 0 ? `${hrs}h ${remMins}m` : `${mins}m`;
+}
 
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#0B0B0B" },
+  listContent: { padding: 16, gap: 12, paddingBottom: 32 },
+  card: {
+    backgroundColor: "#111",
+    borderWidth: 1,
+    borderColor: "#222",
+    padding: 14,
+    borderRadius: 14,
+  },
+  cardTitle: { color: "#FF5F1F", fontSize: 18, fontWeight: "700", marginBottom: 6 },
+  cardDesc: { color: "#C9C9C9", fontSize: 13, lineHeight: 18, marginBottom: 10 },
+  metaRow: { flexDirection: "row", justifyContent: "space-between" },
+  meta: { color: "#8D8D8D", fontSize: 12 },
+  muted: { color: "#8D8D8D", marginTop: 8 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#0B0B0B" },
+});

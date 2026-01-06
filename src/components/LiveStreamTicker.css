@@ -1,0 +1,55 @@
+.liveStreamTicker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background-color: #FF5F1F;
+  color: #000;
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #C94B12;
+}
+
+.tickerContent {
+  display: flex;
+  white-space: nowrap;
+  animation: scroll-left 60s linear infinite;
+}
+
+.tickerText {
+  padding-right: 0;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-10%);
+  }
+}
+
+/* Pause animation on hover */
+.liveStreamTicker:hover .tickerContent {
+  animation-play-state: paused;
+}
+
+/* Empty state - white background, scrolling animation */
+.liveStreamTicker-empty {
+  background-color: #ffffff;
+  color: #000;
+  cursor: default;
+}
+
+.tickerText-empty {
+  font-style: italic;
+  text-transform: uppercase;
+}
+

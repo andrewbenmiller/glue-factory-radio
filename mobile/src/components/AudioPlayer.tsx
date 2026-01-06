@@ -1,5 +1,12 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ImageBackground,
+  Dimensions,
+} from "react-native";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import { Track } from "../types";
 import { apiService } from "../services/api";
@@ -7,9 +14,24 @@ import { apiService } from "../services/api";
 interface AudioPlayerProps {
   track: Track;
   onClose: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+  onEnded?: () => void;
+  trackIndex?: number; // 0-based
+  trackCount?: number;
+  backgroundImageUri?: string;
 }
 
-export const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
+export const AudioPlayer: React.FC<AudioPlayerProps> = ({
+  track,
+  onClose,
+  onPrev,
+  onNext,
+  onEnded,
+  trackIndex,
+  trackCount,
+  backgroundImageUri,
+}) => {
   const soundRef = useRef<Audio.Sound | null>(null);
   const loadGenRef = useRef(0);
 
@@ -17,24 +39,27 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const updateFromStatus = useCallback((status: AVPlaybackStatus) => {
-    if (!status.isLoaded) return;
-    setIsPlaying(Boolean(status.isPlaying));
-    setPosition(status.positionMillis ?? 0);
-    setDuration(status.durationMillis ?? 0);
-  }, []);
+  const updateFromStatus = useCallback(
+    (status: AVPlaybackStatus) => {
+      if (!status.isLoaded) return;
+
+      setIsPlaying(Boolean(status.isPlaying));
+      setPosition(status.positionMillis ?? 0);
+      setDuration(status.durationMillis ?? 0);
+
+      if ((status as any).didJustFinish) {
+        onEnded?.();
+      }
+    },
+    [onEnded]
+  );
 
   const unloadCurrent = useCallback(async () => {
     const s = soundRef.current;
     soundRef.current = null;
     if (s) {
-      try {
-        // stop first (prevents "ghost audio" in edge cases)
-        await s.stopAsync();
-      } catch {}
-      try {
-        await s.unloadAsync();
-      } catch {}
+      try { await s.stopAsync(); } catch {}
+      try { await s.unloadAsync(); } catch {}
     }
   }, []);
 
@@ -42,16 +67,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
     loadGenRef.current += 1;
     const myGen = loadGenRef.current;
 
-    // unload previous sound immediately
     await unloadCurrent();
 
-    // NOTE: better to call this once at app startup, but safe here too.
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
-
-      // Use string values to avoid undefined enums in some expo-av builds
       interruptionModeIOS: "DoNotMix" as any,
       interruptionModeAndroid: "DuckOthers" as any,
       shouldDuckAndroid: true,
@@ -61,14 +82,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
 
     const { sound } = await Audio.Sound.createAsync(
       { uri },
-      {
-        shouldPlay: true,
-        positionMillis: 0,
-        progressUpdateIntervalMillis: 250, // updates UI 4x/sec without polling
-      }
+      { shouldPlay: true, positionMillis: 0, progressUpdateIntervalMillis: 250 }
     );
 
-    // If a newer track load started while we were awaiting, discard this one
     if (myGen !== loadGenRef.current) {
       try { await sound.unloadAsync(); } catch {}
       return;
@@ -80,10 +96,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
 
   useEffect(() => {
     loadAndPlay().catch((e) => console.error("Error loading audio:", e));
-    return () => {
-      // prevent late status updates + clean up
-      unloadCurrent().catch(() => {});
-    };
+    return () => { unloadCurrent().catch(() => {}); };
   }, [loadAndPlay, unloadCurrent]);
 
   const togglePlayPause = useCallback(async () => {
@@ -93,88 +106,168 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ track, onClose }) => {
     const status = await sound.getStatusAsync();
     if (!status.isLoaded) return;
 
-    if (status.isPlaying) {
-      await sound.pauseAsync(); // resumes from same position later
-    } else {
-      await sound.playAsync();
-    }
-    // UI will update via status callback
+    if (status.isPlaying) await sound.pauseAsync();
+    else await sound.playAsync();
   }, []);
 
-  const handleClose = useCallback(async () => {
-    await unloadCurrent();
-    onClose();
-  }, [onClose, unloadCurrent]);
+  const heroTitle = "Glue Factory Radio";
 
-  const formatTime = (millis: number): string => {
-    const totalSeconds = Math.floor(millis / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
+  const subtitle = useMemo(() => {
+    if (typeof trackIndex === "number" && typeof trackCount === "number") {
+      return `Track ${trackIndex + 1} of ${trackCount}`;
+    }
+    return "";
+  }, [trackIndex, trackCount]);
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.trackTitle} numberOfLines={1}>
-          {track.title}
-        </Text>
+  const byline = useMemo(() => {
+    return track?.title ?? "";
+  }, [track]);
 
-        <View style={styles.controls}>
-          <TouchableOpacity onPress={togglePlayPause} style={styles.playButton}>
-            <Text style={styles.playButtonText}>{isPlaying ? "⏸" : "▶"}</Text>
-          </TouchableOpacity>
+  const buttonSize = Math.min(140, Math.floor((Dimensions.get("window").width - 64) / 3));
 
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>
-              {formatTime(position)} / {formatTime(duration)}
-            </Text>
-          </View>
-
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
-        </View>
+  const Body = (
+    <View style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle} numberOfLines={1}>{heroTitle}</Text>
+        {!!subtitle && <Text style={styles.headerSubtitle}>{subtitle}</Text>}
+        <Text style={styles.headerByline} numberOfLines={1}>{byline}</Text>
       </View>
+
+      <View style={[styles.transportRow, { gap: 16 }]}>
+        <Pressable
+          onPress={onPrev}
+          disabled={!onPrev}
+          style={({ pressed }) => [
+            styles.transportBtn,
+            { width: buttonSize, height: buttonSize, opacity: !onPrev ? 0.5 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+          ]}
+        >
+          <Text style={styles.transportIcon}>⏮</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={togglePlayPause}
+          style={({ pressed }) => [
+            styles.transportBtn,
+            styles.transportBtnCenter,
+            { width: buttonSize, height: buttonSize, transform: [{ scale: pressed ? 0.98 : 1 }] },
+          ]}
+        >
+          <Text style={styles.transportIcon}>{isPlaying ? "⏸" : "▶"}</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={onNext}
+          disabled={!onNext}
+          style={({ pressed }) => [
+            styles.transportBtn,
+            { width: buttonSize, height: buttonSize, opacity: !onNext ? 0.5 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+          ]}
+        >
+          <Text style={styles.transportIcon}>⏭</Text>
+        </Pressable>
+      </View>
+
+      {/* Optional: keep a tiny close hit-area somewhere unobtrusive */}
+      <Pressable onPress={onClose} style={styles.closeHit}>
+        <Text style={styles.closeText}>✕</Text>
+      </Pressable>
     </View>
   );
+
+  if (backgroundImageUri) {
+    return (
+      <ImageBackground
+        source={{ uri: backgroundImageUri }}
+        style={styles.bg}
+        imageStyle={styles.bgImg}
+      >
+        <View style={styles.bgOverlay} />
+        {Body}
+      </ImageBackground>
+    );
+  }
+
+  return <View style={[styles.bg, { backgroundColor: "#0B0B0B" }]}>{Body}</View>;
 };
 
+const ORANGE = "#FF5F1F";
+
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+  bg: { flex: 1 },
+  bgImg: { resizeMode: "cover" },
+  bgOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.35)",
   },
-  content: { flex: 1 },
-  trackTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: "#000",
+
+  screen: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    justifyContent: "center",
   },
-  controls: {
-    flexDirection: "row",
+
+  header: {
     alignItems: "center",
-    justifyContent: "space-between",
+    marginBottom: 28,
   },
-  playButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#0066cc",
+  headerTitle: {
+    fontSize: 34,
+    fontWeight: "800",
+    color: ORANGE,
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  headerSubtitle: {
+    marginTop: 6,
+    fontSize: 16,
+    fontWeight: "700",
+    color: ORANGE,
+    opacity: 0.95,
+  },
+  headerByline: {
+    marginTop: 10,
+    fontSize: 20,
+    fontWeight: "800",
+    color: ORANGE,
+    textAlign: "center",
+  },
+
+  transportRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    alignSelf: "center",
+  },
+
+  transportBtn: {
+    backgroundColor: ORANGE,
     justifyContent: "center",
     alignItems: "center",
   },
-  playButtonText: { fontSize: 20, color: "#fff" },
-  timeContainer: { flex: 1, alignItems: "center" },
-  timeText: { fontSize: 14, color: "#666" },
-  closeButton: { width: 32, height: 32, justifyContent: "center", alignItems: "center" },
-  closeButtonText: { fontSize: 20, color: "#666" },
+  transportBtnCenter: {
+    backgroundColor: "#C94B12", // slightly darker middle block like your screenshot
+  },
+  transportIcon: {
+    fontSize: 52,
+    color: "#000",
+    fontWeight: "900",
+  },
+
+  closeHit: {
+    position: "absolute",
+    top: 18,
+    right: 16,
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeText: {
+    fontSize: 22,
+    color: ORANGE,
+    opacity: 0.85,
+    fontWeight: "800",
+  },
 });
