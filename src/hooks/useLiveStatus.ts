@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  ICECAST_STATUS_URL,
   ICECAST_STREAM_URL,
   ICECAST_MOUNT_PATH,
 } from "../config/liveStream";
 import { parseIcecastLiveStatus } from "../utils/parseIcecastLiveStatus";
+
+const STATUS_URL = "/api/live-status";
 
 export function useLiveStatus(pollMs = 15000) {
   const [isLive, setIsLive] = useState(false);
@@ -18,7 +19,7 @@ export function useLiveStatus(pollMs = 15000) {
     async function tick() {
       try {
         setError(null);
-        const res = await fetch(ICECAST_STATUS_URL, { cache: "no-store" });
+        const res = await fetch(STATUS_URL, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
 
