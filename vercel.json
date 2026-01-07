@@ -37,24 +37,6 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/splash-logo.png",
-      "dest": "/splash-logo.png"
-    },
-    {
-      "src": "/splash.html",
-      "dest": "/splash.html"
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(favicon\\.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg|.*\\.ico|manifest\\.json|robots\\.txt)",
-      "dest": "/$1"
-    }
   ]
 }
 
