@@ -11,7 +11,6 @@ export default async function handler(req: any, res: any) {
 
     const text = await r.text();
 
-    // Prevent caching anywhere (Vercel/CDN/browser)
     res.setHeader(
       "Cache-Control",
       "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
@@ -20,8 +19,8 @@ export default async function handler(req: any, res: any) {
     res.setHeader("Expires", "0");
     res.setHeader("Vercel-CDN-Cache-Control", "no-store");
     res.setHeader("CDN-Cache-Control", "no-store");
-
     res.setHeader("Content-Type", "application/json; charset=utf-8");
+
     res.status(r.ok ? 200 : r.status).send(text);
   } catch (e: any) {
     res.setHeader(
