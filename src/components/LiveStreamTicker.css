@@ -1,3 +1,5 @@
+/* LiveStreamTicker.css */
+
 .liveStreamTicker {
   position: fixed;
   top: 0;
@@ -7,49 +9,93 @@
   background-color: #FF5F1F;
   color: #000;
   overflow: hidden;
-  cursor: pointer;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
   z-index: 1000;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #C94B12;
 }
 
+/* Optional: make it feel clickable only when live */
+.liveStreamTicker:not(.liveStreamTicker-empty) {
+  cursor: pointer;
+}
+
+/* The moving belt (contains TWO copies) */
+.tickerTrack {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: tickerScroll 27.5s linear infinite;
+}
+
+/* One copy of the chunks */
 .tickerContent {
   display: flex;
-  white-space: nowrap;
-  animation: scroll-left 60s linear infinite;
+  align-items: center;
 }
 
-.tickerText {
-  padding-right: 0;
-  font-weight: 700;
-  font-size: 14px;
-  flex-shrink: 0;
+/* Seamless loop: move left by exactly ONE copy width (half of track) */
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
-@keyframes scroll-left {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-10%);
-  }
-}
-
-/* Pause animation on hover */
-.liveStreamTicker:hover .tickerContent {
+/* Pause on hover (optional usability) */
+.liveStreamTicker:hover .tickerTrack {
   animation-play-state: paused;
 }
 
-/* Empty state - white background, scrolling animation */
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tickerTrack { animation: none; }
+}
+
+/* -----------------------------
+   PROPER, EVEN SPACING PER CHUNK
+   ----------------------------- */
+
+.tickerChunk {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;          /* EVEN spacing around bullets */
+  flex-shrink: 0;
+
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+
+  margin-right: 60px; /* spacing BETWEEN chunks */
+}
+
+.tickerChunk-empty {
+  gap: 0;             /* No gap when empty (no bullets) */
+}
+
+.tickerChunk .bullet {
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.tickerChunk .text {
+  flex-shrink: 0;
+  white-space: nowrap;
+  text-transform: uppercase; /* optional; remove if you don't want */
+}
+
+/* Optional empty state styling */
+.tickerChunk-empty {
+  opacity: 0.85;
+}
+
 .liveStreamTicker-empty {
   background-color: #ffffff;
   color: #000;
   cursor: default;
 }
 
-.tickerText-empty {
+.tickerChunk-empty .text {
   font-style: italic;
-  text-transform: uppercase;
 }
-

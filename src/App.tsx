@@ -3,7 +3,9 @@ import './App.css';
 import AudioPlayer, { Track, AudioPlayerHandle } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import BackgroundManager from './components/BackgroundManager';
-import { LiveStreamTicker } from './components/LiveStreamTicker';
+import LiveStreamTicker from './components/LiveStreamTicker';
+import { useLiveStatus } from './hooks/useLiveStatus';
+import { useAudio } from './audio/AudioProvider';
 import { apiService, Show } from './services/api';
 import logo from './logo.png'; // Import the PNG logo
 
@@ -15,6 +17,11 @@ function App() {
   // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Live stream status and audio context
+  const { isLive, nowPlaying, streamUrl } = useLiveStatus();
+  const { source, playLive, stopLive } = useAudio();
+  const livePlaying = source === "live";
   
   // Fetch shows on component mount
   useEffect(() => {
@@ -144,7 +151,16 @@ function App() {
   return (
     <>
       <BackgroundManager />
-      <LiveStreamTicker />
+      <LiveStreamTicker
+        isLive={isLive && !!streamUrl}
+        emptyText=" NOTHING CURRENTLY STREAMING "
+        tickerText={
+          livePlaying
+            ? `LIVE NOW: ${nowPlaying ?? "Live Stream"} — Click to stop`
+            : `NOW STREAMING: ${nowPlaying ?? "Live"} — Click to play`
+        }
+        onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
+      />
       
       <div className="logo-container">
         <div className="logo-image-container">
