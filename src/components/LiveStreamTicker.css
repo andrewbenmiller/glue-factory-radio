@@ -18,17 +18,32 @@
   border-bottom: 1px solid #C94B12;
 }
 
-/* Optional: make it feel clickable only when live */
-.liveStreamTicker:not(.liveStreamTicker-empty) {
-  cursor: pointer;
-}
-
 /* The moving belt (contains TWO copies) */
 .tickerTrack {
   display: flex;
   width: max-content;
+  min-width: 100vw; /* Ensure minimum width for consistent animation speed */
   will-change: transform;
+  /* Fixed duration ensures consistent speed regardless of content length */
   animation: tickerScroll 68.8s linear infinite;
+  animation-play-state: running;
+  /* Prevent animation restart when content changes */
+  animation-fill-mode: both;
+}
+
+/* Ensure animation continues smoothly when content changes - uniform speed for all states */
+.liveStreamTicker:not(.liveStreamTicker-empty) .tickerTrack {
+  animation-play-state: running;
+  /* CRITICAL: Always use the same duration for consistent visual speed */
+  animation-duration: 68.8s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  /* Prevent animation from restarting when content changes */
+  animation-fill-mode: both;
+}
+
+.liveStreamTicker-empty .tickerTrack {
+  animation-play-state: paused;
 }
 
 /* One copy of the chunks */

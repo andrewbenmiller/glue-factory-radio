@@ -50,13 +50,18 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     if (!h) return;
     h.pause();
     setIsPlaying(false);
-    audio.notifyTrackDidStop();
+    // Don't call notifyTrackDidStop when pausing - track is still loaded
+    // This keeps the ticker active and showing track info
+    audio.notifyTrackPaused?.();
   }, [current, audio]);
 
   /** Stop ALL audio immediately */
-  function stopAll() {
+  function stopAll(notifyStop = false) {
     Howler.stop();
     setIsPlaying(false);
+    if (notifyStop) {
+      audio.notifyTrackDidStop();
+    }
   }
 
   const startTrack = useCallback(
@@ -69,9 +74,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       const token = playGenRef.current;
 
       // Stop everything before starting another track
-      stopAll();
+      stopAll(false); // Don't notify stop since we're about to start a new track
       audio.notifyTrackWillPlay();
       setIndex(targetIndex);
+
+      // Set track now playing in provider
+      const t = tracks[targetIndex];
+      audio.setTrackNowPlaying(t?.title ?? `Track ${targetIndex + 1}`);
 
       const h = howlsRef.current[targetIndex];
       if (!h) return;
@@ -96,6 +105,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           const total = howlsRef.current.length;
           if (!total) {
             setIsPlaying(false);
+            audio.setTrackNowPlaying(null);
             audio.notifyTrackDidStop();
             return;
           }
@@ -103,6 +113,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           // Stop after the last track (NO looping)
           if (targetIndex >= total - 1) {
             setIsPlaying(false);
+            audio.setTrackNowPlaying(null);
             audio.notifyTrackDidStop();
             return;
           }
@@ -170,19 +181,26 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     // If we have a loaded track and we're somewhere in the middle,
     // just resume from the current position
     if (state === "loaded" && pos > 0) {
+      // Make sure source is set to "track" when resuming
+      if (audio.source !== "track") {
+        audio.notifyTrackWillPlay();
+      }
       h.play();
       setIsPlaying(true);
     } else {
       // Otherwise, start this track from the top
       startTrack(index);
     }
-  }, [current, startTrack, index]);
+  }, [current, startTrack, index, audio]);
 
   // Build/unload Howls when the track list changes
   useEffect(() => {
     console.log("AudioPlayer: Building Howl instances for", tracks.length, "tracks");
 
-    stopAll();
+    // Stop audio but don't notify - tracks are being rebuilt, not stopped
+    Howler.stop();
+    setIsPlaying(false);
+    
     howlsRef.current.forEach((h) => {
       try {
         h.unload();
@@ -211,7 +229,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     setIsPlaying(false);
 
     return () => {
-      stopAll();
+      Howler.stop();
+      setIsPlaying(false);
       howlsRef.current.forEach((h) => {
         try {
           h.unload();
@@ -229,7 +248,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       Math.max(tracks.length - 1, 0)
     );
     if (newIndex !== index && tracks.length > 0) {
-      stopAll();
+      stopAll(false); // Don't notify stop when just changing index
       setIndex(newIndex);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

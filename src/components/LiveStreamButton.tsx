@@ -1,40 +1,44 @@
+// LiveStreamButton.tsx
 import React from "react";
-import { useLiveStatus } from "../hooks/useLiveStatus";
-import { useAudio } from "../audio/AudioProvider";
 import "./LiveStreamButton.css";
 
-export function LiveStreamButton() {
-  const { isLive, nowPlaying, streamUrl, error } = useLiveStatus();
-  const { source, playLive, stopLive } = useAudio();
+type Props = {
+  isLive: boolean;           // True if Icecast stream is available (for styling/display)
+  isPlaying: boolean;        // True if live stream is currently playing
+  nowPlaying?: string | null; // Current show/track name from Icecast
+  onClick: () => void;       // Play/stop toggle handler
+};
 
-  const livePlaying = source === "live";
-
-  if (error) {
-    return (
-      <button disabled className="liveButton disabled">
-        Error: {error}
-      </button>
-    );
-  }
-
-  if (!isLive) {
-    return (
-      <button disabled className="liveButton disabled">
-        No live stream available
-      </button>
-    );
-  }
-
+export default function LiveStreamButton({
+  isLive,
+  isPlaying,
+  nowPlaying,
+  onClick,
+}: Props) {
   return (
     <button
-      className="liveButton"
-      onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
+      className={`live-stream-button ${isLive ? "live-stream-button-active" : "live-stream-button-inactive"} ${isPlaying ? "live-stream-button-playing" : ""}`}
+      onClick={onClick}
+      aria-label={isPlaying ? "Stop live stream" : "Play live stream"}
+      title={isPlaying ? "Stop live stream" : "Play live stream"}
     >
-      {!livePlaying && <span className="recordCircle"></span>}
-      {livePlaying
-        ? "Stop Live Stream"
-        : `Now Streaming: ${nowPlaying ?? "Live"} — Click to play`}
+      <div className="live-stream-button-top">
+        <span className="live-stream-button-icon">
+          {isPlaying ? "⏸" : "▶"}
+        </span>
+        <span className="live-stream-button-status">
+          {isPlaying ? "PLAYING NOW" : "LIVE NOW"}
+        </span>
+      </div>
+      {nowPlaying ? (
+        <div className="live-stream-button-info-container">
+          <span className="live-stream-button-info">"{nowPlaying}"</span>
+        </div>
+      ) : isLive ? (
+        <div className="live-stream-button-info-container">
+          <span className="live-stream-button-info">Available</span>
+        </div>
+      ) : null}
     </button>
   );
 }
-

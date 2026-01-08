@@ -1,42 +1,146 @@
-.liveButton {
-  padding: 12px 24px;
-  background-color: #FF5F1F;
+/* LiveStreamButton.css */
+
+.live-stream-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 35px 45px;
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  background-color: #ffffff;
   color: #000;
   border: none;
   border-radius: 0;
-  font-weight: 700;
-  font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
-  display: inline-flex;
+  font-weight: 700;
+  transition: background-color 0.2s, border-color 0.2s;
+  user-select: none;
+  box-shadow: none;
+}
+
+.live-stream-button:hover {
+  background-color: #f5f5f5;
+}
+
+.live-stream-button:active {
+  background-color: #eeeeee;
+}
+
+.live-stream-button-active {
+  background-color: #ffffff;
+  border: 1px solid #FF5F1F;
+}
+
+.live-stream-button-active:hover {
+  background-color: #fff5f0;
+}
+
+.live-stream-button-playing {
+  background-color: #fff5f5;
+  border: 1px solid #FF0000;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.live-stream-button-playing:hover {
+  background-color: #ffe0e0;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    border-color: #FF0000;
+  }
+  50% {
+    border-color: #ff3333;
+  }
+}
+
+.live-stream-button-inactive {
+  opacity: 0.7;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+}
+
+.live-stream-button-inactive:hover {
+  background-color: #f9f9f9;
+}
+
+.live-stream-button-top {
+  display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  margin: 0 5px 10px 5px;
 }
 
-.liveButton:hover:not(:disabled) {
-  background-color: #C94B12;
-}
-
-.liveButton:active:not(:disabled) {
-  opacity: 0.9;
-}
-
-.liveButton.disabled {
-  background-color: transparent;
-  color: #ffffff;
-  cursor: not-allowed;
-  border-radius: 0;
-  border: 1px solid #ffffff;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.liveButton .recordCircle {
-  width: 12px;
-  height: 12px;
-  background-color: #ff0000;
-  border-radius: 50%;
+.live-stream-button-icon {
+  font-size: 20px;
+  line-height: 1;
   flex-shrink: 0;
 }
 
+.live-stream-button-status {
+  text-transform: uppercase;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  flex: 1;
+  color: #000;
+}
+
+.live-stream-button-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin: 0 5px;
+}
+
+.live-stream-button-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+  color: #000;
+}
+
+.live-stream-button-info {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
+  color: #000;
+}
+
+/* Mobile styles to match show-item */
+@media (max-width: 768px) {
+  .live-stream-button {
+    padding: 15px;
+  }
+  
+  .live-stream-button-top {
+    margin: 0 5px 10px 5px;
+  }
+  
+  .live-stream-button-status {
+    font-size: 20px;
+  }
+  
+  .live-stream-button-info-container {
+    margin: 0 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .live-stream-button {
+    padding: 12px;
+  }
+}

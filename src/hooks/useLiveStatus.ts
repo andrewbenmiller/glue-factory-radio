@@ -8,6 +8,7 @@ import { parseIcecastLiveStatus } from "../utils/parseIcecastLiveStatus";
 export function useLiveStatus(pollMs = 15000) {
   const [isLive, setIsLive] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<string | null>(null);
+  const [showTitle, setShowTitle] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export function useLiveStatus(pollMs = 15000) {
         if (!cancelled) {
           setIsLive(parsed.isLive);
           setNowPlaying(parsed.nowPlaying);
+          setShowTitle(parsed.showTitle);
         }
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? "Live status fetch failed");
@@ -48,7 +50,8 @@ export function useLiveStatus(pollMs = 15000) {
 
   return {
     isLive,
-    nowPlaying,
+    nowPlaying, // Song/track title from Icecast 'yp_currently_playing' field (falls back to 'title')
+    showTitle, // Show title from Icecast 'title' field
     streamUrl: ICECAST_STREAM_URL,
     error,
   };

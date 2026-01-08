@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './App.css';
 import AudioPlayer, { Track, AudioPlayerHandle } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
 import BackgroundManager from './components/BackgroundManager';
 import LiveStreamTicker from './components/LiveStreamTicker';
+import LiveStreamButton from './components/LiveStreamButton';
 import { useLiveStatus } from './hooks/useLiveStatus';
 import { useAudio } from './audio/AudioProvider';
 import { apiService, Show } from './services/api';
@@ -20,8 +21,21 @@ function App() {
 
   // Live stream status and audio context
   const { isLive, nowPlaying, streamUrl } = useLiveStatus();
-  const { source, playLive, stopLive } = useAudio();
+  const { source, playLive, stopLive, trackNowPlaying } = useAudio();
   const livePlaying = source === "live";
+  
+  // Determine what to display in the ticker based on which audio source is playing
+  const tickerDisplayText = useMemo(() => {
+    if (source === "live") {
+      return `LIVE NOW: ${nowPlaying ?? "Live Stream"}`;
+    }
+    if (source === "track") {
+      return `PLAYING NOW: ${trackNowPlaying ?? "Track"}`;
+    }
+    return "NOTHING CURRENTLY PLAYING";
+  }, [source, nowPlaying, trackNowPlaying]);
+  
+  const tickerIsEmpty = source === "none";
   
   // Fetch shows on component mount
   useEffect(() => {
@@ -51,6 +65,11 @@ function App() {
   useEffect(() => {
     console.log('App: State changed - Show:', currentShowIndex, 'Track:', currentTrackIndex);
   }, [currentShowIndex, currentTrackIndex]);
+
+  // Debug audio source changes
+  useEffect(() => {
+    console.log("[AUDIO SOURCE]", source);
+  }, [source]);
   
   // Handle show selection
   const handleShowChange = (newShowIndex: number) => {
@@ -152,14 +171,8 @@ function App() {
     <>
       <BackgroundManager />
       <LiveStreamTicker
-        isLive={isLive && !!streamUrl}
-        emptyText=" NOTHING CURRENTLY STREAMING "
-        tickerText={
-          livePlaying
-            ? `LIVE NOW: ${nowPlaying ?? "Live Stream"} — Click to stop`
-            : `NOW STREAMING: ${nowPlaying ?? "Live"} — Click to play`
-        }
-        onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
+        displayText={tickerDisplayText}
+        isEmpty={tickerIsEmpty}
       />
       
       <div className="logo-container">
@@ -167,6 +180,13 @@ function App() {
           <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
         </div>
       </div>
+      
+      <LiveStreamButton
+        isLive={isLive}
+        isPlaying={livePlaying}
+        nowPlaying={nowPlaying ?? undefined}
+        onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
+      />
       
       <main className="App-main">
         

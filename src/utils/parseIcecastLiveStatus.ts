@@ -30,10 +30,8 @@ export function parseIcecastLiveStatus(
 
   return {
     isLive: Boolean(match),
-    nowPlaying:
-      match?.title?.trim() ||
-      match?.yp_currently_playing?.trim() ||
-      null,
+    nowPlaying: match?.yp_currently_playing?.trim() || match?.title?.trim() || null,
+    showTitle: match?.title?.trim() || null,
     source: match ?? null,
   };
 }
