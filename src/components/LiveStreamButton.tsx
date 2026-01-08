@@ -23,16 +23,16 @@ export default function LiveStreamButton({
       title={isPlaying ? "Stop live stream" : "Play live stream"}
     >
       <div className="live-stream-button-top">
-        <span className="live-stream-button-icon">
-          {isPlaying ? "⏸" : "▶"}
-        </span>
+        {isLive && (
+          <span className="live-stream-button-record-indicator" aria-label="Live">
+            ●
+          </span>
+        )}
         <span className="live-stream-button-status">
           {isPlaying ? "PLAYING NOW" : "LIVE NOW"}
-          {isPlaying && (
-            <span className="live-stream-button-record-indicator" aria-label="Live">
-              ●
-            </span>
-          )}
+        </span>
+        <span className="live-stream-button-icon">
+          {isPlaying ? "⏸" : "▶"}
         </span>
       </div>
       {nowPlaying ? (
