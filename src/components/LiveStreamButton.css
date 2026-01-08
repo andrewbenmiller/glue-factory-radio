@@ -39,16 +39,16 @@
   width: 100%;
 }
 
-/* Record dot slot: always present, pulsing when live */
+/* Record bullet (25px, fixed slot so nothing shifts) */
 .live-stream-button-record-indicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  width: 18px;   /* reserve space so LIVE NOW never shifts */
-  height: 18px;
+  width: 28px;          /* slightly larger than glyph for breathing room */
+  height: 28px;
+  font-size: 25px;
   line-height: 1;
-  font-size: 18px;
 }
 
 .live-stream-button-record-indicator.is-live {
@@ -68,28 +68,23 @@
 /* LIVE NOW text */
 .live-stream-button-status {
   text-transform: uppercase;
-  font-size: 20px;      /* "nicely sized" */
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: 0.6px;
   line-height: 1;
   white-space: nowrap;  /* never wrap */
 }
 
-/* Play/pause: fixed box so ▶ and ⏸ can't shift anything */
+/* Play / Pause icon */
 .live-stream-button-icon {
+  width: 52px;          /* fixed box so ▶ / ⏸ never move layout */
+  height: 52px;
+  font-size: 30px;
+  line-height: 1;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
-
-  font-size: 20px;
-  line-height: 1;
-
-  /* optional: subtle button feel without changing layout */
-  background: transparent;
 }
 
 /* States */
