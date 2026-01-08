@@ -87,6 +87,26 @@
   letter-spacing: 0.5px;
   flex: 1;
   color: #000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-stream-button-record-indicator {
+  color: #FF0000;
+  font-size: 12px;
+  line-height: 1;
+  animation: pulse-red 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .live-stream-button-info-container {
