@@ -28,7 +28,7 @@ export default function LiveStreamButton({
         </span>
         <span className="live-stream-button-status">
           {isPlaying ? "PLAYING NOW" : "LIVE NOW"}
-          {isLive && (
+          {isPlaying && (
             <span className="live-stream-button-record-indicator" aria-label="Live">
               ●
             </span>
