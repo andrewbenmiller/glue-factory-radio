@@ -27,7 +27,7 @@
 
 /* Optional press feedback without "jumping" layout */
 .live-stream-button:active {
-  transform: translateY(1px);
+  transform: none !important;
 }
 
 /* Top row: centered, stable */
