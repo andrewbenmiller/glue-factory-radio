@@ -1,170 +1,143 @@
 /* LiveStreamButton.css */
 
 .live-stream-button {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 35px 45px;
   width: 100%;
   max-width: 600px;
   margin: 20px auto;
-  background-color: #ffffff;
+  padding: 16px 22px;
+
+  /* Pill */
+  border-radius: 9999px;
+
+  /* Your requested base look */
+  background: #ffffff;
+  border: 2px solid #ff0000; /* red outline */
   color: #000;
-  border: none;
-  border-radius: 0;
+
   cursor: pointer;
-  font-weight: 700;
-  transition: background-color 0.2s, border-color 0.2s;
   user-select: none;
   box-shadow: none;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  transition: background-color 0.2s ease, transform 0.05s ease;
 }
 
-.live-stream-button:hover {
-  background-color: #f5f5f5;
-}
-
+/* Optional press feedback without "jumping" layout */
 .live-stream-button:active {
-  background-color: #eeeeee;
+  transform: translateY(1px);
 }
 
-.live-stream-button-active {
-  background-color: #ffffff;
-  border: 1px solid #FF5F1F;
-}
-
-.live-stream-button-active:hover {
-  background-color: #fff5f0;
-}
-
-.live-stream-button-playing {
-  background-color: #fff5f5;
-  border: 1px solid #FF0000;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.live-stream-button-playing:hover {
-  background-color: #ffe0e0;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    border-color: #FF0000;
-  }
-  50% {
-    border-color: #ff3333;
-  }
-}
-
-.live-stream-button-inactive {
-  opacity: 0.7;
-  background-color: #ffffff;
-  border: 1px solid #cccccc;
-}
-
-.live-stream-button-inactive:hover {
-  background-color: #f9f9f9;
-}
-
+/* Top row: centered, stable */
 .live-stream-button-top {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center; /* center the whole row */
+  gap: 14px;
   width: 100%;
-  margin: 0 5px 10px 5px;
-  justify-content: center;
-  text-align: center;
 }
 
-.live-stream-button-status {
-  text-transform: uppercase;
-  font-size: 1.3rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  flex: 0 0 auto;
-  color: #000;
-  order: 2;
-}
-
-.live-stream-button-icon {
-  font-size: 24px;
-  line-height: 1;
-  flex-shrink: 0;
-  order: 3;
-  cursor: pointer;
-  margin-left: 8px;
-}
-
+/* Record dot slot: always present, pulsing when live */
 .live-stream-button-record-indicator {
-  color: #FF0000;
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;   /* reserve space so LIVE NOW never shifts */
+  height: 18px;
   line-height: 1;
+  font-size: 18px;
+}
+
+.live-stream-button-record-indicator.is-live {
+  color: #ff0000;
   animation: pulse-red 1.5s ease-in-out infinite;
-  flex-shrink: 0;
-  order: 1;
+}
+
+.live-stream-button-record-indicator.is-not-live {
+  opacity: 0; /* occupies space but invisible */
 }
 
 @keyframes pulse-red {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
-.live-stream-button-info-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  margin: 0 5px;
-}
-
-.live-stream-button-label {
-  font-size: 0.85rem;
-  font-weight: 700;
+/* LIVE NOW text */
+.live-stream-button-status {
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0.8;
-  color: #000;
+  font-size: 20px;      /* "nicely sized" */
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  line-height: 1;
+  white-space: nowrap;  /* never wrap */
+}
+
+/* Play/pause: fixed box so ▶ and ⏸ can't shift anything */
+.live-stream-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+
+  font-size: 20px;
+  line-height: 1;
+
+  /* optional: subtle button feel without changing layout */
+  background: transparent;
+}
+
+/* States */
+/* "Play mode should become faint pink indicating it's active":
+   I'm interpreting that as "when isPlaying true" */
+.live-stream-button-playing {
+  background: #fff5f5; /* faint pink */
+}
+
+/* If you want "live but not playing" to still be white, do nothing;
+   or add a tiny tint if desired:
+.live-stream-button-live { background: #ffffff; }
+*/
+
+.live-stream-button-inactive {
+  opacity: 0.75;
+  border-color: #cccccc; /* if not live, don't scream red */
+}
+
+/* Keep your nowPlaying block, but make it center-friendly in a pill */
+.live-stream-button-info-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .live-stream-button-info {
-  font-size: 0.95rem;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.3;
+  max-width: 520px;
+  text-align: center;
+
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
-  word-wrap: break-word;
-  color: #000;
 }
 
-/* Mobile styles to match show-item */
+/* Mobile */
 @media (max-width: 768px) {
-  .live-stream-button {
-    padding: 15px;
-  }
-  
-  .live-stream-button-top {
-    margin: 0 5px 10px 5px;
-  }
-  
-  .live-stream-button-status {
-    font-size: 20px;
-  }
-  
-  .live-stream-button-info-container {
-    margin: 0 5px;
-  }
+  .live-stream-button { padding: 14px 16px; }
+  .live-stream-button-status { font-size: 18px; }
+  .live-stream-button-icon { width: 34px; height: 34px; font-size: 19px; }
 }
 
 @media (max-width: 480px) {
-  .live-stream-button {
-    padding: 12px;
-  }
+  .live-stream-button-status { font-size: 17px; }
 }
