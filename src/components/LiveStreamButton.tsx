@@ -29,7 +29,7 @@ export default function LiveStreamButton({
           </span>
         )}
         <span className="live-stream-button-status">
-          {isPlaying ? "PLAYING NOW" : "LIVE NOW"}
+          LIVE NOW
         </span>
         <span className="live-stream-button-icon">
           {isPlaying ? "⏸" : "▶"}
