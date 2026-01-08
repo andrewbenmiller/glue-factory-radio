@@ -104,24 +104,6 @@
   order: 1;
 }
 
-.live-stream-button-status {
-  text-transform: uppercase;
-  font-size: 1.3rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  flex: 1;
-  color: #000;
-  order: 2;
-}
-
-.live-stream-button-icon {
-  font-size: 24px;
-  line-height: 1;
-  flex-shrink: 0;
-  order: 3;
-  cursor: pointer;
-}
-
 @keyframes pulse-red {
   0%, 100% {
     opacity: 1;
