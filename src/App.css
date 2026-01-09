@@ -18,14 +18,15 @@
 }
 
 .logo-image-container {
-  margin-bottom: -20px;
+  margin-bottom: 0;      /* remove the -20px */
+  padding: 10px 0;       /* your desired top/bottom breathing room */
 }
 
 .logo-image {
+  display: block;        /* removes inline-image baseline weirdness */
   height: 150px;
   width: auto;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin: 0 auto;        /* keep centered */
 }
 
 .app-logo {
