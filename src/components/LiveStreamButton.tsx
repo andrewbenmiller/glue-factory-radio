@@ -30,25 +30,6 @@ export default function LiveStreamButton({
       type="button"
     >
       <div className="live-stream-button-top">
-        {/* Always render to reserve space; hide visually when not live */}
-        <span
-          className={`live-stream-button-record-indicator ${
-            isLive ? "is-live" : "is-not-live"
-          }`}
-          aria-hidden={!isLive}
-          title={isLive ? "Live" : ""}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="30"
-            height="30"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="12" cy="12" r="9" />
-          </svg>
-        </span>
-
         <span className="live-stream-button-status">LIVE NOW</span>
 
         <span className="live-stream-button-icon" aria-hidden>

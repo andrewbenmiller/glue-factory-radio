@@ -39,36 +39,6 @@
   width: 100%;
 }
 
-/* Record indicator slot: fixed geometry */
-.live-stream-button-record-indicator {
-  width: 30px;
-  height: 30px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  line-height: 1;
-}
-
-/* SVG circle sizing */
-.live-stream-button-record-indicator svg {
-  width: 30px;
-  height: 30px;
-  display: block;
-  fill: #ff0000;
-}
-
-/* Live: solid red dot (no animation) */
-.live-stream-button-record-indicator.is-live {
-  opacity: 1;
-}
-
-/* Not live: reserve space but hide */
-.live-stream-button-record-indicator.is-not-live {
-  opacity: 0;
-}
-
 /* LIVE NOW text */
 .live-stream-button-status {
   text-transform: uppercase;
