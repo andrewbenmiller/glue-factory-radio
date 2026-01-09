@@ -271,6 +271,19 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   return (
     <div className={`audio-player ${className}`}>
+      <div 
+        className="past-mixes-header"
+        style={{
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '36px',
+          color: '#FF5F1F',
+          textAlign: 'center',
+          marginBottom: '20px'
+        }}
+      >
+        /////LISTEN TO PAST MIXES & SHOWS/////
+      </div>
+
       <div className="controls">
         <button
           className="control-btn skip-btn"
