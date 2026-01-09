@@ -347,6 +347,18 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Past mixes header */
+.past-mixes-header {
+  font-family: Arial, sans-serif;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 700;
+  color: #FF5F1F;
+  text-align: center;
+  margin: 0 auto 20px;
+  max-width: 600px;
+  width: 100%;
+}
+
 /* Player info styling */
 .player-info {
   text-align: center;
