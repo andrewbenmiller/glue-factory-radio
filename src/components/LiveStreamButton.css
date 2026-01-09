@@ -42,7 +42,7 @@
 /* LIVE NOW text */
 .live-stream-button-status {
   text-transform: uppercase;
-  font-size: 30px;
+  font-size: 25px;
   font-weight: 700;
   letter-spacing: 0.6px;
   line-height: 1;
@@ -51,8 +51,8 @@
 
 /* Locked play / pause icon container */
 .live-stream-button-icon {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
 
   display: inline-flex;
   align-items: center;

@@ -35,8 +35,8 @@ export default function LiveStreamButton({
         <span className="live-stream-button-icon" aria-hidden>
           <svg
             viewBox="0 0 24 24"
-            width="30"
-            height="30"
+            width="23"
+            height="23"
             fill="currentColor"
           >
             {isPlaying ? (
