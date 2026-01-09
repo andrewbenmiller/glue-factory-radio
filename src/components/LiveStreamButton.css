@@ -39,30 +39,39 @@
   width: 100%;
 }
 
-/* Record bullet (25px, fixed slot so nothing shifts) */
+/* Record indicator slot: fixed geometry, no font weirdness */
 .live-stream-button-record-indicator {
+  width: 34px;   /* slot width - adjust if you want more breathing room */
+  height: 34px;  /* slot height */
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-
-  width: 28px;          /* slightly larger than glyph for breathing room */
-  height: 28px;
-  font-size: 25px;
+  justify-content: flex-start; /* keeps the left edge "locked" */
   line-height: 1;
 }
 
-.live-stream-button-record-indicator.is-live {
-  color: #ff0000;
-  animation: pulse-red 1.5s ease-in-out infinite;
+/* Make the SVG fill the slot reliably */
+.live-stream-button-record-indicator svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+  fill: #ff0000;
 }
 
+/* Live: hard blink (on/off), not fade */
+.live-stream-button-record-indicator.is-live svg {
+  animation: blink 1s steps(1, end) infinite;
+}
+
+/* Not live: keep the space but hide it */
 .live-stream-button-record-indicator.is-not-live {
-  opacity: 0; /* occupies space but invisible */
+  opacity: 0;
 }
 
-@keyframes pulse-red {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+/* True on/off blink */
+@keyframes blink {
+  0%   { visibility: visible; }
+  50%  { visibility: hidden; }
+  100% { visibility: visible; }
 }
 
 /* LIVE NOW text */

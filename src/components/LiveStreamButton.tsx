@@ -38,7 +38,15 @@ export default function LiveStreamButton({
           aria-hidden={!isLive}
           title={isLive ? "Live" : ""}
         >
-          ●
+          <svg
+            viewBox="0 0 24 24"
+            width="30"
+            height="30"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="12" cy="12" r="9" />
+          </svg>
         </span>
 
         <span className="live-stream-button-status">LIVE NOW</span>
