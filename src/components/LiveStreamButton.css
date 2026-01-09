@@ -11,7 +11,7 @@
 
   /* Your requested base look */
   background: #ffffff;
-  border: 2px solid #ff0000; /* red outline */
+  border: 1px solid #ff0000; /* red outline */
   color: #000;
 
   cursor: pointer;
