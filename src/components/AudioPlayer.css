@@ -347,16 +347,19 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Past mixes header */
+/* Past mixes header - sized relative to 600px container to prevent line breaks */
 .past-mixes-header {
   font-family: Arial, sans-serif;
-  font-size: clamp(24px, 4vw, 36px);
+  font-size: clamp(16px, 4.67vw, calc(600px * 0.0467));
   font-weight: 700;
   color: #FF5F1F;
   text-align: center;
   margin: 0 auto 20px;
   max-width: 600px;
   width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Player info styling */

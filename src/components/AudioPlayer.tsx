@@ -272,7 +272,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   return (
     <div className={`audio-player ${className}`}>
       <h3 className="past-mixes-header">
-        /////LISTEN TO PAST MIXES & SHOWS/////
+        LISTEN TO PAST MIXES & SHOWS
       </h3>
 
       <div className="controls">
