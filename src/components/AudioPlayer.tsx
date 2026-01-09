@@ -271,20 +271,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   return (
     <div className={`audio-player ${className}`}>
-      <div className="player-info">
-        <div className="show-info">
-          <h3>{showName}</h3>
-          <p className="track-count">
-            Track {index + 1} of {tracks.length}
-          </p>
-        </div>
-        <div className="track-info" style={{ textAlign: "center" }}>
-          <h4 className="track-title" style={{ textAlign: "center" }}>
-            {title}
-          </h4>
-        </div>
-      </div>
-
       <div className="controls">
         <button
           className="control-btn skip-btn"
@@ -327,6 +313,20 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
             style={{ width: "48px", height: "48px" }}
           />
         </button>
+      </div>
+
+      <div className="player-info">
+        <div className="show-info">
+          <h3>{showName}</h3>
+          <p className="track-count">
+            Track {index + 1} of {tracks.length}
+          </p>
+        </div>
+        <div className="track-info" style={{ textAlign: "center" }}>
+          <h4 className="track-title" style={{ textAlign: "center" }}>
+            {title}
+          </h4>
+        </div>
       </div>
     </div>
   );
