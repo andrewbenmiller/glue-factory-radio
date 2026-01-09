@@ -20,7 +20,7 @@
 
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 
   transition: background-color 0.2s ease, transform 0.05s ease;
 }
@@ -35,14 +35,14 @@
   display: flex;
   align-items: center;
   justify-content: center; /* center the whole row */
-  gap: 14px;
+  gap: 6px; /* try 4–6px depending on taste */
   width: 100%;
 }
 
 /* Record indicator slot: fixed geometry */
 .live-stream-button-record-indicator {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
 
   display: inline-flex;
   align-items: center;
@@ -81,8 +81,8 @@
 
 /* Locked play / pause icon container */
 .live-stream-button-icon {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
 
   display: inline-flex;
   align-items: center;
@@ -113,6 +113,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
+  margin-top: -1px; /* very tight (almost broadcast lower-third style) */
 }
 
 .live-stream-button-info {
