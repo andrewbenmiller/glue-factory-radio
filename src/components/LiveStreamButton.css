@@ -39,17 +39,19 @@
   width: 100%;
 }
 
-/* Record indicator slot: fixed geometry, no font weirdness */
+/* Record indicator slot: fixed geometry */
 .live-stream-button-record-indicator {
-  width: 34px;   /* slot width - adjust if you want more breathing room */
-  height: 34px;  /* slot height */
+  width: 34px;
+  height: 34px;
+
   display: inline-flex;
   align-items: center;
-  justify-content: flex-start; /* keeps the left edge "locked" */
+  justify-content: flex-start;
+
   line-height: 1;
 }
 
-/* Make the SVG fill the slot reliably */
+/* SVG circle sizing */
 .live-stream-button-record-indicator svg {
   width: 30px;
   height: 30px;
@@ -57,21 +59,14 @@
   fill: #ff0000;
 }
 
-/* Live: hard blink (on/off), not fade */
-.live-stream-button-record-indicator.is-live svg {
-  animation: blink 1s steps(1, end) infinite;
+/* Live: solid red dot (no animation) */
+.live-stream-button-record-indicator.is-live {
+  opacity: 1;
 }
 
-/* Not live: keep the space but hide it */
+/* Not live: reserve space but hide */
 .live-stream-button-record-indicator.is-not-live {
   opacity: 0;
-}
-
-/* True on/off blink */
-@keyframes blink {
-  0%   { visibility: visible; }
-  50%  { visibility: hidden; }
-  100% { visibility: visible; }
 }
 
 /* LIVE NOW text */
