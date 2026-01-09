@@ -43,8 +43,26 @@ export default function LiveStreamButton({
 
         <span className="live-stream-button-status">LIVE NOW</span>
 
-        <span className="live-stream-button-icon" aria-hidden="true">
-          {isPlaying ? "⏸" : "▶"}
+        <span className="live-stream-button-icon" aria-hidden>
+          <svg
+            viewBox="0 0 24 24"
+            width="30"
+            height="30"
+            fill="currentColor"
+          >
+            {isPlaying ? (
+              <>
+                {/* PAUSE — left edge locked at x = 4 */}
+                <rect x="4" y="4" width="5" height="16" />
+                <rect x="11" y="4" width="5" height="16" />
+              </>
+            ) : (
+              <>
+                {/* PLAY — left edge also locked at x = 4 */}
+                <polygon points="4,4 4,20 18,12" />
+              </>
+            )}
+          </svg>
         </span>
       </div>
 

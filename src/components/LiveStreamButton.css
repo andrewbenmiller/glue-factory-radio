@@ -75,16 +75,16 @@
   white-space: nowrap;  /* never wrap */
 }
 
-/* Play / Pause icon */
+/* Locked play / pause icon container */
 .live-stream-button-icon {
-  width: 52px;          /* fixed box so ▶ / ⏸ never move layout */
+  width: 52px;
   height: 52px;
-  font-size: 30px;
-  line-height: 1;
 
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+
+  color: #000;
 }
 
 /* States */
