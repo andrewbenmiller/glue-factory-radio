@@ -116,10 +116,40 @@ function App() {
   //   setAutoPlay(!autoPlay);
   // };
   
-  // Ensure indices are valid (handle empty shows array safely)
-  const validShowIndex = shows.length > 0 
-    ? Math.min(Math.max(0, currentShowIndex), shows.length - 1)
-    : 0;
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="loading-state">
+        <h2>Loading Glue Factory Radio...</h2>
+        <p>Please wait while we fetch your shows.</p>
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="error-state">
+        <h2>Error Loading Shows</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
+  
+  // No shows state
+  if (shows.length === 0) {
+    return (
+      <div className="no-shows-state">
+        <h2>No Shows Available</h2>
+        <p>No shows have been uploaded yet.</p>
+        <p>Check back later or contact an administrator.</p>
+      </div>
+    );
+  }
+  
+  // Ensure indices are valid
+  const validShowIndex = Math.min(Math.max(0, currentShowIndex), shows.length - 1);
   
   // Convert show tracks to EpisodePlayer format
   const convertShowToTracks = (show: Show): Track[] => {
@@ -173,8 +203,6 @@ function App() {
           currentShowIndex={validShowIndex}
           onShowSelect={handleShowChange}
           onTrackSelect={handleTrackSelect}
-          isLoading={isLoading}
-          error={error}
         />
       </main>
     </>

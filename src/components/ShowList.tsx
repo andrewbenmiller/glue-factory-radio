@@ -7,8 +7,6 @@ interface ShowListProps {
   currentShowIndex: number;
   onShowSelect: (index: number) => void;
   onTrackSelect: (showIndex: number, trackIndex: number) => void;
-  isLoading?: boolean;
-  error?: string | null;
 }
 
 const ShowList: React.FC<ShowListProps> = ({
@@ -16,8 +14,6 @@ const ShowList: React.FC<ShowListProps> = ({
   currentShowIndex,
   onShowSelect,
   onTrackSelect,
-  isLoading = false,
-  error = null,
 }) => {
   const [expandedShows, setExpandedShows] = useState<Set<number>>(new Set());
 
@@ -46,35 +42,6 @@ const ShowList: React.FC<ShowListProps> = ({
     event.stopPropagation(); // Prevent show selection when clicking track
     onTrackSelect(showIndex, trackIndex);
   };
-
-  // Show error state inline
-  if (error) {
-    return (
-      <div className="show-list">
-        <div className="shows-container">
-          <div className="error-state-inline">
-            <p className="error-message">Error loading shows: {error}</p>
-            <button onClick={() => window.location.reload()} className="retry-button">
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state inline
-  if (isLoading) {
-    return (
-      <div className="show-list">
-        <div className="shows-container">
-          <div className="loading-state-inline">
-            <p>Loading shows...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="show-list">
