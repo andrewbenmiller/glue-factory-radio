@@ -353,14 +353,28 @@
   margin: 0 auto 20px;
 }
 
-/* Past mixes header - sized relative to 600px container to prevent line breaks */
+/* Past mixes header - boxed section label */
 .past-mixes-header {
-  font-family: Arial, sans-serif;
-  font-size: clamp(16px, 4.67vw, calc(600px * 0.0467));
-  font-weight: 700;
-  color: #FF5F1F;
+  display: block;
+
+  width: 100%;
+  max-width: 600px;
+
+  margin: 24px auto 16px auto;
+  padding: 10px 14px;
+
+  background: #ffffff;
+  color: #000000;
+
+  border: 1px solid #000000;
+
   text-align: center;
   white-space: nowrap;
+
+  font-size: 18px;        /* feels "label-like", not headline */
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 /* Player info styling */
