@@ -7,11 +7,11 @@
   border-radius: 0;
   padding: 30px;
   box-shadow: none;
-  max-width: 600px;
   margin: 0 auto 20px auto;
   font-family: Helvetica, Arial, sans-serif;
   color: black;
   font-weight: bold;
+  /* box-sizing, width, max-width handled in AudioPlayer.css shared rule */
 }
 
 .shows-container {
