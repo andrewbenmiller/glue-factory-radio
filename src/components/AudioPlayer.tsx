@@ -282,6 +282,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           className="control-btn skip-btn"
           onClick={prevInternal}
           title="Previous Track"
+          disabled={tracks.length === 0}
         >
           <span className="desktop-icon">⏮</span>
           <img
@@ -296,6 +297,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           className="control-btn play-btn"
           onClick={() => (isPlaying ? pauseInternal() : resumeOrStart())}
           title={isPlaying ? "Pause" : "Play"}
+          disabled={tracks.length === 0}
         >
           <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
           <img
@@ -310,6 +312,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
           className="control-btn skip-btn"
           onClick={nextInternal}
           title="Next Track"
+          disabled={tracks.length === 0}
         >
           <span className="desktop-icon">⏭</span>
           <img
@@ -325,12 +328,14 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         <div className="show-info">
           <h3>{showName}</h3>
           <p className="track-count">
-            Track {index + 1} of {tracks.length}
+            {tracks.length > 0 
+              ? `Track ${index + 1} of ${tracks.length}`
+              : "No tracks available"}
           </p>
         </div>
         <div className="track-info" style={{ textAlign: "center" }}>
           <h4 className="track-title" style={{ textAlign: "center" }}>
-            {title}
+            {tracks.length > 0 ? title : "—"}
           </h4>
         </div>
       </div>
