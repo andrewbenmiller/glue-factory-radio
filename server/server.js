@@ -128,7 +128,7 @@ app.get("/api/images/:filename", async (req, res) => {
 });
 
 // Audio proxy route for R2 files
-const { GetObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
+const { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command } = require("@aws-sdk/client-s3");
 
 app.get("/api/audio/:filename", async (req, res) => {
   const { filename } = req.params;
@@ -214,11 +214,49 @@ app.get("/api/audio/:filename", async (req, res) => {
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({ 
-    status: "OK", 
+  res.json({
+    status: "OK",
     message: "Glue Factory Radio Server is running!",
-    timestamp: new Date().toISOString() 
+    timestamp: new Date().toISOString()
   });
+});
+
+// R2 diagnostic endpoint - check cloud storage connection
+app.get("/api/r2-status", async (req, res) => {
+  const cloudStorage = require('./services/cloudStorage');
+
+  const status = {
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    configured: cloudStorage.isConfigured(),
+    envVars: {
+      S3_ENDPOINT: process.env.S3_ENDPOINT ? '✓ set' : '✗ missing',
+      S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID ? '✓ set' : '✗ missing',
+      S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY ? '✓ set' : '✗ missing',
+      S3_BUCKET_NAME: process.env.S3_BUCKET_NAME ? `✓ set (${process.env.S3_BUCKET_NAME})` : '✗ missing',
+      S3_PUBLIC_URL: process.env.S3_PUBLIC_URL ? '✓ set' : '✗ missing',
+    },
+    connectionTest: null
+  };
+
+  // Only test connection if configured and in production
+  if (cloudStorage.isConfigured() && cloudStorage.isProduction) {
+    try {
+      const command = new ListObjectsV2Command({
+        Bucket: process.env.S3_BUCKET_NAME,
+        MaxKeys: 1
+      });
+      await cloudStorage.s3Client.send(command);
+      status.connectionTest = '✓ R2 connection successful';
+    } catch (error) {
+      status.connectionTest = `✗ R2 connection failed: ${error.message}`;
+      status.errorCode = error.Code || error.name;
+    }
+  } else if (!cloudStorage.isProduction) {
+    status.connectionTest = 'Skipped (not in production mode)';
+  }
+
+  res.json(status);
 });
 
 // Serve uploads directory AFTER API routes to avoid conflicts
