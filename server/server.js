@@ -259,6 +259,38 @@ app.get("/api/r2-status", async (req, res) => {
   res.json(status);
 });
 
+// List files in R2 bucket for debugging
+app.get("/api/r2-files", async (req, res) => {
+  const cloudStorage = require('./services/cloudStorage');
+
+  if (!cloudStorage.isConfigured() || !cloudStorage.isProduction) {
+    return res.status(400).json({ error: 'R2 not configured or not in production' });
+  }
+
+  try {
+    const command = new ListObjectsV2Command({
+      Bucket: process.env.S3_BUCKET_NAME,
+      MaxKeys: 50
+    });
+    const response = await cloudStorage.s3Client.send(command);
+
+    const files = (response.Contents || []).map(obj => ({
+      key: obj.Key,
+      size: obj.Size,
+      lastModified: obj.LastModified
+    }));
+
+    res.json({
+      bucket: process.env.S3_BUCKET_NAME,
+      publicUrl: process.env.S3_PUBLIC_URL,
+      fileCount: files.length,
+      files
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve uploads directory AFTER API routes to avoid conflicts
 const uploadsPath = path.join(__dirname, "uploads");
 console.log(`📁 Uploads directory path: ${uploadsPath}`);
