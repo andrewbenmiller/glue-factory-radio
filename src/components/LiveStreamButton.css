@@ -2,9 +2,10 @@
 
 .live-stream-button {
   width: 100%;
-  max-width: 600px;
+  max-width: 540px; /* Match show-item inner width */
   margin: 20px auto;
   padding: 16px 22px;
+  box-sizing: border-box;
 
   /* Pill */
   border-radius: 9999px;
@@ -121,11 +122,19 @@
 
 /* Mobile */
 @media (max-width: 768px) {
-  .live-stream-button { padding: 14px 16px; }
+  .live-stream-button {
+    padding: 14px 16px;
+    margin: 20px 20px; /* Match show-list and audio-player padding */
+    width: calc(100% - 40px); /* Account for the margins */
+  }
   .live-stream-button-status { font-size: 18px; }
   .live-stream-button-icon { width: 34px; height: 34px; font-size: 19px; }
 }
 
 @media (max-width: 480px) {
+  .live-stream-button {
+    margin: 20px 15px; /* Match show-list and audio-player padding */
+    width: calc(100% - 30px);
+  }
   .live-stream-button-status { font-size: 17px; }
 }
