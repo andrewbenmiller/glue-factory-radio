@@ -16,14 +16,14 @@
 }
 
 .show-title {
-  font-size: 1.8rem;
+  font-size: 24px;
   margin: 0 0 10px 0;
   font-weight: 700;
   color: #FF5F1F;
 }
 
 .show-info {
-  font-size: 1rem;
+  font-size: 24px;
   font-weight: 300;
   text-align: center;
 }
@@ -46,7 +46,7 @@
 }
 
 .current-track-title {
-  font-size: 1.3rem;
+  font-size: 24px;
   margin: 0 0 5px 0;
   font-weight: 600;
   color: #FF5F1F;
@@ -59,7 +59,7 @@
 
 .track-info {
   position: relative;
-  font-size: 0.9rem;
+  font-size: 24px;
   color: #ff5f1f;
   font-weight: 300;
   text-align: center !important;
@@ -382,10 +382,25 @@
   text-align: center;
   white-space: nowrap;
 
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+}
+
+.past-mixes-header.clickable:hover {
+  background: #f0f0f0;
+}
+
+.archive-arrow {
+  margin-left: 10px;
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 14px;
+}
+
+.archive-arrow.expanded {
+  transform: rotate(180deg);
 }
 
 /* Player info styling */
@@ -395,20 +410,20 @@
 }
 
 .show-info h3 {
-  font-size: 1.8rem;
+  font-size: 24px;
   margin: 0 0 5px 0;
   font-weight: 600;
   color: #FF5F1F;
 }
 
 .show-info p {
-  font-size: 0.9rem;
+  font-size: 24px;
   margin: 0;
   color: #FF5F1F;
 }
 
 .track-info h4 {
-  font-size: 1.2rem;
+  font-size: 24px;
   margin: 7px 0 5px 0;
   font-weight: 600;
   color: #FF5F1F;
@@ -424,7 +439,7 @@
 
 
 .track-info p {
-  font-size: 0.9rem;
+  font-size: 24px;
   margin: 0;
   color: #FF5F1F;
 }

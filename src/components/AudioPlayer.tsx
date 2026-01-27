@@ -27,10 +27,12 @@ type Props = {
   initialIndex?: number;
   className?: string;
   showName?: string;
+  archiveExpanded?: boolean;
+  onArchiveToggle?: () => void;
 };
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
-  { tracks, initialIndex = 0, className = "", showName = "CD Mode" },
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle },
   ref
 ) {
   const audio = useAudio();
@@ -272,66 +274,81 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   return (
     <div className={`audio-player ${className}`}>
       <div className="archive-section">
-        <h2 className="past-mixes-header">LISTEN TO PAST MIXES & SHOWS</h2>
+        <h2
+          className={`past-mixes-header ${onArchiveToggle ? 'clickable' : ''}`}
+          onClick={onArchiveToggle}
+          style={{ cursor: onArchiveToggle ? 'pointer' : 'default' }}
+        >
+          LISTEN TO THE ARCHIVE
+          {onArchiveToggle && (
+            <span className={`archive-arrow ${archiveExpanded ? 'expanded' : ''}`}>
+              ▼
+            </span>
+          )}
+        </h2>
       </div>
 
-      <div className="controls">
-        <button
-          className="control-btn skip-btn"
-          onClick={prevInternal}
-          title="Previous Track"
-        >
-          <span className="desktop-icon">⏮</span>
-          <img
-            src={prevIcon}
-            alt="Previous"
-            className="mobile-icon"
-            style={{ width: "48px", height: "48px" }}
-          />
-        </button>
+      {archiveExpanded && (
+        <>
+          <div className="controls">
+            <button
+              className="control-btn skip-btn"
+              onClick={prevInternal}
+              title="Previous Track"
+            >
+              <span className="desktop-icon">⏮</span>
+              <img
+                src={prevIcon}
+                alt="Previous"
+                className="mobile-icon"
+                style={{ width: "48px", height: "48px" }}
+              />
+            </button>
 
-        <button
-          className="control-btn play-btn"
-          onClick={() => (isPlaying ? pauseInternal() : resumeOrStart())}
-          title={isPlaying ? "Pause" : "Play"}
-        >
-          <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
-          <img
-            src={isPlaying ? pauseIcon : playIcon}
-            alt={isPlaying ? "Pause" : "Play"}
-            className="mobile-icon"
-            style={{ width: "48px", height: "48px" }}
-          />
-        </button>
+            <button
+              className="control-btn play-btn"
+              onClick={() => (isPlaying ? pauseInternal() : resumeOrStart())}
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
+              <img
+                src={isPlaying ? pauseIcon : playIcon}
+                alt={isPlaying ? "Pause" : "Play"}
+                className="mobile-icon"
+                style={{ width: "48px", height: "48px" }}
+              />
+            </button>
 
-        <button
-          className="control-btn skip-btn"
-          onClick={nextInternal}
-          title="Next Track"
-        >
-          <span className="desktop-icon">⏭</span>
-          <img
-            src={nextIcon}
-            alt="Next"
-            className="mobile-icon"
-            style={{ width: "48px", height: "48px" }}
-          />
-        </button>
-      </div>
+            <button
+              className="control-btn skip-btn"
+              onClick={nextInternal}
+              title="Next Track"
+            >
+              <span className="desktop-icon">⏭</span>
+              <img
+                src={nextIcon}
+                alt="Next"
+                className="mobile-icon"
+                style={{ width: "48px", height: "48px" }}
+              />
+            </button>
+          </div>
 
-      <div className="player-info">
-        <div className="show-info">
-          <h3>{showName}</h3>
-          <p className="track-count">
-            Track {index + 1} of {tracks.length}
-          </p>
-        </div>
-        <div className="track-info" style={{ textAlign: "center" }}>
-          <h4 className="track-title" style={{ textAlign: "center" }}>
-            {title}
-          </h4>
-        </div>
-      </div>
+          <div className="player-info">
+            <div className="show-info">
+              <h3>{showName}</h3>
+              <p className="track-count">
+                Track {index + 1} of {tracks.length}
+              </p>
+            </div>
+            <div className="track-info" style={{ textAlign: "center" }}>
+              <h4 className="track-title" style={{ textAlign: "center" }}>
+                {title}
+              </h4>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 });

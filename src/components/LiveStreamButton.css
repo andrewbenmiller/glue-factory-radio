@@ -61,11 +61,29 @@
   color: #000;
 }
 
+/* Pulsating record icon */
+.live-stream-button-record {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff0000;
+  animation: pulse-record 2s ease-in-out infinite;
+}
+
+@keyframes pulse-record {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 /* States */
 /* "Play mode should become faint pink indicating it's active":
    I'm interpreting that as "when isPlaying true" */
 .live-stream-button-playing {
-  background: #fff5f5; /* faint pink */
+  background: #ffffff; /* opaque white */
 }
 
 /* If you want "live but not playing" to still be white, do nothing;

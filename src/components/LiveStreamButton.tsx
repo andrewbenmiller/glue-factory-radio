@@ -30,6 +30,13 @@ export default function LiveStreamButton({
       type="button"
     >
       <div className="live-stream-button-top">
+        {isLive && (
+          <span className="live-stream-button-record" aria-hidden>
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <circle cx="12" cy="12" r="10" fill="currentColor" />
+            </svg>
+          </span>
+        )}
         <span className="live-stream-button-status">LIVE NOW</span>
 
         <span className="live-stream-button-icon" aria-hidden>

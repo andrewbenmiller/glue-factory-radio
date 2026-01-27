@@ -15,6 +15,7 @@ function App() {
   const [shows, setShows] = useState<Show[]>([]);
   const [currentShowIndex, setCurrentShowIndex] = useState(0);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [archiveExpanded, setArchiveExpanded] = useState(false);
   // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -196,14 +197,18 @@ function App() {
           tracks={currentTracks}
           initialIndex={currentTrackIndex}
           showName={shows[validShowIndex]?.title || "CD Mode"}
+          archiveExpanded={archiveExpanded}
+          onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
         />
-        
-        <ShowList
-          shows={shows}
-          currentShowIndex={validShowIndex}
-          onShowSelect={handleShowChange}
-          onTrackSelect={handleTrackSelect}
-        />
+
+        {archiveExpanded && (
+          <ShowList
+            shows={shows}
+            currentShowIndex={validShowIndex}
+            onShowSelect={handleShowChange}
+            onTrackSelect={handleTrackSelect}
+          />
+        )}
       </main>
     </>
   );
