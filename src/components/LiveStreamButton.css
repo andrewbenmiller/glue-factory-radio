@@ -1,8 +1,9 @@
 /* LiveStreamButton.css */
 
 .live-stream-button {
-  width: 100%;
-  max-width: 540px; /* Match show-item inner width */
+  /* Button is OUTSIDE App-main, so must account for App-main padding (20px×2) + show-list padding (30px×2) = 100px */
+  width: calc(100% - 100px);
+  max-width: 540px; /* Match shows-container inner width: 600px - 60px padding */
   margin: 20px auto;
   padding: 16px 22px;
   box-sizing: border-box;
@@ -120,12 +121,15 @@
   -webkit-box-orient: vertical;
 }
 
-/* Mobile */
+/* Mobile - match show-list/shows-container width */
+/* Button is OUTSIDE App-main, so must account for both padding layers */
 @media (max-width: 768px) {
   .live-stream-button {
     padding: 14px 16px;
-    margin: 20px 20px; /* Match show-list and audio-player padding */
-    width: calc(100% - 40px); /* Account for the margins */
+    /* App-main padding (15px×2) + show-list padding (20px×2) = 70px */
+    width: calc(100% - 70px);
+    max-width: 560px; /* shows-container: 600px - 40px padding */
+    margin: 20px auto;
   }
   .live-stream-button-status { font-size: 18px; }
   .live-stream-button-icon { width: 34px; height: 34px; font-size: 19px; }
@@ -133,8 +137,9 @@
 
 @media (max-width: 480px) {
   .live-stream-button {
-    margin: 20px 15px; /* Match show-list and audio-player padding */
-    width: calc(100% - 30px);
+    /* App-main padding (10px×2) + show-list padding (15px×2) = 50px */
+    width: calc(100% - 50px);
+    max-width: 570px; /* shows-container: 600px - 30px padding */
   }
   .live-stream-button-status { font-size: 17px; }
 }
