@@ -66,12 +66,14 @@
   gap: 12px;
   padding: 12px;
   background: transparent;
+  overflow: hidden; /* Prevent overflow on mobile */
 }
 
 .archive-controls-row .control-btn {
   flex: 1;
   aspect-ratio: 1; /* Perfect square */
   max-width: none;
+  min-width: 0; /* Allow flex items to shrink below content size */
   background: #FF5F1F;
   border: 1px solid #FF5F1F;
   border-radius: 0;
