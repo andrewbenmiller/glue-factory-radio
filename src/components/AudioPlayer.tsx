@@ -273,82 +273,81 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
 
   return (
     <div className={`audio-player ${className}`}>
-      <div className="archive-section">
-        <h2
-          className={`past-mixes-header ${onArchiveToggle ? 'clickable' : ''}`}
+      {/* Bordered container for archive section */}
+      <div className="archive-container">
+        {/* Header row */}
+        <div
+          className={`archive-header-row ${onArchiveToggle ? 'clickable' : ''}`}
           onClick={onArchiveToggle}
-          style={{ cursor: onArchiveToggle ? 'pointer' : 'default' }}
         >
-          LISTEN TO THE ARCHIVE
+          <span className="archive-header-text">LISTEN TO THE ARCHIVE</span>
           {onArchiveToggle && (
             <span className={`archive-arrow ${archiveExpanded ? 'expanded' : ''}`}>
               ▼
             </span>
           )}
-        </h2>
+        </div>
+
+        {/* Expanded content */}
+        {archiveExpanded && (
+          <>
+            {/* Transport controls row */}
+            <div className="archive-controls-row">
+              <button
+                className="control-btn skip-btn"
+                onClick={prevInternal}
+                title="Previous Track"
+              >
+                <span className="desktop-icon">⏮</span>
+                <img
+                  src={prevIcon}
+                  alt="Previous"
+                  className="mobile-icon"
+                  style={{ width: "48px", height: "48px" }}
+                />
+              </button>
+
+              <button
+                className="control-btn play-btn"
+                onClick={() => (isPlaying ? pauseInternal() : resumeOrStart())}
+                title={isPlaying ? "Pause" : "Play"}
+              >
+                <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
+                <img
+                  src={isPlaying ? pauseIcon : playIcon}
+                  alt={isPlaying ? "Pause" : "Play"}
+                  className="mobile-icon"
+                  style={{ width: "48px", height: "48px" }}
+                />
+              </button>
+
+              <button
+                className="control-btn skip-btn"
+                onClick={nextInternal}
+                title="Next Track"
+              >
+                <span className="desktop-icon">⏭</span>
+                <img
+                  src={nextIcon}
+                  alt="Next"
+                  className="mobile-icon"
+                  style={{ width: "48px", height: "48px" }}
+                />
+              </button>
+            </div>
+
+            {/* Now playing info row */}
+            <div className="archive-info-row">
+              <span className="archive-info-show">
+                <span className="archive-info-label">Currently loaded:</span> {showName}
+              </span>
+              <span className="archive-info-track">
+                Track {index + 1}/{tracks.length}: {title}
+              </span>
+            </div>
+          </>
+        )}
       </div>
-
-      {archiveExpanded && (
-        <>
-          <div className="controls">
-            <button
-              className="control-btn skip-btn"
-              onClick={prevInternal}
-              title="Previous Track"
-            >
-              <span className="desktop-icon">⏮</span>
-              <img
-                src={prevIcon}
-                alt="Previous"
-                className="mobile-icon"
-                style={{ width: "48px", height: "48px" }}
-              />
-            </button>
-
-            <button
-              className="control-btn play-btn"
-              onClick={() => (isPlaying ? pauseInternal() : resumeOrStart())}
-              title={isPlaying ? "Pause" : "Play"}
-            >
-              <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
-              <img
-                src={isPlaying ? pauseIcon : playIcon}
-                alt={isPlaying ? "Pause" : "Play"}
-                className="mobile-icon"
-                style={{ width: "48px", height: "48px" }}
-              />
-            </button>
-
-            <button
-              className="control-btn skip-btn"
-              onClick={nextInternal}
-              title="Next Track"
-            >
-              <span className="desktop-icon">⏭</span>
-              <img
-                src={nextIcon}
-                alt="Next"
-                className="mobile-icon"
-                style={{ width: "48px", height: "48px" }}
-              />
-            </button>
-          </div>
-
-          <div className="player-info">
-            <div className="show-info">
-              <h3>{showName}</h3>
-              <p className="track-count">
-                Track {index + 1} of {tracks.length}
-              </p>
-            </div>
-            <div className="track-info" style={{ textAlign: "center" }}>
-              <h4 className="track-title" style={{ textAlign: "center" }}>
-                {title}
-              </h4>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 });

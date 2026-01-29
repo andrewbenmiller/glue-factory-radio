@@ -1,254 +1,198 @@
 /* ============================================
-   BASE STYLES (Desktop/Web)
+   INDEX TABLE STYLE - Show Archive
    ============================================ */
 
 .show-list {
   background: transparent;
-  border-radius: 0;
-  padding: 30px;
-  box-shadow: none;
+  padding: 0 30px 30px 30px;
   margin: 0 auto 20px auto;
   font-family: Helvetica, Arial, sans-serif;
   color: black;
-  font-weight: bold;
   width: 100%;
   max-width: 600px;
   box-sizing: border-box;
 }
 
+/* Table container with outer border */
 .shows-container {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  border: 1px solid black;
+  background: white;
 }
 
-/* Show Item Container */
+/* Individual show row */
 .show-item {
+  display: flex;
+  flex-direction: column;
   background-color: #ffffff;
-  border: none;
-  border-radius: 0;
-  padding: 35px 45px 35px 45px;
+  border-bottom: 1px solid black;
   cursor: pointer;
-  transition: none;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 15px;
   box-sizing: border-box;
   width: 100%;
 }
 
-.show-item::before {
-  display: none;
+/* Remove border from last item */
+.show-item:last-child {
+  border-bottom: none;
 }
 
-.show-item:hover {
-  background-color: #ffffff;
-  transform: none;
-  box-shadow: none;
-}
-
-.show-item:hover::before {
-  transform: scaleX(1);
-}
-
-.show-item.active {
-  background-color: #ffffff;
-  box-shadow: none;
-}
-
-.show-item.active::before {
-  display: none;
-}
-
-/* Show Item Header */
-.show-item-header {
+/* Main row content - horizontal layout */
+.show-item-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin: 0 5px 10px 5px;
+  padding: 10px 12px;
+  gap: 12px;
+  min-height: 44px;
 }
 
+.show-item-row:hover {
+  background-color: #f5f5f5;
+}
+
+.show-item.active .show-item-row {
+  background-color: #f0f0f0;
+}
+
+/* Show number column */
+.show-item-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: black;
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+/* Show title column */
 .show-item-title {
-  font-size: 24px;
+  font-size: 14px;
+  font-weight: 600;
   color: black;
   margin: 0;
-  font-weight: 600;
   flex: 1;
-  margin-right: 15px;
-  line-height: 1.4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* Duration column */
 .show-item-duration {
-  background: transparent;
+  font-size: 14px;
+  font-weight: 400;
   color: black;
-  padding: 0;
-  border-radius: 0;
-  font-size: 1.3rem;
-  font-weight: 600;
   white-space: nowrap;
-  line-height: 1.4;
+  flex-shrink: 0;
+  min-width: 45px;
   text-align: right;
 }
 
-.show-item-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Show Item Description */
-.show-item-description {
-  color: black;
-  margin: 0 5px 15px 5px;
-  line-height: 1.5;
-  font-size: 0.95rem;
-}
-
-/* Show Item Meta */
-.show-item-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  color: black;
-  margin: 0 5px;
-}
-
-.show-item-number {
-  background: transparent;
-  color: black;
-  padding: 0;
-  border-radius: 0;
-  font-weight: bold;
-}
-
-.show-item-tracks {
-  background: transparent;
-  color: black;
-  padding: 0;
-  border-radius: 0;
-  font-weight: bold;
-  white-space: nowrap;
-  text-align: right;
-}
-
-/* Expand Arrow */
-.expand-arrow {
+/* Play button */
+.show-item-play {
   background: transparent;
   border: none;
   cursor: pointer;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease;
-  width: calc(100% - 10px);
-  padding: 8px 0 3px 0;
-  margin: 20px 5px 2px 5px;
-}
-
-.expand-arrow:hover {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: black;
   opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-.expand-arrow.rotated {
-  transform: rotate(180deg);
+.show-item-play:hover {
+  opacity: 1;
 }
 
-.expand-arrow .triangle {
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 14px solid #FF5F1F;
-  display: inline-block;
-  transition: transform 0.3s ease;
+/* Expanded description row */
+.show-item-description {
+  display: none;
+  padding: 0 12px 10px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #333;
+  line-height: 1.5;
+  border-top: none;
+  margin: 0;
 }
 
-/* Tracks Dropdown */
+.show-item.expanded .show-item-description {
+  display: block;
+}
+
+/* ============================================
+   TRACKS DROPDOWN (Expanded State)
+   ============================================ */
+
 .tracks-dropdown {
   display: none;
+  border-top: 1px solid black;
 }
 
 .tracks-dropdown.expanded {
   display: block;
-  padding: 15px 5px 0 5px;
-  margin: 0;
-}
-
-.tracks-dropdown.collapsed {
-  display: none;
 }
 
 .tracks-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0;
-  margin: 0;
 }
 
-/* Track Items */
+/* Individual track row */
 .track-item {
-  background: transparent;
-  padding: 8px 0;
-  border-radius: 0;
-  border: none;
-  transition: all 0.2s ease;
-  margin: 0;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 12px;
   cursor: pointer;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.track-item:last-child {
+  border-bottom: none;
 }
 
 .track-item:hover {
-  background: gray;
+  background: #f0f0f0;
 }
 
 .track-item:active {
-  background: rgba(255, 95, 31, 0.35);
+  background: #e5e5e5;
 }
 
-.track-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-}
-
+/* Track number */
 .track-number {
-  background: transparent;
-  color: black;
-  padding: 0;
-  margin: 0;
-  border-radius: 0;
-  font-size: 18px;
-  font-weight: bold;
-  min-width: 20px;
-  text-align: center;
-  line-height: 1;
+  font-size: 13px;
+  font-weight: 400;
+  color: #666;
+  min-width: 24px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
+/* Track title */
 .track-title {
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 400;
   color: black;
   flex: 1;
-  font-size: 18px;
-  text-align: left !important;
-  line-height: 1.4;
-  margin: 0 !important;
-  padding: 5px 0 5px 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* Track duration */
 .track-duration {
-  background: transparent;
-  color: black;
-  padding: 0;
-  margin: 0;
-  border-radius: 0;
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1;
+  font-size: 13px;
+  font-weight: 400;
+  color: #666;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* No Shows State */
@@ -256,181 +200,95 @@
   text-align: center;
   padding: 40px 20px;
   color: black;
+  border: 1px solid black;
+  background: white;
 }
 
 .no-shows p {
   margin: 10px 0;
-  font-size: 1.1rem;
-}
-
-.no-shows p:first-child {
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: black;
-}
-
-/* Legacy dropdown button (unused but kept for reference) */
-.dropdown-button {
-  background: transparent;
-  color: #FF5F1F;
-  border: none;
-  border-radius: 50%;
-  width: 59px;
-  height: 59px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 46px;
-  font-weight: bold;
-  transition: transform 0.3s ease;
-  flex-shrink: 0;
-}
-
-.dropdown-button.rotated {
-  font-size: 43px;
-  transform: rotate(45deg) translateY(2px);
-}
-
-.dropdown-button:active:not(.rotated) {
-  transform: scale(0.95);
-}
-
-.dropdown-button.rotated:active {
-  transform: rotate(45deg) translateY(2px) scale(0.95);
+  font-size: 14px;
 }
 
 /* ============================================
    MOBILE STYLES
    ============================================ */
 
-/* Tablet and below (max-width: 1024px) */
-@media (max-width: 1024px) {
-  .show-item-header {
-    flex-direction: row;
-    flex-wrap: nowrap;
-  }
-  
-  .show-item-controls {
-    flex-direction: row;
-    flex-shrink: 0;
-  }
-}
-
-/* Mobile (max-width: 768px) */
 @media (max-width: 768px) {
-  /* Container adjustments */
   .show-list {
-    margin: 0 auto 20px auto;
-    padding: 20px;
-    border-radius: 0;
+    padding: 0 20px 20px 20px;
   }
-  
-  .show-item {
-    padding: 15px;
-  }
-  
-  /* Typography adjustments */
-  .show-item-title {
-    font-size: 20px;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .show-item-duration {
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-  
-  /* Layout adjustments */
-  .show-item-header {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .show-item-controls {
-    flex-direction: row;
-    flex-shrink: 0;
-    align-items: center;
+
+  .show-item-row {
+    padding: 10px;
     gap: 8px;
   }
-  
-  /* Tracks dropdown */
-  .tracks-dropdown {
-    padding: 15px 5px 0 5px;
+
+  .show-item-number {
+    font-size: 13px;
+    min-width: 26px;
   }
-  
-  .track-info {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
+
+  .show-item-title {
+    font-size: 13px;
   }
-  
-  /* Track typography - smaller on mobile */
+
+  .show-item-duration {
+    font-size: 13px;
+    min-width: 40px;
+  }
+
+  .track-item {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
   .track-number,
   .track-title,
   .track-duration {
-    font-size: 13px;
-  }
-  
-  .track-title {
-    padding: 5px 0 5px 0;
-    text-align: left !important;
-    margin: 0 !important;
-    line-height: 1.4;
-  }
-  
-  /* Reduce spacing between tracks on mobile */
-  .track-item {
-    padding: 4px 0;
+    font-size: 12px;
   }
 }
 
-/* Small Mobile (max-width: 480px) */
 @media (max-width: 480px) {
-  /* Container adjustments */
   .show-list {
-    margin: 0 auto 10px auto;
-    padding: 15px;
+    padding: 0 15px 15px 15px;
   }
-  
-  .show-item {
-    padding: 12px;
+
+  .show-item-row {
+    padding: 8px 10px;
+    gap: 6px;
   }
-  
-  /* Typography adjustments */
+
+  .show-item-number {
+    font-size: 12px;
+    min-width: 24px;
+  }
+
   .show-item-title {
-    font-size: 20px;
+    font-size: 12px;
   }
-  
+
   .show-item-duration {
-    font-size: 20px;
+    font-size: 12px;
+    min-width: 36px;
   }
-  
-  /* Track items - reduced spacing on small mobile */
+
+  .show-item-play {
+    font-size: 14px;
+    padding: 2px;
+  }
+
   .track-item {
-    padding: 4px 0;
+    padding: 6px 10px;
   }
-  
-  /* Track typography - smaller on mobile */
+
   .track-number,
   .track-title,
   .track-duration {
-    font-size: 13px;
+    font-size: 11px;
   }
-  
-  .track-title {
-    padding: 5px 0 5px 0;
-    text-align: left !important;
-    margin: 0 !important;
-    line-height: 1.4;
-  }
-  
-  .track-info {
-    align-items: center;
+
+  .track-number {
+    min-width: 20px;
   }
 }

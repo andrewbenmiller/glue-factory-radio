@@ -23,8 +23,7 @@ const ShowList: React.FC<ShowListProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-
-  const toggleShowExpansion = (showIndex: number, event: React.MouseEvent<HTMLButtonElement>) => {
+  const toggleShowExpansion = (showIndex: number, event: React.MouseEvent) => {
     event.stopPropagation();
     setExpandedShows(prev => {
       const next = new Set(prev);
@@ -34,12 +33,17 @@ const ShowList: React.FC<ShowListProps> = ({
     });
   };
 
+  const handlePlayClick = (showIndex: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    onShowSelect(showIndex);
+  };
+
   const handleTrackClick = (
     showIndex: number,
     trackIndex: number,
     event: React.MouseEvent
   ) => {
-    event.stopPropagation(); // Prevent show selection when clicking track
+    event.stopPropagation();
     onTrackSelect(showIndex, trackIndex);
   };
 
@@ -48,76 +52,53 @@ const ShowList: React.FC<ShowListProps> = ({
       <div className="shows-container">
         {shows.map((show, index) => {
           const isExpanded = expandedShows.has(index);
+          const showNumber = shows.length - index;
 
           return (
             <div
               key={show.id}
-              className={`show-item ${
-                index === currentShowIndex ? 'active' : ''
-              }`}
-              onClick={() => {
-                // Only trigger a show change if this is NOT the currently active show
-                if (index !== currentShowIndex) {
-                  onShowSelect(index);
-                }
-              }}
+              className={`show-item ${index === currentShowIndex ? 'active' : ''} ${isExpanded ? 'expanded' : ''}`}
             >
-              <div className="show-item-header">
-                <h4 className="show-item-title">{show.title}</h4>
-                <div className="show-item-controls">
-                  <span className="show-item-duration">
-                    {formatDuration(show.total_duration)}
-                  </span>
-                </div>
+              {/* Main row: # | Title | Duration | Play */}
+              <div
+                className="show-item-row"
+                onClick={(e) => toggleShowExpansion(index, e)}
+              >
+                <span className="show-item-number">#{showNumber}</span>
+                <span className="show-item-title">{show.title}</span>
+                <span className="show-item-duration">
+                  {formatDuration(show.total_duration)}
+                </span>
+                <button
+                  className="show-item-play"
+                  onClick={(e) => handlePlayClick(index, e)}
+                  title="Play show"
+                >
+                  ▶
+                </button>
               </div>
 
+              {/* Description (shown when expanded) */}
               {show.description && (
                 <p className="show-item-description">{show.description}</p>
               )}
 
-              <div className="show-item-meta">
-                <span className="show-item-number">
-                  #{shows.length - index}
-                </span>
-                <span className="show-item-tracks">
-                  {show.total_tracks} tracks
-                </span>
-              </div>
-
-              <button
-                className={`expand-arrow ${
-                  isExpanded ? 'rotated' : ''
-                }`}
-                onClick={(e) => toggleShowExpansion(index, e)}
-                title={isExpanded ? 'Hide tracks' : 'Show tracks'}
-              >
-                <span className="triangle"></span>
-              </button>
-
-              {/* 🔽 Always rendered, animated via CSS */}
+              {/* Tracks dropdown */}
               <div
-                className={`tracks-dropdown ${
-                  isExpanded ? 'expanded' : 'collapsed'
-                }`}
+                className={`tracks-dropdown ${isExpanded ? 'expanded' : 'collapsed'}`}
               >
                 <div className="tracks-list">
                   {show.tracks.map((track, trackIndex) => (
                     <div
                       key={track.id}
                       className="track-item"
-                      onClick={(e) =>
-                        handleTrackClick(index, trackIndex, e)
-                      }
+                      onClick={(e) => handleTrackClick(index, trackIndex, e)}
                     >
-                      <div className="track-info">
-                        <span className="track-number">
-                          {trackIndex + 1}
-                        </span>
-                        <span className="track-title">{track.title}</span>
-                        <span className="track-duration">
-                          {formatDuration(track.duration)}
-                        </span>
-                      </div>
+                      <span className="track-number">{trackIndex + 1}</span>
+                      <span className="track-title">{track.title}</span>
+                      <span className="track-duration">
+                        {formatDuration(track.duration)}
+                      </span>
                     </div>
                   ))}
                 </div>

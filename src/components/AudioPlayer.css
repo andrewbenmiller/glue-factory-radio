@@ -1,7 +1,7 @@
 .audio-player {
   background: transparent;
   border-radius: 0;
-  padding: 0 30px 15px 30px;
+  padding: 0 30px 0 30px;
   color: #FF5F1F;
   box-shadow: none;
   max-width: 600px;
@@ -11,6 +11,212 @@
   text-align: center;
   box-sizing: border-box;
 }
+
+/* ============================================
+   ARCHIVE CONTAINER - Index Table Style
+   ============================================ */
+
+.archive-container {
+  background: transparent;
+  width: 100%;
+}
+
+/* Header row */
+.archive-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid black;
+  gap: 8px;
+}
+
+.archive-header-row.clickable {
+  cursor: pointer;
+}
+
+.archive-header-row.clickable:hover {
+  background: #f5f5f5;
+}
+
+.archive-header-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: black;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.archive-arrow {
+  font-size: 12px;
+  color: black;
+  transition: transform 0.3s ease;
+}
+
+.archive-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+/* Controls row */
+.archive-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 12px;
+  padding: 12px;
+  background: transparent;
+}
+
+.archive-controls-row .control-btn {
+  flex: 1;
+  aspect-ratio: 1; /* Perfect square */
+  max-width: none;
+  background: #FF5F1F;
+  border: 1px solid #FF5F1F;
+  border-radius: 0;
+  color: black;
+  font-size: 3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: background 0.2s ease;
+}
+
+.archive-controls-row .control-btn:hover {
+  background: #d4450f;
+}
+
+.archive-controls-row .control-btn:active {
+  background: #b93a0d;
+}
+
+/* Info row */
+.archive-info-row {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  border: 1px solid black;
+  border-bottom: none;
+  background: #fafafa;
+  text-align: left;
+  gap: 4px;
+}
+
+.archive-info-show {
+  font-size: 14px;
+  font-weight: 600;
+  color: black;
+}
+
+.archive-info-label {
+  text-transform: uppercase;
+}
+
+.archive-info-track {
+  font-size: 13px;
+  font-weight: 400;
+  color: #333;
+}
+
+/* Show desktop icons by default, hide mobile icons */
+.desktop-icon {
+  display: inline;
+}
+
+.mobile-icon {
+  display: none;
+}
+
+/* ============================================
+   MOBILE STYLES
+   ============================================ */
+
+@media (max-width: 768px) {
+  .audio-player {
+    padding: 0 20px;
+    margin: 0 auto;
+  }
+
+  .archive-header-text {
+    font-size: 13px;
+  }
+
+  .archive-controls-row {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .archive-controls-row .control-btn {
+    font-size: 2.5rem;
+  }
+
+  .archive-info-show {
+    font-size: 13px;
+  }
+
+  .archive-info-track {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .audio-player {
+    padding: 0 15px;
+    margin: 0 auto;
+  }
+
+  .archive-header-row {
+    padding: 10px 12px;
+  }
+
+  .archive-header-text {
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .archive-arrow {
+    font-size: 10px;
+  }
+
+  .archive-controls-row {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .archive-controls-row .control-btn {
+    font-size: 2rem;
+  }
+
+  /* On mobile: hide desktop icons, show mobile icons */
+  .desktop-icon {
+    display: none;
+  }
+
+  .mobile-icon {
+    display: inline;
+  }
+
+  .archive-info-row {
+    padding: 10px 12px;
+  }
+
+  .archive-info-show {
+    font-size: 12px;
+  }
+
+  .archive-info-track {
+    font-size: 11px;
+  }
+}
+
+/* ============================================
+   LEGACY STYLES (kept for compatibility)
+   ============================================ */
 
 .player-header {
   text-align: center;
@@ -22,12 +228,6 @@
   margin: 0 0 10px 0;
   font-weight: 700;
   color: #FF5F1F;
-}
-
-.show-info {
-  font-size: 24px;
-  font-weight: 300;
-  text-align: center;
 }
 
 .player-main {
@@ -57,15 +257,6 @@
 .track-count {
   font-weight: bold;
   margin: 5px 0;
-}
-
-.track-info {
-  position: relative;
-  font-size: 24px;
-  color: #ff5f1f;
-  font-weight: 300;
-  text-align: center !important;
-  min-height: 1.4em; /* keep a stable block height */
 }
 
 .time-display {
@@ -114,14 +305,15 @@
   border: 1px solid #FF5F1F;
 }
 
+/* Base control button styles (used as fallback) */
 .controls {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 15px;
-  flex-wrap: nowrap; /* Prevent wrapping on desktop */
+  flex-wrap: nowrap;
   width: 100%;
-  max-width: 540px; /* Match show-item inner width (600px - 30px padding on each side) */
+  max-width: 540px;
   margin: 0 auto;
 }
 
@@ -171,13 +363,6 @@
   font-size: 4rem;
   background: #FF5F1F;
   color: black;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  font-family: inherit;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .play-btn:hover {
@@ -239,90 +424,13 @@
   accent-color: #667eea;
 }
 
-
 .no-show {
   text-align: center;
   font-size: 1.2rem;
   opacity: 0.8;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .audio-player {
-    padding: 20px 20px 15px 20px;
-    margin: 0 auto;
-    border-radius: 0;
-  }
-
-  .show-title {
-    font-size: 1.8rem;
-  }
-
-  .controls {
-    gap: 10px;
-    width: 100%;
-    max-width: none;
-  }
-
-  .control-btn, .play-btn {
-    flex: 1;
-    max-width: none; /* Let buttons stretch to fill, matching show-item width */
-    height: 130px;
-    font-size: 3.2rem;
-  }
-
-  .player-info {
-    margin-top: 35px;
-  }
-}
-
-/* Show desktop icons by default, hide mobile icons */
-.desktop-icon {
-  display: inline;
-}
-
-.mobile-icon {
-  display: none;
-}
-
-/* FRESH START - Simple mobile buttons */
-@media (max-width: 480px) {
-  .audio-player {
-    padding: 15px;
-    margin: 0 auto;
-  }
-
-  .controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    max-width: none;
-  }
-
-  .control-btn, .play-btn {
-    flex: 1;
-    max-width: none; /* Let buttons stretch to fill, matching show-item width */
-    height: 90px;
-    background: #FF5F1F;
-    color: black;
-    border: none;
-    font-size: 2rem;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-
-  /* On mobile: hide desktop icons, show mobile icons */
-  .desktop-icon {
-    display: none;
-  }
-
-  .mobile-icon {
-    display: inline;
-  }
-}
-
-/* New timeline-based progress bar */
+/* Timeline-based progress bar */
 .timeline {
   width: 100%;
   height: 8px;
@@ -342,7 +450,6 @@
   border-radius: 0;
 }
 
-/* Playhead thumb marker */
 .playhead {
   position: absolute;
   top: 50%;
@@ -355,155 +462,4 @@
   pointer-events: none;
   z-index: 10;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Content container matching transport controls width */
-.content-600 {
-  max-width: 600px;
-  margin: 0 auto 20px;
-}
-
-/* Make 600px mean 600px total (including padding/border) */
-.show-list,
-.archive-section {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.archive-section {
-  margin: 24px auto 45px auto;
-  padding: 0 30px; /* match .show-list padding so edges line up */
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-/* The boxed label */
-.past-mixes-header {
-  margin: 0;                 /* IMPORTANT: kills default h2 weirdness */
-  padding: 10px 14px;
-  box-sizing: border-box;
-
-  width: 100%;
-  background: #fff;
-  color: #000;
-  border: 1px solid #000;
-
-  text-align: center;
-  white-space: normal; /* Allow wrapping on mobile */
-
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-/* Mobile adjustments for archive header */
-@media (max-width: 768px) {
-  .archive-section {
-    padding: 0 20px;
-    margin-bottom: 35px;
-  }
-}
-
-@media (max-width: 480px) {
-  .archive-section {
-    padding: 0 15px;
-    margin-bottom: 30px;
-  }
-
-  .past-mixes-header {
-    font-size: 18px;
-    padding: 12px 10px;
-    letter-spacing: 0.3px;
-  }
-
-  .archive-arrow {
-    margin-left: 6px;
-    font-size: 12px;
-  }
-}
-
-.past-mixes-header.clickable:hover {
-  background: #f0f0f0;
-}
-
-.archive-arrow {
-  margin-left: 10px;
-  display: inline-block;
-  transition: transform 0.3s ease;
-  font-size: 14px;
-}
-
-.archive-arrow.expanded {
-  transform: rotate(180deg);
-}
-
-/* Player info styling */
-.player-info {
-  text-align: center;
-  margin-top: 45px;
-}
-
-.show-info h3 {
-  font-size: 24px;
-  margin: 0 0 7px 0;
-  font-weight: 600;
-  color: #FF5F1F;
-  line-height: 1.3;
-}
-
-.show-info p {
-  font-size: 24px;
-  margin: 0;
-  color: #FF5F1F;
-  line-height: 1.3;
-}
-
-.track-info h4 {
-  font-size: 24px;
-  margin: 7px 0 0 0;
-  font-weight: 600;
-  color: #FF5F1F;
-  text-align: center !important;
-  line-height: 1.3;
-}
-
-.track-title {
-  text-align: center !important;
-  display: block !important;
-  width: 100% !important;
-}
-
-
-.track-info p {
-  font-size: 24px;
-  margin: 0;
-  color: #FF5F1F;
-}
-
-/* Mobile player info text - must come after base rules */
-@media (max-width: 480px) {
-  .player-info {
-    margin-top: 30px;
-  }
-
-  .player-info .show-info h3 {
-    font-size: 16px;
-  }
-
-  .player-info .show-info p {
-    font-size: 16px;
-  }
-
-  .player-info .track-info h4 {
-    font-size: 16px;
-  }
-
-  .player-info .track-info p {
-    font-size: 16px;
-  }
 }
