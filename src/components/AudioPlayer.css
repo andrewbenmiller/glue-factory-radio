@@ -62,7 +62,7 @@
 .archive-controls-row {
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
+  align-items: center;
   gap: 12px;
   padding: 12px;
   background: transparent;
@@ -70,10 +70,11 @@
 }
 
 .archive-controls-row .control-btn {
-  flex: 1;
+  flex: 1 1 0; /* Equal flex basis */
   aspect-ratio: 1; /* Perfect square */
   max-width: none;
   min-width: 0; /* Allow flex items to shrink below content size */
+  height: auto; /* Let height be determined by aspect-ratio */
   background: #FF5F1F;
   border: 1px solid #FF5F1F;
   border-radius: 0;
