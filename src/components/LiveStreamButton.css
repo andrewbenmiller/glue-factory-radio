@@ -8,16 +8,17 @@
   transform: translate(-50%, -50%);
   width: calc(100% - 40px);
   max-width: 540px;
-  padding: 16px 22px;
+  aspect-ratio: 1; /* Perfect circle: height equals width */
+  padding: 16px;
   box-sizing: border-box;
   z-index: 50;
 
-  /* Pill */
-  border-radius: 9999px;
+  /* Circle */
+  border-radius: 50%;
 
   /* Your requested base look */
   background: #ffffff;
-  border: 1px solid #ff0000; /* red outline */
+  border: 1px solid #ff1900;
   color: #000;
 
   cursor: pointer;
@@ -26,115 +27,113 @@
 
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  justify-content: center;
+  align-items: center;
 
   transition: background-color 0.2s ease;
-}
-
-/* Top row: centered, stable */
-.live-stream-button-top {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* center the whole row */
-  gap: 6px; /* try 4–6px depending on taste */
-  width: 100%;
 }
 
 /* LIVE NOW text */
 .live-stream-button-status {
   text-transform: uppercase;
-  font-size: 25px;
+  font-size: 75px;
   font-weight: 700;
   letter-spacing: 0.6px;
   line-height: 1;
-  white-space: nowrap;  /* never wrap */
+  white-space: nowrap;
+  color: #ff1900;
+  display: block;
 }
 
-/* Locked play / pause icon container */
-.live-stream-button-icon {
-  width: 42px;
-  height: 42px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-
-  color: #000;
+/* Play icon - hidden by default */
+.live-stream-button-play-icon {
+  display: none;
+  color: #ff1900;
 }
 
-/* Pulsating record icon */
-.live-stream-button-record {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #ff0000;
-  animation: pulse-record 2s ease-in-out infinite;
+.live-stream-button-play-icon svg {
+  width: 200px;
+  height: 200px;
 }
 
-@keyframes pulse-record {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+/* Stop icon - hidden by default */
+.live-stream-button-stop-icon {
+  display: none;
+  color: #ff1900;
+}
+
+.live-stream-button-stop-icon svg {
+  width: 200px;
+  height: 200px;
+}
+
+/* ===== HOVER STATE (not playing) ===== */
+/* On hover when NOT playing: hide text, show play icon */
+.live-stream-button:not(.live-stream-button-playing):hover .live-stream-button-status {
+  display: none;
+}
+
+.live-stream-button:not(.live-stream-button-playing):hover .live-stream-button-play-icon {
+  display: block;
+}
+
+/* ===== PLAYING STATE ===== */
+/* When playing: always hide text, hide play icon, show stop icon */
+.live-stream-button-playing .live-stream-button-status {
+  display: none;
+}
+
+.live-stream-button-playing .live-stream-button-play-icon {
+  display: none;
+}
+
+.live-stream-button-playing .live-stream-button-stop-icon {
+  display: block;
 }
 
 /* States */
-/* "Play mode should become faint pink indicating it's active":
-   I'm interpreting that as "when isPlaying true" */
 .live-stream-button-playing {
-  background: #ffffff; /* opaque white */
+  background: #ffffff;
 }
-
-/* If you want "live but not playing" to still be white, do nothing;
-   or add a tiny tint if desired:
-.live-stream-button-live { background: #ffffff; }
-*/
 
 .live-stream-button-inactive {
   opacity: 0.75;
-  border-color: #cccccc; /* if not live, don't scream red */
-}
-
-/* Keep your nowPlaying block, but make it center-friendly in a pill */
-.live-stream-button-info-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: -1px; /* very tight (almost broadcast lower-third style) */
-}
-
-.live-stream-button-info {
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.2;
-  max-width: 520px;
-  text-align: center;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
+  border-color: #cccccc;
 }
 
 /* Mobile styles */
 @media (max-width: 768px) {
   .live-stream-button {
-    padding: 14px 16px;
+    padding: 14px;
     width: calc(100% - 30px);
     max-width: 540px;
   }
-  .live-stream-button-status { font-size: 18px; }
-  .live-stream-button-icon { width: 34px; height: 34px; font-size: 19px; }
+
+  .live-stream-button-status {
+    font-size: 54px;
+  }
+
+  .live-stream-button-play-icon svg,
+  .live-stream-button-stop-icon svg {
+    width: 150px;
+    height: 150px;
+  }
 }
 
 @media (max-width: 480px) {
   .live-stream-button {
+    padding: 12px;
     width: calc(100% - 20px);
     max-width: 540px;
   }
-  .live-stream-button-status { font-size: 17px; }
+
+  .live-stream-button-status {
+    font-size: 48px;
+  }
+
+  .live-stream-button-play-icon svg,
+  .live-stream-button-stop-icon svg {
+    width: 120px;
+    height: 120px;
+  }
 }

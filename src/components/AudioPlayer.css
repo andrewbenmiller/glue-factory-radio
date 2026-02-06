@@ -2,7 +2,7 @@
   background: transparent;
   border-radius: 0;
   padding: 0 20px;
-  color: #FF5F1F;
+  color: #ff1900;
   box-shadow: none;
   max-width: 1400px;
   width: 100%;
@@ -27,13 +27,16 @@
   align-items: center;
   justify-content: center;
   min-height: 60px;
-  padding: 12px max(20px, calc(50vw - 700px));
+  padding: 0 max(20px, calc(50vw - 700px));
   background: white;
   border-top: 1px solid black;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   gap: 8px;
   box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .archive-header-row.clickable {
@@ -47,14 +50,14 @@
 .archive-header-text {
   font-size: 18px;
   font-weight: 700;
-  color: black;
+  color: #ff1900;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .archive-arrow {
   font-size: 12px;
-  color: black;
+  color: #ff1900;
   transition: transform 0.3s ease;
 }
 
@@ -68,7 +71,7 @@
   justify-content: center;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 0 12px 12px 12px;
   background: transparent;
   overflow: hidden; /* Prevent overflow on mobile */
 }
@@ -78,10 +81,10 @@
   width: 170px; /* Original width */
   height: 160px; /* Original height */
   min-width: 0;
-  background: #FF5F1F;
-  border: 1px solid #FF5F1F;
+  background: white;
+  border: 1px solid #ff1900;
   border-radius: 0;
-  color: black;
+  color: #ff1900;
   font-size: 3rem;
   cursor: pointer;
   display: flex;
@@ -94,11 +97,11 @@
 }
 
 .archive-controls-row .control-btn:hover {
-  background: #d4450f;
+  background: #fff5f3;
 }
 
 .archive-controls-row .control-btn:active {
-  background: #b93a0d;
+  background: #ffe5e0;
 }
 
 /* Info row */
@@ -107,7 +110,7 @@
   flex-direction: row;
   align-items: center;
   padding: 0 max(20px, calc(50vw - 700px));
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid rgba(255, 25, 0, 0.25);
   background: white;
   text-align: left;
   gap: 0;
@@ -120,7 +123,7 @@
 .archive-info-show {
   font-size: 18px;
   font-weight: 600;
-  color: black;
+  color: #ff1900;
   padding: 20px;
   flex-shrink: 0;
 }
@@ -132,7 +135,7 @@
 .archive-info-track {
   font-size: 18px;
   font-weight: 400;
-  color: #333;
+  color: #ff1900;
   padding: 20px;
   flex: 1;
   text-align: right;
@@ -158,7 +161,7 @@
   }
 
   .archive-header-row {
-    padding: 12px max(15px, calc(50vw - 700px));
+    padding: 0 max(15px, calc(50vw - 700px));
   }
 
   .archive-header-text {
@@ -167,7 +170,7 @@
 
   .archive-controls-row {
     gap: 12px;
-    padding: 12px;
+    padding: 0 12px 12px 12px;
   }
 
   .archive-controls-row .control-btn {
@@ -199,7 +202,7 @@
   }
 
   .archive-header-row {
-    padding: 10px max(10px, calc(50vw - 700px));
+    padding: 0 max(10px, calc(50vw - 700px));
   }
 
   .archive-header-text {
@@ -213,7 +216,7 @@
 
   .archive-controls-row {
     gap: 8px;
-    padding: 10px;
+    padding: 0 10px 10px 10px;
   }
 
   .archive-controls-row .control-btn {
@@ -232,18 +235,21 @@
   }
 
   .archive-info-row {
-    min-height: 40px;
-    padding: 0 max(10px, calc(50vw - 700px));
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: auto;
+    padding: 10px max(10px, calc(50vw - 700px));
   }
 
   .archive-info-show {
     font-size: 12px;
-    padding: 10px;
+    padding: 0;
   }
 
   .archive-info-track {
     font-size: 12px;
-    padding: 10px;
+    padding: 5px 0 0 0;
+    text-align: left;
   }
 }
 
@@ -260,7 +266,7 @@
   font-size: 24px;
   margin: 0 0 10px 0;
   font-weight: 700;
-  color: #FF5F1F;
+  color: #ff1900;
 }
 
 .player-main {
@@ -284,7 +290,7 @@
   font-size: 24px;
   margin: 0 0 5px 0;
   font-weight: 600;
-  color: #FF5F1F;
+  color: #ff1900;
 }
 
 .track-count {
@@ -308,7 +314,7 @@
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
-  border: 1px solid #FF5F1F;
+  border: 1px solid #ff1900;
   position: relative;
   z-index: 1000;
   pointer-events: auto;
@@ -322,7 +328,7 @@
   border-radius: 0;
   background: black;
   cursor: pointer;
-  border: 1px solid #FF5F1F;
+  border: 1px solid #ff1900;
 }
 
 .progress-bar.seeking {
@@ -335,7 +341,7 @@
   border-radius: 0;
   background: black;
   cursor: pointer;
-  border: 1px solid #FF5F1F;
+  border: 1px solid #ff1900;
 }
 
 /* Base control button styles (used as fallback) */
@@ -351,13 +357,13 @@
 }
 
 .control-btn {
-  background: #FF5F1F;
-  border: 1px solid #FF5F1F;
+  background: #ff1900;
+  border: 1px solid #ff1900;
   border-radius: 0;
   flex: 1;
   max-width: 170px;
   height: 160px;
-  color: black;
+  color: white;
   font-size: 4rem;
   cursor: pointer;
   transition: background 0.2s ease;
@@ -394,8 +400,8 @@
   max-width: 170px;
   height: 160px;
   font-size: 4rem;
-  background: #FF5F1F;
-  color: black;
+  background: #ff1900;
+  color: white;
 }
 
 .play-btn:hover {
@@ -423,7 +429,7 @@
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
-  border: 1px solid #FF5F1F;
+  border: 1px solid #ff1900;
 }
 
 .volume-slider::-webkit-slider-thumb {
@@ -434,7 +440,7 @@
   border-radius: 0;
   background: black;
   cursor: pointer;
-  border: 1px solid #FF5F1F;
+  border: 1px solid #ff1900;
 }
 
 .auto-play-toggle {
@@ -468,7 +474,7 @@
   width: 100%;
   height: 8px;
   background: rgba(0, 0, 0, 0.1);
-  border: 1px solid #FF5F1F;
+  border: 1px solid #ff1900;
   border-radius: 0;
   cursor: pointer;
   position: relative;
@@ -489,7 +495,7 @@
   width: 16px;
   height: 16px;
   background: white;
-  border: 2px solid #FF5F1F;
+  border: 2px solid #ff1900;
   border-radius: 0;
   transform: translate(-50%, -50%);
   pointer-events: none;

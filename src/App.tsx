@@ -193,6 +193,17 @@ function App() {
 
       {/* Archive footer - fixed to bottom, expands upward */}
       <div className={`App-footer-archive ${archiveExpanded ? 'expanded' : ''}`}>
+        {/* Sticky header row - must be direct child of scroll container */}
+        <div
+          className="archive-header-row clickable"
+          onClick={() => setArchiveExpanded(!archiveExpanded)}
+        >
+          <span className="archive-header-text">{archiveExpanded ? 'CLOSE THE ARCHIVE' : 'OPEN THE ARCHIVE'}</span>
+          <span className={`archive-arrow ${archiveExpanded ? 'expanded' : ''}`}>
+            ▼
+          </span>
+        </div>
+
         <AudioPlayer
           key={shows[validShowIndex]?.id ?? validShowIndex}
           ref={playerRef}

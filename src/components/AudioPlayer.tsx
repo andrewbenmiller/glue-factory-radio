@@ -275,20 +275,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     <div className={`audio-player ${className}`}>
       {/* Bordered container for archive section */}
       <div className="archive-container">
-        {/* Header row */}
-        <div
-          className={`archive-header-row ${onArchiveToggle ? 'clickable' : ''}`}
-          onClick={onArchiveToggle}
-        >
-          <span className="archive-header-text">LISTEN TO THE ARCHIVE</span>
-          {onArchiveToggle && (
-            <span className={`archive-arrow ${archiveExpanded ? 'expanded' : ''}`}>
-              ▼
-            </span>
-          )}
-        </div>
-
-        {/* Expanded content */}
+        {/* Expanded content - header is now rendered in App.tsx */}
         {archiveExpanded && (
           <>
             {/* Transport controls row */}
