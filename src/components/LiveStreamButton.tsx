@@ -29,47 +29,22 @@ export default function LiveStreamButton({
       title={isPlaying ? "Stop live stream" : "Play live stream"}
       type="button"
     >
-      <div className="live-stream-button-top">
-        {isLive && (
-          <span className="live-stream-button-record" aria-hidden>
-            <svg viewBox="0 0 24 24" width="20" height="20">
-              <circle cx="12" cy="12" r="10" fill="currentColor" />
-            </svg>
-          </span>
-        )}
-        <span className="live-stream-button-status">LIVE NOW</span>
+      {/* LIVE NOW text - shown by default when not playing, hidden on hover */}
+      <span className="live-stream-button-status">LIVE NOW</span>
 
-        <span className="live-stream-button-icon" aria-hidden>
-          <svg
-            viewBox="0 0 24 24"
-            width="23"
-            height="23"
-            fill="currentColor"
-          >
-            {isPlaying ? (
-              <>
-                {/* STOP — left edge locked at x = 4, 14x14 square */}
-                <rect x="4" y="4" width="14" height="14" />
-              </>
-            ) : (
-              <>
-                {/* PLAY — left edge also locked at x = 4 */}
-                <polygon points="4,4 4,20 18,12" />
-              </>
-            )}
-          </svg>
-        </span>
-      </div>
+      {/* Play icon - shown on hover when not playing */}
+      <span className="live-stream-button-play-icon" aria-hidden>
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="4,2 4,22 22,12" />
+        </svg>
+      </span>
 
-      {nowPlaying ? (
-        <div className="live-stream-button-info-container">
-          <span className="live-stream-button-info">"{nowPlaying}"</span>
-        </div>
-      ) : isLive ? (
-        <div className="live-stream-button-info-container">
-          <span className="live-stream-button-info">Available</span>
-        </div>
-      ) : null}
+      {/* Stop icon - shown when playing (persists) */}
+      <span className="live-stream-button-stop-icon" aria-hidden>
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="18" height="18" />
+        </svg>
+      </span>
     </button>
   );
 }
