@@ -1,12 +1,16 @@
 /* LiveStreamButton.css */
 
 .live-stream-button {
-  /* Button is OUTSIDE App-main, so must account for App-main padding (20px×2) + show-list padding (30px×2) = 100px */
-  width: calc(100% - 100px);
-  max-width: 540px; /* Match shows-container inner width: 600px - 60px padding */
-  margin: 20px auto;
+  /* True center: fixed position at exact center of viewport */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 40px);
+  max-width: 540px;
   padding: 16px 22px;
   box-sizing: border-box;
+  z-index: 50;
 
   /* Pill */
   border-radius: 9999px;
@@ -24,12 +28,7 @@
   flex-direction: column;
   gap: 2px;
 
-  transition: background-color 0.2s ease, transform 0.05s ease;
-}
-
-/* Optional press feedback without "jumping" layout */
-.live-stream-button:active {
-  transform: none !important;
+  transition: background-color 0.2s ease;
 }
 
 /* Top row: centered, stable */
@@ -121,15 +120,12 @@
   -webkit-box-orient: vertical;
 }
 
-/* Mobile - match show-list/shows-container width */
-/* Button is OUTSIDE App-main, so must account for both padding layers */
+/* Mobile styles */
 @media (max-width: 768px) {
   .live-stream-button {
     padding: 14px 16px;
-    /* App-main padding (15px×2) + show-list padding (20px×2) = 70px */
-    width: calc(100% - 70px);
-    max-width: 560px; /* shows-container: 600px - 40px padding */
-    margin: 20px auto;
+    width: calc(100% - 30px);
+    max-width: 540px;
   }
   .live-stream-button-status { font-size: 18px; }
   .live-stream-button-icon { width: 34px; height: 34px; font-size: 19px; }
@@ -137,9 +133,8 @@
 
 @media (max-width: 480px) {
   .live-stream-button {
-    /* App-main padding (10px×2) + show-list padding (15px×2) = 50px */
-    width: calc(100% - 50px);
-    max-width: 570px; /* shows-container: 600px - 30px padding */
+    width: calc(100% - 20px);
+    max-width: 540px;
   }
   .live-stream-button-status { font-size: 17px; }
 }

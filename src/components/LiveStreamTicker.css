@@ -75,8 +75,9 @@
   gap: 10px;          /* EVEN spacing around bullets */
   flex-shrink: 0;
 
-  font-weight: 700;
-  font-size: 14px;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 400;
+  font-size: 12px;
   letter-spacing: 0.2px;
 
   margin-right: 60px; /* spacing BETWEEN chunks */

@@ -48,9 +48,8 @@ export default function LiveStreamButton({
           >
             {isPlaying ? (
               <>
-                {/* PAUSE — left edge locked at x = 4 */}
-                <rect x="4" y="4" width="5" height="16" />
-                <rect x="11" y="4" width="5" height="16" />
+                {/* STOP — left edge locked at x = 4, 14x14 square */}
+                <rect x="4" y="4" width="14" height="14" />
               </>
             ) : (
               <>

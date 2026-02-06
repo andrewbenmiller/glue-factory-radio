@@ -175,24 +175,26 @@ function App() {
         displayText={tickerDisplayText}
         isEmpty={tickerIsEmpty}
       />
-      
+
+      {/* Logo at top */}
       <div className="logo-container">
         <div className="logo-image-container">
           <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
         </div>
       </div>
-      
+
+      {/* LIVE NOW button - fixed at true center of viewport */}
       <LiveStreamButton
         isLive={isLive}
         isPlaying={livePlaying}
         nowPlaying={nowPlaying ?? undefined}
         onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
       />
-      
-      <main className="App-main">
-        
+
+      {/* Archive footer - fixed to bottom, expands upward */}
+      <div className={`App-footer-archive ${archiveExpanded ? 'expanded' : ''}`}>
         <AudioPlayer
-          key={shows[validShowIndex]?.id ?? validShowIndex}  // force remount on show change
+          key={shows[validShowIndex]?.id ?? validShowIndex}
           ref={playerRef}
           tracks={currentTracks}
           initialIndex={currentTrackIndex}
@@ -209,7 +211,7 @@ function App() {
             onTrackSelect={handleTrackSelect}
           />
         )}
-      </main>
+      </div>
     </>
   );
 }

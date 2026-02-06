@@ -4,21 +4,24 @@
 
 .show-list {
   background: transparent;
-  padding: 0 30px 30px 30px;
-  margin: 0 auto 20px auto;
+  padding: 0 20px 20px 20px;
+  margin: 0 auto;
   font-family: Helvetica, Arial, sans-serif;
   color: black;
   width: 100%;
-  max-width: 600px;
+  max-width: 1400px;
   box-sizing: border-box;
 }
 
-/* Table container with outer border */
+/* Table container - no vertical borders, horizontal lines extend to edges */
 .shows-container {
   display: flex;
   flex-direction: column;
-  border: 1px solid black;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
   background: white;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 /* Individual show row */
@@ -26,10 +29,12 @@
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #e0e0e0;
   cursor: pointer;
   box-sizing: border-box;
   width: 100%;
+  padding-left: max(20px, calc(50vw - 700px));
+  padding-right: max(20px, calc(50vw - 700px));
 }
 
 /* Remove border from last item */
@@ -41,32 +46,36 @@
 .show-item-row {
   display: flex;
   align-items: center;
-  padding: 10px 12px;
-  gap: 12px;
-  min-height: 44px;
+  padding: 0;
+  gap: 0;
+  min-height: 60px;
+  box-sizing: border-box;
 }
 
 .show-item-row:hover {
-  background-color: #f5f5f5;
+  background-color: white;
 }
 
 .show-item.active .show-item-row {
-  background-color: #f0f0f0;
+  background-color: white;
 }
 
 /* Show number column */
 .show-item-number {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 400;
   color: black;
-  min-width: 30px;
+  min-width: 60px;
   flex-shrink: 0;
+  padding: 20px;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 /* Show title column */
 .show-item-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: black;
   margin: 0;
   flex: 1;
@@ -74,17 +83,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* Duration column */
 .show-item-duration {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 400;
   color: black;
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: 45px;
+  min-width: 80px;
   text-align: right;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* Play button */
@@ -92,7 +105,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,13 +123,16 @@
 /* Expanded description row */
 .show-item-description {
   display: none;
-  padding: 0 12px 10px 12px;
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 400;
-  color: #333;
+  font-style: italic;
+  color: black;
   line-height: 1.5;
   border-top: none;
   margin: 0;
+  /* Align under title: skip number column (60px) + match title padding */
+  padding: 20px 20px 20px 80px;
+  box-sizing: border-box;
 }
 
 .show-item.expanded .show-item-description {
@@ -129,7 +145,12 @@
 
 .tracks-dropdown {
   display: none;
-  border-top: 1px solid black;
+  border-top: 1px solid #e0e0e0;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding-left: max(20px, calc(50vw - 700px));
+  padding-right: max(20px, calc(50vw - 700px));
+  box-sizing: border-box;
 }
 
 .tracks-dropdown.expanded {
@@ -145,11 +166,13 @@
 .track-item {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  gap: 12px;
+  padding: 0;
+  gap: 0;
+  min-height: 60px;
   cursor: pointer;
   border-bottom: 1px solid #e0e0e0;
-  background: #fafafa;
+  background: white;
+  box-sizing: border-box;
 }
 
 .track-item:last-child {
@@ -157,26 +180,28 @@
 }
 
 .track-item:hover {
-  background: #f0f0f0;
+  background: white;
 }
 
 .track-item:active {
-  background: #e5e5e5;
+  background: white;
 }
 
-/* Track number */
+/* Track number - aligns under show-item-number */
 .track-number {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 400;
-  color: #666;
-  min-width: 24px;
-  text-align: right;
+  color: black;
+  min-width: 60px;
   flex-shrink: 0;
+  padding: 20px;
+  text-align: center;
+  box-sizing: border-box;
 }
 
-/* Track title */
+/* Track title - aligns under show-item-title */
 .track-title {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 400;
   color: black;
   flex: 1;
@@ -184,15 +209,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-/* Track duration */
+/* Track duration - aligns under show-item-duration */
 .track-duration {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 400;
-  color: #666;
+  color: black;
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: 80px;
+  text-align: right;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* No Shows State */
@@ -215,80 +246,143 @@
 
 @media (max-width: 768px) {
   .show-list {
-    padding: 0 20px 20px 20px;
+    padding: 0 15px 15px 15px;
+  }
+
+  .show-item {
+    padding-left: max(15px, calc(50vw - 700px));
+    padding-right: max(15px, calc(50vw - 700px));
+  }
+
+  .tracks-dropdown {
+    padding-left: max(15px, calc(50vw - 700px));
+    padding-right: max(15px, calc(50vw - 700px));
   }
 
   .show-item-row {
-    padding: 10px;
-    gap: 8px;
+    padding: 0;
+    gap: 0;
   }
 
   .show-item-number {
-    font-size: 13px;
-    min-width: 26px;
+    font-size: 16px;
+    min-width: 50px;
+    padding: 15px;
   }
 
   .show-item-title {
-    font-size: 13px;
+    font-size: 16px;
+    padding: 15px;
   }
 
   .show-item-duration {
-    font-size: 13px;
-    min-width: 40px;
+    font-size: 16px;
+    min-width: 60px;
+    padding: 15px;
+  }
+
+  .show-item-play {
+    padding: 15px;
+  }
+
+  .show-item-description {
+    font-size: 16px;
+    /* Align under title: skip number column (50px) + match title padding */
+    padding: 15px 15px 15px 65px;
   }
 
   .track-item {
-    padding: 8px 10px;
-    gap: 8px;
+    padding: 0;
+    gap: 0;
+    min-height: 50px;
   }
 
-  .track-number,
-  .track-title,
+  .track-number {
+    font-size: 16px;
+    min-width: 50px;
+    padding: 15px;
+  }
+
+  .track-title {
+    font-size: 16px;
+    padding: 15px;
+  }
+
   .track-duration {
-    font-size: 12px;
+    font-size: 16px;
+    min-width: 60px;
+    padding: 15px;
   }
 }
 
 @media (max-width: 480px) {
   .show-list {
-    padding: 0 15px 15px 15px;
+    padding: 0 10px 10px 10px;
+  }
+
+  .show-item {
+    padding-left: max(10px, calc(50vw - 700px));
+    padding-right: max(10px, calc(50vw - 700px));
+  }
+
+  .tracks-dropdown {
+    padding-left: max(10px, calc(50vw - 700px));
+    padding-right: max(10px, calc(50vw - 700px));
   }
 
   .show-item-row {
-    padding: 8px 10px;
-    gap: 6px;
+    padding: 0;
+    gap: 0;
   }
 
   .show-item-number {
-    font-size: 12px;
-    min-width: 24px;
+    font-size: 14px;
+    min-width: 40px;
+    padding: 10px;
   }
 
   .show-item-title {
-    font-size: 12px;
+    font-size: 14px;
+    padding: 10px;
   }
 
   .show-item-duration {
-    font-size: 12px;
-    min-width: 36px;
+    font-size: 14px;
+    min-width: 50px;
+    padding: 10px;
   }
 
   .show-item-play {
     font-size: 14px;
-    padding: 2px;
+    padding: 10px;
+  }
+
+  .show-item-description {
+    font-size: 14px;
+    /* Align under title: skip number column (40px) + match title padding */
+    padding: 10px 10px 10px 50px;
   }
 
   .track-item {
-    padding: 6px 10px;
-  }
-
-  .track-number,
-  .track-title,
-  .track-duration {
-    font-size: 11px;
+    padding: 0;
+    gap: 0;
+    min-height: 40px;
   }
 
   .track-number {
-    min-width: 20px;
+    font-size: 14px;
+    min-width: 40px;
+    padding: 10px;
+  }
+
+  .track-title {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .track-duration {
+    font-size: 14px;
+    min-width: 50px;
+    padding: 10px;
   }
 }

@@ -1,10 +1,10 @@
 .audio-player {
   background: transparent;
   border-radius: 0;
-  padding: 0 30px 0 30px;
+  padding: 0 20px;
   color: #FF5F1F;
   box-shadow: none;
-  max-width: 600px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   font-family: Helvetica, Arial, sans-serif;
@@ -26,10 +26,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
+  min-height: 60px;
+  padding: 12px max(20px, calc(50vw - 700px));
   background: white;
-  border: 1px solid black;
+  border-top: 1px solid black;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   gap: 8px;
+  box-sizing: border-box;
 }
 
 .archive-header-row.clickable {
@@ -37,11 +41,11 @@
 }
 
 .archive-header-row.clickable:hover {
-  background: #f5f5f5;
+  background: white;
 }
 
 .archive-header-text {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
   color: black;
   text-transform: uppercase;
@@ -61,7 +65,7 @@
 /* Controls row */
 .archive-controls-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 12px;
   padding: 12px;
@@ -70,11 +74,10 @@
 }
 
 .archive-controls-row .control-btn {
-  flex: 1 1 0; /* Equal flex basis */
-  aspect-ratio: 1; /* Perfect square */
-  max-width: none;
-  min-width: 0; /* Allow flex items to shrink below content size */
-  height: auto; /* Let height be determined by aspect-ratio */
+  flex: 0 0 auto; /* Don't grow or shrink */
+  width: 170px; /* Original width */
+  height: 160px; /* Original height */
+  min-width: 0;
   background: #FF5F1F;
   border: 1px solid #FF5F1F;
   border-radius: 0;
@@ -101,19 +104,25 @@
 /* Info row */
 .archive-info-row {
   display: flex;
-  flex-direction: column;
-  padding: 12px 16px;
-  border: 1px solid black;
-  border-bottom: none;
-  background: #fafafa;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 max(20px, calc(50vw - 700px));
+  border-top: 1px solid #e0e0e0;
+  background: white;
   text-align: left;
-  gap: 4px;
+  gap: 0;
+  min-height: 60px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
 }
 
 .archive-info-show {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   color: black;
+  padding: 20px;
+  flex-shrink: 0;
 }
 
 .archive-info-label {
@@ -121,9 +130,12 @@
 }
 
 .archive-info-track {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 400;
   color: #333;
+  padding: 20px;
+  flex: 1;
+  text-align: right;
 }
 
 /* Show desktop icons by default, hide mobile icons */
@@ -141,12 +153,16 @@
 
 @media (max-width: 768px) {
   .audio-player {
-    padding: 0 20px;
+    padding: 0 15px;
     margin: 0 auto;
   }
 
+  .archive-header-row {
+    padding: 12px max(15px, calc(50vw - 700px));
+  }
+
   .archive-header-text {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .archive-controls-row {
@@ -155,30 +171,39 @@
   }
 
   .archive-controls-row .control-btn {
+    width: 130px;
+    height: 120px;
     font-size: 2.5rem;
   }
 
+  .archive-info-row {
+    min-height: 50px;
+    padding: 0 max(15px, calc(50vw - 700px));
+  }
+
   .archive-info-show {
-    font-size: 13px;
+    font-size: 16px;
+    padding: 15px;
   }
 
   .archive-info-track {
-    font-size: 12px;
+    font-size: 16px;
+    padding: 15px;
   }
 }
 
 @media (max-width: 480px) {
   .audio-player {
-    padding: 0 15px;
+    padding: 0 10px;
     margin: 0 auto;
   }
 
   .archive-header-row {
-    padding: 10px 12px;
+    padding: 10px max(10px, calc(50vw - 700px));
   }
 
   .archive-header-text {
-    font-size: 12px;
+    font-size: 14px;
     letter-spacing: 0.3px;
   }
 
@@ -187,11 +212,13 @@
   }
 
   .archive-controls-row {
-    gap: 12px;
-    padding: 12px;
+    gap: 8px;
+    padding: 10px;
   }
 
   .archive-controls-row .control-btn {
+    width: 100px;
+    height: 90px;
     font-size: 2rem;
   }
 
@@ -205,15 +232,18 @@
   }
 
   .archive-info-row {
-    padding: 10px 12px;
+    min-height: 40px;
+    padding: 0 max(10px, calc(50vw - 700px));
   }
 
   .archive-info-show {
     font-size: 12px;
+    padding: 10px;
   }
 
   .archive-info-track {
-    font-size: 11px;
+    font-size: 12px;
+    padding: 10px;
   }
 }
 
