@@ -177,6 +177,7 @@
     width: 130px;
     height: 120px;
     font-size: 2.5rem;
+    color: #ff1900;
   }
 
   .archive-info-row {
@@ -223,6 +224,7 @@
     width: 100px;
     height: 90px;
     font-size: 2rem;
+    color: #ff1900;
   }
 
   /* On mobile: hide desktop icons, show mobile icons */
