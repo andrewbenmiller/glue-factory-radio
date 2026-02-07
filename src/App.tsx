@@ -8,7 +8,7 @@ import LiveStreamButton from './components/LiveStreamButton';
 import { useLiveStatus } from './hooks/useLiveStatus';
 import { useAudio } from './audio/AudioProvider';
 import { apiService, Show } from './services/api';
-import logo from './logo.png'; // Import the PNG logo
+import logo from './logo.png';
 
 function App() {
   const playerRef = useRef<AudioPlayerHandle | null>(null);
@@ -176,11 +176,9 @@ function App() {
         isEmpty={tickerIsEmpty}
       />
 
-      {/* Logo at top */}
+      {/* Logo at center top */}
       <div className="logo-container">
-        <div className="logo-image-container">
-          <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
-        </div>
+        <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
       </div>
 
       {/* LIVE NOW button - fixed at true center of viewport */}

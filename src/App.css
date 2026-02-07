@@ -26,21 +26,25 @@
 }
 
 .logo-container {
-  max-width: 600px;
-  margin: 55px auto 0 auto;
-  text-align: center;
+  position: fixed;
+  top: 60px; /* Below the ticker */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
 }
 
 .logo-image-container {
-  margin-bottom: 0;      /* remove the -20px */
-  padding: 10px 0;       /* your desired top/bottom breathing room */
+  margin: 0;
+  padding: 0;
 }
 
 .logo-image {
-  display: block;        /* removes inline-image baseline weirdness */
-  height: 112px;         /* 25% smaller than 150px */
+  display: block;
+  height: 112px;
   width: auto;
-  margin: 0 auto;        /* keep centered */
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .app-logo {
@@ -111,8 +115,12 @@
     padding-bottom: 70px;
   }
 
+  .logo-container {
+    top: 60px;
+  }
+
   .logo-image {
-    height: 90px;          /* 25% smaller than 120px */
+    height: 158px;
   }
 
   .app-logo {
@@ -147,8 +155,12 @@
     padding-bottom: 60px;
   }
 
+  .logo-container {
+    top: 55px;
+  }
+
   .logo-image {
-    height: 60px;          /* 25% smaller than 80px */
+    height: 105px;
   }
 
   .app-logo {

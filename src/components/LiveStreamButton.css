@@ -6,19 +6,13 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: calc(100% - 40px);
-  max-width: 540px;
-  aspect-ratio: 1; /* Perfect circle: height equals width */
   padding: 16px;
   box-sizing: border-box;
   z-index: 50;
 
-  /* Circle */
-  border-radius: 50%;
-
-  /* Your requested base look */
-  background: #ffffff;
-  border: 1px solid #ff1900;
+  /* No background, no border */
+  background: transparent;
+  border: none;
   color: #000;
 
   cursor: pointer;
@@ -29,20 +23,19 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-
-  transition: background-color 0.2s ease;
 }
 
 /* LIVE NOW text */
 .live-stream-button-status {
   text-transform: uppercase;
-  font-size: 75px;
+  font-size: 150px;
   font-weight: 700;
   letter-spacing: 0.6px;
   line-height: 1;
   white-space: nowrap;
   color: #ff1900;
   display: block;
+  text-align: center;
 }
 
 /* Play icon - hidden by default */
@@ -93,24 +86,21 @@
 
 /* States */
 .live-stream-button-playing {
-  background: #ffffff;
+  background: transparent;
 }
 
 .live-stream-button-inactive {
-  opacity: 0.75;
-  border-color: #cccccc;
+  opacity: 1;
 }
 
 /* Mobile styles */
 @media (max-width: 768px) {
   .live-stream-button {
     padding: 14px;
-    width: calc(100% - 30px);
-    max-width: 540px;
   }
 
   .live-stream-button-status {
-    font-size: 54px;
+    font-size: 108px;
   }
 
   .live-stream-button-play-icon svg,
@@ -123,12 +113,12 @@
 @media (max-width: 480px) {
   .live-stream-button {
     padding: 12px;
-    width: calc(100% - 20px);
-    max-width: 540px;
+    max-width: 90vw;
   }
 
   .live-stream-button-status {
-    font-size: 48px;
+    font-size: 72px;
+    line-height: 1.1;
   }
 
   .live-stream-button-play-icon svg,
