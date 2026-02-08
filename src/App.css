@@ -84,13 +84,15 @@
   right: 0;
   background: white;
   z-index: 100;
-  transition: max-height 0.3s ease;
-  max-height: 62px; /* Collapsed: 60px header + 2px border */
+  transition: height 0.3s ease, max-height 0.3s ease;
+  height: 62px; /* Collapsed: 60px header + 2px border */
+  max-height: 62px;
   overflow: hidden;
 }
 
 .App-footer-archive.expanded {
-  max-height: 50vh; /* Expanded: up to half the viewport */
+  height: 75vh; /* Expanded: immediately rises to full height */
+  max-height: 75vh;
   overflow-y: auto;
 }
 
@@ -141,7 +143,8 @@
   }
 
   .App-footer-archive.expanded {
-    max-height: 60vh; /* Slightly more on mobile */
+    height: 80vh; /* Immediately rises to full height on mobile */
+    max-height: 80vh;
   }
 }
 
@@ -178,6 +181,12 @@
 
   .App-footer-archive {
     max-height: 62px;
+  }
+
+  .App-footer-archive.expanded {
+    /* Logo is at top: 55px, height: 105px, so bottom is at 160px. Add 20px gap = 180px */
+    height: calc(100vh - 180px);
+    max-height: calc(100vh - 180px);
   }
 }
 

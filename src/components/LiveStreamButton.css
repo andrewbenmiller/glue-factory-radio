@@ -19,10 +19,16 @@
   user-select: none;
   box-shadow: none;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  /* Use grid to stack elements in same cell - prevents layout shift on hover */
+  display: grid;
+  place-items: center;
+}
+
+/* All content items stack in the same grid cell */
+.live-stream-button-status,
+.live-stream-button-play-icon,
+.live-stream-button-stop-icon {
+  grid-area: 1 / 1;
 }
 
 /* LIVE NOW text */
@@ -34,14 +40,16 @@
   line-height: 1;
   white-space: nowrap;
   color: #ff1900;
-  display: block;
   text-align: center;
+  opacity: 1;
+  transition: opacity 0.15s ease;
 }
 
 /* Play icon - hidden by default */
 .live-stream-button-play-icon {
-  display: none;
   color: #ff1900;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .live-stream-button-play-icon svg {
@@ -51,8 +59,9 @@
 
 /* Stop icon - hidden by default */
 .live-stream-button-stop-icon {
-  display: none;
   color: #ff1900;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .live-stream-button-stop-icon svg {
@@ -61,27 +70,27 @@
 }
 
 /* ===== HOVER STATE (not playing) ===== */
-/* On hover when NOT playing: hide text, show play icon */
+/* On hover when NOT playing: fade out text, fade in play icon */
 .live-stream-button:not(.live-stream-button-playing):hover .live-stream-button-status {
-  display: none;
+  opacity: 0;
 }
 
 .live-stream-button:not(.live-stream-button-playing):hover .live-stream-button-play-icon {
-  display: block;
+  opacity: 1;
 }
 
 /* ===== PLAYING STATE ===== */
 /* When playing: always hide text, hide play icon, show stop icon */
 .live-stream-button-playing .live-stream-button-status {
-  display: none;
+  opacity: 0;
 }
 
 .live-stream-button-playing .live-stream-button-play-icon {
-  display: none;
+  opacity: 0;
 }
 
 .live-stream-button-playing .live-stream-button-stop-icon {
-  display: block;
+  opacity: 1;
 }
 
 /* States */
@@ -113,12 +122,19 @@
 @media (max-width: 480px) {
   .live-stream-button {
     padding: 12px;
-    max-width: 90vw;
+    /* Force the button to only be as big as the icon, not the hidden text */
+    width: 144px;
+    height: 144px;
   }
 
+  /* On mobile: completely hide the "LIVE NOW" text from layout */
   .live-stream-button-status {
-    font-size: 72px;
-    line-height: 1.1;
+    display: none;
+  }
+
+  /* On mobile: show play icon by default (when not playing) */
+  .live-stream-button:not(.live-stream-button-playing) .live-stream-button-play-icon {
+    opacity: 1;
   }
 
   .live-stream-button-play-icon svg,

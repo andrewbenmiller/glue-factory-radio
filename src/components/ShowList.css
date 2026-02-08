@@ -28,7 +28,7 @@
 .show-item {
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: #fff5f3; /* Light red matching transport control hover */
   border-bottom: 1px solid rgba(255, 25, 0, 0.25);
   cursor: pointer;
   box-sizing: border-box;
@@ -53,11 +53,11 @@
 }
 
 .show-item-row:hover {
-  background-color: white;
+  background-color: transparent;
 }
 
 .show-item.active .show-item-row {
-  background-color: white;
+  background-color: transparent;
 }
 
 /* Show number column */
