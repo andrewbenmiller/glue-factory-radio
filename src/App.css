@@ -184,9 +184,9 @@
   }
 
   .App-footer-archive.expanded {
-    /* Logo is at top: 55px, height: 105px, so bottom is at 160px. Add 20px gap = 180px */
-    height: calc(100vh - 180px);
-    max-height: calc(100vh - 180px);
+    /* Logo is at top: 55px, height: 105px, so bottom is at 160px. Add 50px gap = 210px */
+    height: calc(100vh - 210px);
+    max-height: calc(100vh - 210px);
   }
 }
 
