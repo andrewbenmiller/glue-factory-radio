@@ -151,6 +151,7 @@
   padding-left: max(20px, calc(50vw - 700px));
   padding-right: max(20px, calc(50vw - 700px));
   box-sizing: border-box;
+  background: white; /* Extend white background to page edges */
 }
 
 .tracks-dropdown.expanded {
