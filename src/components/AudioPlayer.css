@@ -26,13 +26,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 60px;
   padding: 0 max(20px, calc(50vw - 700px));
   background: white;
   border-top: 1px solid #ff1900;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  gap: 8px;
   box-sizing: border-box;
   position: sticky;
   top: 0;
@@ -45,6 +45,36 @@
 
 .archive-header-row.clickable:hover {
   background: white;
+}
+
+/* Bottom nav footer - fixed at bottom of expanded archive */
+.archive-nav-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  min-height: 60px;
+  padding: 0 max(20px, calc(50vw - 700px));
+  background: white;
+  border-top: 1px solid rgba(255, 25, 0, 0.25);
+  z-index: 200;
+}
+
+.archive-nav-item {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ff1900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.archive-nav-item:hover {
+  color: #ffb3a7;
 }
 
 .archive-header-text {
@@ -168,6 +198,15 @@
     font-size: 16px;
   }
 
+  .archive-nav-footer {
+    gap: 30px;
+    padding: 0 max(15px, calc(50vw - 700px));
+  }
+
+  .archive-nav-item {
+    font-size: 14px;
+  }
+
   .archive-controls-row {
     gap: 12px;
     padding: 0 12px 12px 12px;
@@ -207,6 +246,17 @@
   }
 
   .archive-header-text {
+    font-size: 14px;
+    letter-spacing: 0.3px;
+  }
+
+  .archive-nav-footer {
+    gap: 20px;
+    padding: 0 max(10px, calc(50vw - 700px));
+    min-height: 50px;
+  }
+
+  .archive-nav-item {
     font-size: 14px;
     letter-spacing: 0.3px;
   }

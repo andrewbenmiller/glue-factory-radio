@@ -16,6 +16,7 @@ function App() {
   const [currentShowIndex, setCurrentShowIndex] = useState(0);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [archiveExpanded, setArchiveExpanded] = useState(false);
+  const [activePage, setActivePage] = useState<'about' | 'events' | 'contact' | null>(null);
   // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -213,14 +214,42 @@ function App() {
         />
 
         {archiveExpanded && (
-          <ShowList
-            shows={shows}
-            currentShowIndex={validShowIndex}
-            onShowSelect={handleShowChange}
-            onTrackSelect={handleTrackSelect}
-          />
+          <>
+            <ShowList
+              shows={shows}
+              currentShowIndex={validShowIndex}
+              onShowSelect={handleShowChange}
+              onTrackSelect={handleTrackSelect}
+            />
+            {/* Bottom nav footer - fixed within expanded archive */}
+            <div className="archive-nav-footer">
+              <span className="archive-nav-item" onClick={() => setActivePage('about')}>ABOUT</span>
+              <span className="archive-nav-item" onClick={() => setActivePage('events')}>EVENTS</span>
+              <span className="archive-nav-item" onClick={() => setActivePage('contact')}>CONTACT</span>
+            </div>
+          </>
         )}
       </div>
+
+      {/* Page overlay for nav items */}
+      {activePage && (
+        <div className="page-overlay">
+          <button className="page-overlay-close" onClick={() => setActivePage(null)}>
+            &times;
+          </button>
+          <div className="page-overlay-content">
+            {activePage === 'about' && (
+              <h1>ABOUT</h1>
+            )}
+            {activePage === 'events' && (
+              <h1>EVENTS</h1>
+            )}
+            {activePage === 'contact' && (
+              <h1>CONTACT</h1>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
