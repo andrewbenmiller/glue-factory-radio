@@ -45,6 +45,8 @@ function setupTabNavigation() {
                 loadShows();
             } else if (targetTab === 'backgrounds') {
                 loadBackgroundImages();
+            } else if (targetTab === 'pages') {
+                loadPages();
             } else if (targetTab === 'stats') {
                 loadStats();
             }
@@ -987,6 +989,117 @@ async function loadBackgroundImages() {
                 <p>❌ Error loading background images: ${error.message}</p>
             </div>
         `;
+    }
+}
+
+// Load Pages
+async function loadPages() {
+    const container = document.getElementById('pagesContainer');
+
+    if (!container) {
+        console.error('❌ pagesContainer not found');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/pages`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch pages: ${response.status}`);
+        }
+
+        const pages = await response.json();
+
+        const pageLabels = {
+            about: 'About',
+            events: 'Events',
+            contact: 'Contact'
+        };
+
+        const pagesHtml = pages.map(page => `
+            <div class="page-content-card" style="margin-bottom: 30px; padding: 25px; border: 1px solid black;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">${pageLabels[page.page_name] || page.page_name}</h3>
+                    <span style="font-size: 12px; color: #666;">
+                        Last updated: ${page.updated_at ? new Date(page.updated_at).toLocaleString() : 'Never'}
+                    </span>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <textarea
+                        id="page-content-${page.page_name}"
+                        style="width: 100%; height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; font-family: Helvetica, Arial, sans-serif; resize: vertical;"
+                        placeholder="Enter content for ${pageLabels[page.page_name] || page.page_name} page..."
+                    >${escapeHtml(page.content || '')}</textarea>
+                </div>
+                <button
+                    class="upload-button"
+                    onclick="savePage('${page.page_name}')"
+                    id="save-btn-${page.page_name}"
+                >
+                    Save ${pageLabels[page.page_name] || page.page_name}
+                </button>
+            </div>
+        `).join('');
+
+        container.innerHTML = pagesHtml;
+
+    } catch (error) {
+        console.error('Error loading pages:', error);
+        container.innerHTML = `
+            <div class="loading">
+                <p>❌ Error loading pages: ${error.message}</p>
+                <button onclick="loadPages()" class="upload-button" style="margin-top: 15px;">Retry</button>
+            </div>
+        `;
+    }
+}
+
+// Save Page Content
+async function savePage(pageName) {
+    const textarea = document.getElementById(`page-content-${pageName}`);
+    const saveBtn = document.getElementById(`save-btn-${pageName}`);
+
+    if (!textarea) {
+        showStatus(`❌ Could not find content for ${pageName}`, 'error');
+        return;
+    }
+
+    const content = textarea.value;
+
+    // Disable button while saving
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/pages/${pageName}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Failed to save ${pageName}`);
+        }
+
+        const result = await response.json();
+        showStatus(`✅ ${pageName.charAt(0).toUpperCase() + pageName.slice(1)} page saved successfully`, 'success');
+
+        // Reload pages to show updated timestamp
+        await loadPages();
+
+    } catch (error) {
+        console.error(`Error saving ${pageName}:`, error);
+        showStatus(`❌ Failed to save ${pageName}: ${error.message}`, 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = `Save ${pageName.charAt(0).toUpperCase() + pageName.slice(1)}`;
+        }
     }
 }
 

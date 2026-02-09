@@ -74,6 +74,7 @@ app.get("/javascript-test", (req, res) => {
 // API routes
 app.use("/api/shows", require("./routes/shows"));
 app.use("/api/upload", require("./routes/upload"));
+app.use("/api/pages", require("./routes/pages"));
 
 // Handle OPTIONS preflight for audio files
 app.options("/api/audio/:filename", (req, res) => {

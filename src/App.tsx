@@ -7,7 +7,7 @@ import LiveStreamTicker from './components/LiveStreamTicker';
 import LiveStreamButton from './components/LiveStreamButton';
 import { useLiveStatus } from './hooks/useLiveStatus';
 import { useAudio } from './audio/AudioProvider';
-import { apiService, Show } from './services/api';
+import { apiService, Show, PageContent } from './services/api';
 import logo from './logo.png';
 
 function App() {
@@ -17,6 +17,8 @@ function App() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [archiveExpanded, setArchiveExpanded] = useState(false);
   const [activePage, setActivePage] = useState<'about' | 'events' | 'contact' | null>(null);
+  const [pageContent, setPageContent] = useState<PageContent | null>(null);
+  const [pageLoading, setPageLoading] = useState(false);
   // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +74,29 @@ function App() {
   useEffect(() => {
     console.log("[AUDIO SOURCE]", source);
   }, [source]);
+
+  // Fetch page content when a page overlay is opened
+  useEffect(() => {
+    if (!activePage) {
+      setPageContent(null);
+      return;
+    }
+
+    const fetchPageContent = async () => {
+      setPageLoading(true);
+      try {
+        const content = await apiService.getPageContent(activePage);
+        setPageContent(content);
+      } catch (err) {
+        console.error('Error fetching page content:', err);
+        setPageContent(null);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    fetchPageContent();
+  }, [activePage]);
   
   // Handle show selection
   const handleShowChange = (newShowIndex: number) => {
@@ -238,14 +263,13 @@ function App() {
             &times;
           </button>
           <div className="page-overlay-content">
-            {activePage === 'about' && (
-              <h1>ABOUT</h1>
-            )}
-            {activePage === 'events' && (
-              <h1>EVENTS</h1>
-            )}
-            {activePage === 'contact' && (
-              <h1>CONTACT</h1>
+            <h1>{activePage.toUpperCase()}</h1>
+            {pageLoading ? (
+              <p className="page-loading">Loading...</p>
+            ) : pageContent?.content ? (
+              <div className="page-text">{pageContent.content}</div>
+            ) : (
+              <p className="page-empty">No content yet.</p>
             )}
           </div>
         </div>
