@@ -2,6 +2,27 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
+// Default pages to seed if none exist
+const DEFAULT_PAGES = ['about', 'events', 'contact'];
+
+// Helper to seed default pages
+function seedDefaultPages(callback) {
+  let completed = 0;
+  DEFAULT_PAGES.forEach(pageName => {
+    db.run(
+      'INSERT INTO page_content (page_name, content) VALUES (?, ?) ON CONFLICT (page_name) DO NOTHING',
+      [pageName, ''],
+      (err) => {
+        if (err) console.error('Error seeding page:', pageName, err);
+        completed++;
+        if (completed === DEFAULT_PAGES.length) {
+          callback();
+        }
+      }
+    );
+  });
+}
+
 // Get all page content
 router.get('/', (req, res) => {
   db.all('SELECT * FROM page_content ORDER BY page_name', [], (err, rows) => {
@@ -9,6 +30,20 @@ router.get('/', (req, res) => {
       console.error('Error fetching page content:', err);
       return res.status(500).json({ error: 'Failed to fetch page content' });
     }
+
+    // If no pages exist, seed them and return
+    if (!rows || rows.length === 0) {
+      seedDefaultPages(() => {
+        db.all('SELECT * FROM page_content ORDER BY page_name', [], (err, newRows) => {
+          if (err) {
+            return res.status(500).json({ error: 'Failed to fetch page content after seeding' });
+          }
+          res.json(newRows || []);
+        });
+      });
+      return;
+    }
+
     res.json(rows);
   });
 });
