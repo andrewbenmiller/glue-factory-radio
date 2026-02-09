@@ -27,7 +27,7 @@
 
 .logo-container {
   position: fixed;
-  top: 60px; /* Below the ticker */
+  top: 70px; /* Below the ticker, with 10px extra padding */
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
@@ -118,7 +118,7 @@
   }
 
   .logo-container {
-    top: 60px;
+    top: 70px;
   }
 
   .logo-image {
@@ -159,7 +159,7 @@
   }
 
   .logo-container {
-    top: 55px;
+    top: 65px;
   }
 
   .logo-image {
@@ -235,4 +235,104 @@
 .no-shows-state p {
   color: #FF5F1F;
   font-size: 16px;
+}
+
+/* Page Overlay for nav items */
+.page-overlay {
+  position: fixed;
+  /* Logo: top 70px + height 112px = 182px, + 40px gap = 222px */
+  top: 222px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 25, 0, 0.25);
+  z-index: 300;
+  overflow-y: auto;
+  /* Center content both axes */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-overlay-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 32px;
+  color: #ff1900;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-overlay-close:hover {
+  color: #ffb3a7;
+}
+
+.page-overlay-content {
+  padding: 60px 40px;
+  max-width: 1400px;
+  color: #ff1900;
+  font-family: Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+
+.page-overlay-content h1 {
+  font-size: 48px;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+  .page-overlay {
+    /* Logo: top 70px + height 158px = 228px, + 40px gap = 268px */
+    top: 268px;
+  }
+
+  .page-overlay-close {
+    top: 15px;
+    right: 15px;
+    font-size: 28px;
+  }
+
+  .page-overlay-content {
+    padding: 50px 30px;
+  }
+
+  .page-overlay-content h1 {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-overlay {
+    /* Logo: top 65px + height 105px = 170px, + 40px gap = 210px */
+    top: 210px;
+  }
+
+  .page-overlay-close {
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+  }
+
+  .page-overlay-content {
+    padding: 40px 20px;
+  }
+
+  .page-overlay-content h1 {
+    font-size: 28px;
+  }
 }
