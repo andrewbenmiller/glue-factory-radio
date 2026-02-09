@@ -38,6 +38,13 @@ export interface UploadResponse {
   };
 }
 
+export interface PageContent {
+  id: number;
+  page_name: string;
+  content: string;
+  updated_at: string;
+}
+
 class ApiService {
   private baseUrl: string;
 
@@ -95,6 +102,15 @@ class ApiService {
   // Get the full URL for a show
   getShowUrl(filename: string): string {
     return `${this.baseUrl}/uploads/${filename}`;
+  }
+
+  // Get page content by name
+  async getPageContent(pageName: string): Promise<PageContent> {
+    const response = await fetch(`${this.baseUrl}/api/pages/${pageName}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch page content: ${response.status}`);
+    }
+    return response.json();
   }
 }
 

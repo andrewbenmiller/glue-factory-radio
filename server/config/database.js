@@ -220,6 +220,27 @@ function initializeSQLiteDatabase() {
     }
   });
 
+  // Page content table for nav pages (About, Events, Contact)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS page_content (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      page_name TEXT UNIQUE NOT NULL,
+      content TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating page_content table:', err.message);
+    } else {
+      console.log('✅ Page content table ready');
+      // Insert default pages if they don't exist
+      const defaultPages = ['about', 'events', 'contact'];
+      defaultPages.forEach(pageName => {
+        db.run(`INSERT OR IGNORE INTO page_content (page_name, content) VALUES (?, '')`, [pageName]);
+      });
+    }
+  });
+
   // Create indexes for better performance
   db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`, (err) => {
     if (err) {
@@ -376,6 +397,27 @@ function initializePostgreSQLDatabase() {
   db.run(`ALTER TABLE background_images ADD COLUMN url TEXT`, (err) => {
     if (err && !err.message.includes('already exists')) {
       console.error('Error adding url column:', err.message);
+    }
+  });
+
+  // Page content table for nav pages (About, Events, Contact)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS page_content (
+      id SERIAL PRIMARY KEY,
+      page_name TEXT UNIQUE NOT NULL,
+      content TEXT,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating page_content table:', err.message);
+    } else {
+      console.log('✅ Page content table ready');
+      // Insert default pages if they don't exist
+      const defaultPages = ['about', 'events', 'contact'];
+      defaultPages.forEach(pageName => {
+        db.run(`INSERT INTO page_content (page_name, content) VALUES (?, '') ON CONFLICT (page_name) DO NOTHING`, [pageName]);
+      });
     }
   });
 
