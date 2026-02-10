@@ -278,7 +278,16 @@ function App() {
                   onMouseEnter={() => setContactHovered(true)}
                   onMouseLeave={() => setContactHovered(false)}
                 >
-                  {contactCopied ? 'COPIED!' : contactHovered ? 'CLICK TO COPY' : pageContent.content}
+                  {/* Email stays in DOM to maintain hover area size */}
+                  <span className={`contact-email ${contactHovered || contactCopied ? 'hidden' : ''}`}>
+                    {pageContent.content}
+                  </span>
+                  {/* Overlay text positioned on top */}
+                  {(contactHovered || contactCopied) && (
+                    <span className="contact-overlay">
+                      {contactCopied ? 'COPIED!' : 'CLICK TO COPY'}
+                    </span>
+                  )}
                 </div>
               ) : (
                 <div className="page-text">{pageContent.content}</div>

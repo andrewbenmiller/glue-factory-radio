@@ -329,6 +329,24 @@
 /* Contact page click-to-copy */
 .contact-copyable {
   cursor: pointer;
+  position: relative;
+  display: inline-block;
+}
+
+.contact-email {
+  visibility: visible;
+}
+
+.contact-email.hidden {
+  visibility: hidden;
+}
+
+.contact-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 
 /* Events page email signup */
