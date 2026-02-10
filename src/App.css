@@ -240,12 +240,13 @@
 /* Page Overlay for nav items */
 .page-overlay {
   position: fixed;
-  /* Logo: top 70px + height 112px = 182px, + 40px gap = 222px */
-  top: 222px;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.85);
+  /* Match expanded archive height exactly */
+  height: 75vh;
+  max-height: 75vh;
+  background: rgba(255, 255, 255, 0.70);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 25, 0, 0.25);
@@ -263,20 +264,33 @@
   right: 20px;
   background: transparent;
   border: none;
-  font-size: 32px;
-  color: #ff1900;
   cursor: pointer;
-  line-height: 1;
-  padding: 0;
   width: 40px;
   height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.page-overlay-close:hover {
-  color: #ffb3a7;
+.page-overlay-close::before,
+.page-overlay-close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 2px;
+  background-color: #ff1900;
+}
+
+.page-overlay-close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.page-overlay-close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.page-overlay-close:hover::before,
+.page-overlay-close:hover::after {
+  background-color: #ffb3a7;
 }
 
 .page-overlay-content {
@@ -296,11 +310,11 @@
 }
 
 .page-text {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.7;
   color: #ff1900;
   white-space: pre-wrap;
-  text-align: left;
+  text-align: center;
   max-width: 800px;
   margin: 0 auto;
 }
@@ -310,6 +324,86 @@
   font-size: 16px;
   color: rgba(255, 25, 0, 0.6);
   font-style: italic;
+}
+
+/* Contact page click-to-copy */
+.contact-copyable {
+  cursor: pointer;
+}
+
+/* Events page email signup */
+.events-signup {
+  margin-top: 40px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.events-signup-form {
+  position: relative;
+}
+
+.events-signup-label {
+  display: block;
+  font-size: 16px;
+  color: #ff1900;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.events-signup-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.events-signup-input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 2px solid #ff1900;
+  background: transparent;
+  color: #ff1900;
+  font-family: Helvetica, Arial, sans-serif;
+  outline: none;
+}
+
+.events-signup-input::placeholder {
+  color: rgba(255, 25, 0, 0.5);
+}
+
+.events-signup-input:focus {
+  border-color: #ff1900;
+  background: rgba(255, 25, 0, 0.05);
+}
+
+.events-signup-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: #ff1900;
+  color: white;
+  border: 2px solid #ff1900;
+  cursor: pointer;
+  font-family: Helvetica, Arial, sans-serif;
+  transition: background 0.2s, color 0.2s;
+}
+
+.events-signup-button:hover {
+  background: transparent;
+  color: #ff1900;
+}
+
+@media (max-width: 480px) {
+  .events-signup-input-row {
+    flex-direction: column;
+  }
+
+  .events-signup-button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -326,14 +420,21 @@
 
 @media (max-width: 768px) {
   .page-overlay {
-    /* Logo: top 70px + height 158px = 228px, + 40px gap = 268px */
-    top: 268px;
+    /* Match expanded archive height on tablet */
+    height: 80vh;
+    max-height: 80vh;
   }
 
   .page-overlay-close {
     top: 15px;
     right: 15px;
-    font-size: 28px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .page-overlay-close::before,
+  .page-overlay-close::after {
+    width: 30px;
   }
 
   .page-overlay-content {
@@ -347,14 +448,21 @@
 
 @media (max-width: 480px) {
   .page-overlay {
-    /* Logo: top 65px + height 105px = 170px, + 40px gap = 210px */
-    top: 210px;
+    /* Match expanded archive height on mobile */
+    height: calc(100vh - 210px);
+    max-height: calc(100vh - 210px);
   }
 
   .page-overlay-close {
     top: 10px;
     right: 10px;
-    font-size: 24px;
+    width: 25px;
+    height: 25px;
+  }
+
+  .page-overlay-close::before,
+  .page-overlay-close::after {
+    width: 25px;
   }
 
   .page-overlay-content {
