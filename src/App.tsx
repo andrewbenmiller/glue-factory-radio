@@ -19,6 +19,8 @@ function App() {
   const [activePage, setActivePage] = useState<'about' | 'events' | 'contact' | null>(null);
   const [pageContent, setPageContent] = useState<PageContent | null>(null);
   const [pageLoading, setPageLoading] = useState(false);
+  const [contactCopied, setContactCopied] = useState(false);
+  const [contactHovered, setContactHovered] = useState(false);
   // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -259,17 +261,61 @@ function App() {
       {/* Page overlay for nav items */}
       {activePage && (
         <div className="page-overlay">
-          <button className="page-overlay-close" onClick={() => setActivePage(null)}>
-            &times;
+          <button className="page-overlay-close" onClick={() => setActivePage(null)} aria-label="Close">
           </button>
           <div className="page-overlay-content">
-            <h1>{activePage.toUpperCase()}</h1>
             {pageLoading ? (
               <p className="page-loading">Loading...</p>
             ) : pageContent?.content ? (
-              <div className="page-text">{pageContent.content}</div>
-            ) : (
-              <p className="page-empty">No content yet.</p>
+              activePage === 'contact' ? (
+                <div
+                  className={`page-text contact-copyable ${contactCopied ? 'copied' : ''}`}
+                  onClick={() => {
+                    navigator.clipboard.writeText(pageContent.content);
+                    setContactCopied(true);
+                    setTimeout(() => setContactCopied(false), 2000);
+                  }}
+                  onMouseEnter={() => setContactHovered(true)}
+                  onMouseLeave={() => setContactHovered(false)}
+                >
+                  {contactCopied ? 'COPIED!' : contactHovered ? 'CLICK TO COPY' : pageContent.content}
+                </div>
+              ) : (
+                <div className="page-text">{pageContent.content}</div>
+              )
+            ) : null}
+
+            {/* Mailchimp signup form - Events page only */}
+            {activePage === 'events' && (
+              <div className="events-signup">
+                <form
+                  action="https://gluefactoryradio.us3.list-manage.com/subscribe/post?u=59fdb08d951a9fe15136d1bcf&amp;id=d929eeaa44&amp;f_id=00625ee1f0"
+                  method="post"
+                  target="_self"
+                  className="events-signup-form"
+                >
+                  <label htmlFor="mce-EMAIL" className="events-signup-label">
+                    Subscribe for event updates
+                  </label>
+                  <div className="events-signup-input-row">
+                    <input
+                      type="email"
+                      name="EMAIL"
+                      id="mce-EMAIL"
+                      placeholder="Enter your email"
+                      required
+                      className="events-signup-input"
+                    />
+                    <button type="submit" className="events-signup-button">
+                      Subscribe
+                    </button>
+                  </div>
+                  {/* Honeypot field for bot protection */}
+                  <div style={{ position: 'absolute', left: '-5000px' }} aria-hidden="true">
+                    <input type="text" name="b_59fdb08d951a9fe15136d1bcf_d929eeaa44" tabIndex={-1} defaultValue="" />
+                  </div>
+                </form>
+              </div>
             )}
           </div>
         </div>
