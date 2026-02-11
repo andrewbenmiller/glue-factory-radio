@@ -26,26 +26,15 @@ function seedDefaultPages(callback) {
 
 // Get all page content
 router.get('/', (req, res) => {
-  db.all('SELECT * FROM page_content ORDER BY page_name', [], (err, rows) => {
-    if (err) {
-      console.error('Error fetching page content:', err);
-      return res.status(500).json({ error: 'Failed to fetch page content' });
-    }
-
-    // If no pages exist, seed them and return
-    if (!rows || rows.length === 0) {
-      seedDefaultPages(() => {
-        db.all('SELECT * FROM page_content ORDER BY page_name', [], (err, newRows) => {
-          if (err) {
-            return res.status(500).json({ error: 'Failed to fetch page content after seeding' });
-          }
-          res.json(newRows || []);
-        });
-      });
-      return;
-    }
-
-    res.json(rows);
+  // Always seed missing default pages first, then return all
+  seedDefaultPages(() => {
+    db.all('SELECT * FROM page_content ORDER BY page_name', [], (err, rows) => {
+      if (err) {
+        console.error('Error fetching page content:', err);
+        return res.status(500).json({ error: 'Failed to fetch page content' });
+      }
+      res.json(rows || []);
+    });
   });
 });
 
