@@ -3,15 +3,16 @@ const router = express.Router();
 const db = require('../config/database');
 
 // Default pages to seed if none exist
-const DEFAULT_PAGES = ['about', 'events', 'contact'];
+const DEFAULT_PAGES = ['about', 'events', 'contact', 'live_label'];
 
 // Helper to seed default pages
 function seedDefaultPages(callback) {
   let completed = 0;
   DEFAULT_PAGES.forEach(pageName => {
+    const defaultContent = pageName === 'live_label' ? 'LIVE NOW' : '';
     db.run(
       'INSERT INTO page_content (page_name, content) VALUES (?, ?) ON CONFLICT (page_name) DO NOTHING',
-      [pageName, ''],
+      [pageName, defaultContent],
       (err) => {
         if (err) console.error('Error seeding page:', pageName, err);
         completed++;

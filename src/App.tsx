@@ -17,8 +17,7 @@ function App() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [archiveExpanded, setArchiveExpanded] = useState(false);
   const [activePage, setActivePage] = useState<'about' | 'events' | 'contact' | null>(null);
-  const [pageContent, setPageContent] = useState<PageContent | null>(null);
-  const [pageLoading, setPageLoading] = useState(false);
+  const [pageCache, setPageCache] = useState<Record<string, PageContent>>({});
   const [contactCopied, setContactCopied] = useState(false);
   const [contactHovered, setContactHovered] = useState(false);
   // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
@@ -30,16 +29,22 @@ function App() {
   const { source, playLive, stopLive, trackNowPlaying } = useAudio();
   const livePlaying = source === "live";
   
+  // Custom live stream label from admin (defaults to "LIVE NOW")
+  const liveLabel = pageCache.live_label?.content || 'LIVE NOW';
+
   // Determine what to display in the ticker based on which audio source is playing
   const tickerDisplayText = useMemo(() => {
     if (source === "live") {
-      return `LIVE NOW: ${nowPlaying ?? "Live Stream"}`;
+      if (nowPlaying && !liveLabel.includes(nowPlaying)) {
+        return `${liveLabel}: ${nowPlaying}`;
+      }
+      return liveLabel;
     }
     if (source === "track") {
       return `PLAYING NOW: ${trackNowPlaying ?? "Track"}`;
     }
     return "NOTHING CURRENTLY PLAYING";
-  }, [source, nowPlaying, trackNowPlaying]);
+  }, [source, nowPlaying, trackNowPlaying, liveLabel]);
   
   const tickerIsEmpty = source === "none";
   
@@ -77,28 +82,28 @@ function App() {
     console.log("[AUDIO SOURCE]", source);
   }, [source]);
 
-  // Fetch page content when a page overlay is opened
+  // Fetch all page content on mount
   useEffect(() => {
-    if (!activePage) {
-      setPageContent(null);
-      return;
-    }
-
-    const fetchPageContent = async () => {
-      setPageLoading(true);
+    const fetchAllPages = async () => {
       try {
-        const content = await apiService.getPageContent(activePage);
-        setPageContent(content);
+        const [about, events, contact, liveLabel] = await Promise.all([
+          apiService.getPageContent('about'),
+          apiService.getPageContent('events'),
+          apiService.getPageContent('contact'),
+          apiService.getPageContent('live_label'),
+        ]);
+        setPageCache({
+          about: about,
+          events: events,
+          contact: contact,
+          live_label: liveLabel,
+        });
       } catch (err) {
         console.error('Error fetching page content:', err);
-        setPageContent(null);
-      } finally {
-        setPageLoading(false);
       }
     };
-
-    fetchPageContent();
-  }, [activePage]);
+    fetchAllPages();
+  }, []);
   
   // Handle show selection
   const handleShowChange = (newShowIndex: number) => {
@@ -214,6 +219,7 @@ function App() {
         isLive={isLive}
         isPlaying={livePlaying}
         nowPlaying={nowPlaying ?? undefined}
+        liveLabel={liveLabel}
         onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
       />
 
@@ -264,14 +270,12 @@ function App() {
           <button className="page-overlay-close" onClick={() => setActivePage(null)} aria-label="Close">
           </button>
           <div className="page-overlay-content">
-            {pageLoading ? (
-              <p className="page-loading">Loading...</p>
-            ) : pageContent?.content ? (
+            {activePage && pageCache[activePage]?.content ? (
               activePage === 'contact' ? (
                 <div
                   className={`page-text contact-copyable ${contactCopied ? 'copied' : ''}`}
                   onClick={() => {
-                    navigator.clipboard.writeText(pageContent.content);
+                    navigator.clipboard.writeText(pageCache[activePage].content);
                     setContactCopied(true);
                     setTimeout(() => setContactCopied(false), 2000);
                   }}
@@ -279,18 +283,18 @@ function App() {
                   onMouseLeave={() => setContactHovered(false)}
                 >
                   {/* Email stays in DOM to maintain hover area size */}
-                  <span className={`contact-email ${contactHovered || contactCopied ? 'hidden' : ''}`}>
-                    {pageContent.content}
+                  <span className={`contact-email ${contactCopied || (contactHovered && window.matchMedia('(hover: hover)').matches) ? 'hidden' : ''}`}>
+                    {pageCache[activePage].content}
                   </span>
                   {/* Overlay text positioned on top */}
-                  {(contactHovered || contactCopied) && (
-                    <span className="contact-overlay">
-                      {contactCopied ? 'COPIED!' : 'CLICK TO COPY'}
-                    </span>
-                  )}
+                  {contactCopied ? (
+                    <span className="contact-overlay">COPIED!</span>
+                  ) : contactHovered && window.matchMedia('(hover: hover)').matches ? (
+                    <span className="contact-overlay">CLICK TO COPY</span>
+                  ) : null}
                 </div>
               ) : (
-                <div className="page-text">{pageContent.content}</div>
+                <div className="page-text">{pageCache[activePage].content}</div>
               )
             ) : null}
 

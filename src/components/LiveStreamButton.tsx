@@ -1,25 +1,92 @@
 // LiveStreamButton.tsx
-import React from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import "./LiveStreamButton.css";
 
 type Props = {
   isLive: boolean;
   isPlaying: boolean;
   nowPlaying?: string | null;
+  liveLabel?: string;
   onClick: () => void;
 };
+
+const MAX_WIDTH = 800;
+const MIN_FONT = 80;
 
 export default function LiveStreamButton({
   isLive,
   isPlaying,
   nowPlaying,
+  liveLabel,
   onClick,
 }: Props) {
+  const [fontSize, setFontSize] = useState<number | null>(null);
+  const [allowWrap, setAllowWrap] = useState(false);
+  const label = liveLabel || "LIVE NOW";
+
+  const getBaseFontSize = useCallback(() => {
+    if (typeof window === 'undefined') return 150;
+    if (window.innerWidth <= 768) return 108;
+    return 150;
+  }, []);
+
+  useEffect(() => {
+    // Skip on mobile where text is display:none
+    if (typeof window !== 'undefined' && window.innerWidth <= 480) return;
+
+    const measure = () => {
+      const baseFontSize = getBaseFontSize();
+      const span = document.createElement('span');
+      span.style.position = 'absolute';
+      span.style.visibility = 'hidden';
+      span.style.whiteSpace = 'nowrap';
+      span.style.fontWeight = '700';
+      span.style.letterSpacing = '0.6px';
+      span.style.lineHeight = '1';
+      span.style.fontSize = `${baseFontSize}px`;
+      span.style.textTransform = 'uppercase';
+      span.textContent = label;
+      document.body.appendChild(span);
+      const measuredWidth = span.offsetWidth;
+      document.body.removeChild(span);
+
+      if (measuredWidth <= MAX_WIDTH) {
+        setFontSize(null);
+        setAllowWrap(false);
+      } else {
+        const scaled = Math.floor(baseFontSize * (MAX_WIDTH / measuredWidth));
+        if (scaled >= MIN_FONT) {
+          setFontSize(scaled);
+          setAllowWrap(false);
+        } else {
+          setFontSize(MIN_FONT);
+          setAllowWrap(true);
+        }
+      }
+    };
+
+    measure();
+
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [label, getBaseFontSize]);
+
   const stateClass = isPlaying
     ? "live-stream-button-playing"
     : isLive
       ? "live-stream-button-live"
       : "live-stream-button-inactive";
+
+  const textStyle: React.CSSProperties = {};
+  if (fontSize !== null) {
+    textStyle.fontSize = `${fontSize}px`;
+  }
+  if (allowWrap) {
+    textStyle.whiteSpace = 'normal';
+    textStyle.maxWidth = `${MAX_WIDTH}px`;
+    textStyle.wordBreak = 'break-word';
+    textStyle.textAlign = 'center';
+  }
 
   return (
     <button
@@ -29,8 +96,10 @@ export default function LiveStreamButton({
       title={isPlaying ? "Stop live stream" : "Play live stream"}
       type="button"
     >
-      {/* LIVE NOW text - shown by default when not playing, hidden on hover */}
-      <span className="live-stream-button-status">LIVE NOW</span>
+      {/* Custom label text - shown by default when not playing, hidden on hover */}
+      <span className="live-stream-button-status" style={textStyle}>
+        {label}
+      </span>
 
       {/* Play icon - shown on hover when not playing */}
       <span className="live-stream-button-play-icon" aria-hidden>

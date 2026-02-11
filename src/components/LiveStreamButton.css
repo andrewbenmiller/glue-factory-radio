@@ -31,7 +31,7 @@
   grid-area: 1 / 1;
 }
 
-/* LIVE NOW text */
+/* Live label text */
 .live-stream-button-status {
   text-transform: uppercase;
   font-size: 150px;
@@ -41,6 +41,7 @@
   white-space: nowrap;
   color: #ff1900;
   text-align: center;
+  max-width: 800px;
   opacity: 1;
   transition: opacity 0.15s ease;
 }
