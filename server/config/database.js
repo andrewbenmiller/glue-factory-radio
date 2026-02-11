@@ -234,9 +234,10 @@ function initializeSQLiteDatabase() {
     } else {
       console.log('✅ Page content table ready');
       // Insert default pages if they don't exist
-      const defaultPages = ['about', 'events', 'contact'];
+      const defaultPages = ['about', 'events', 'contact', 'live_label'];
       defaultPages.forEach(pageName => {
-        db.run(`INSERT OR IGNORE INTO page_content (page_name, content) VALUES (?, '')`, [pageName]);
+        const defaultContent = pageName === 'live_label' ? 'LIVE NOW' : '';
+        db.run(`INSERT OR IGNORE INTO page_content (page_name, content) VALUES (?, ?)`, [pageName, defaultContent]);
       });
     }
   });
@@ -414,9 +415,10 @@ function initializePostgreSQLDatabase() {
     } else {
       console.log('✅ Page content table ready');
       // Insert default pages if they don't exist
-      const defaultPages = ['about', 'events', 'contact'];
+      const defaultPages = ['about', 'events', 'contact', 'live_label'];
       defaultPages.forEach(pageName => {
-        db.run(`INSERT INTO page_content (page_name, content) VALUES (?, '') ON CONFLICT (page_name) DO NOTHING`, [pageName]);
+        const defaultContent = pageName === 'live_label' ? 'LIVE NOW' : '';
+        db.run(`INSERT INTO page_content (page_name, content) VALUES (?, ?) ON CONFLICT (page_name) DO NOTHING`, [pageName, defaultContent]);
       });
     }
   });

@@ -1011,12 +1011,39 @@ async function loadPages() {
         const pages = await response.json();
 
         const pageLabels = {
+            live_label: 'Live Stream Label',
             about: 'About',
             events: 'Events',
             contact: 'Contact'
         };
 
-        const pagesHtml = pages.map(page => `
+        // Sort so live_label appears first
+        pages.sort((a, b) => {
+            if (a.page_name === 'live_label') return -1;
+            if (b.page_name === 'live_label') return 1;
+            return 0;
+        });
+
+        const pagesHtml = pages.map(page => {
+            const isLiveLabel = page.page_name === 'live_label';
+            const inputHtml = isLiveLabel
+                ? `<input
+                    type="text"
+                    id="page-content-${page.page_name}"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; font-family: Helvetica, Arial, sans-serif;"
+                    placeholder="e.g. LIVE NOW: DJ TRUE FACE PRESENTS:"
+                    value="${escapeHtml(page.content || '')}"
+                  />
+                  <small style="display: block; margin-top: 8px; color: #666;">
+                    This text replaces "LIVE NOW" on the main page and in the ticker when the stream is live. Default: LIVE NOW
+                  </small>`
+                : `<textarea
+                    id="page-content-${page.page_name}"
+                    style="width: 100%; height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; font-family: Helvetica, Arial, sans-serif; resize: vertical;"
+                    placeholder="Enter content for ${pageLabels[page.page_name] || page.page_name} page..."
+                  >${escapeHtml(page.content || '')}</textarea>`;
+
+            return `
             <div class="page-content-card" style="margin-bottom: 30px; padding: 25px; border: 1px solid black;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">${pageLabels[page.page_name] || page.page_name}</h3>
@@ -1025,11 +1052,7 @@ async function loadPages() {
                     </span>
                 </div>
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <textarea
-                        id="page-content-${page.page_name}"
-                        style="width: 100%; height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; font-family: Helvetica, Arial, sans-serif; resize: vertical;"
-                        placeholder="Enter content for ${pageLabels[page.page_name] || page.page_name} page..."
-                    >${escapeHtml(page.content || '')}</textarea>
+                    ${inputHtml}
                 </div>
                 <button
                     class="upload-button"
@@ -1039,7 +1062,8 @@ async function loadPages() {
                     Save ${pageLabels[page.page_name] || page.page_name}
                 </button>
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         container.innerHTML = pagesHtml;
 
