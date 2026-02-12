@@ -118,6 +118,11 @@ function App() {
     // Only when switching to a different show:
     setCurrentShowIndex(newShowIndex);
     setCurrentTrackIndex(0); // jump to first track of the new show
+
+    // Auto-play the first track of the new show
+    requestAnimationFrame(() => {
+      playerRef.current?.playFromUI(0);
+    });
   };
   
   // Handle track selection from ShowList
