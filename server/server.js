@@ -20,6 +20,8 @@ const corsOptions = {
       'https://glue-factory-radio-production.up.railway.app/',
       'https://glue-factory-radio.vercel.app',
       'https://radio.gluefactorymusic.com',
+      'https://gluefactoryradio.com',
+      'https://www.gluefactoryradio.com',
       process.env.CORS_ORIGIN
     ].filter(Boolean);
     
