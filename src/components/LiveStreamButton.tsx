@@ -1,5 +1,5 @@
 // LiveStreamButton.tsx
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./LiveStreamButton.css";
 
 type Props = {
