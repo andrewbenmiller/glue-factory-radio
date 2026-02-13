@@ -306,7 +306,7 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
       filesCount: req.files ? req.files.length : 0
     });
     
-    const { title, description, trackTitle } = req.body;
+    const { title, description, trackTitle, tags: tagsRaw } = req.body;
     const audioFiles = req.files || [];
 
     if (!title) {
@@ -418,38 +418,76 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
       }
 
       // Update show totals
-      db.run(`
-        UPDATE shows 
-        SET total_tracks = ?,
-            total_duration = ?
-        WHERE id = ?
-      `, [tracks.length, totalDuration, showId], (err) => {
-        if (err) {
-          console.error('Error updating show totals:', err);
-        }
-        
-        // Get the created show
-        db.get(`
-          SELECT * FROM shows WHERE id = ?
-        `, [showId], (err, show) => {
-          if (err) {
-            return res.status(500).json({ error: 'Show created but failed to retrieve' });
-          }
+      await new Promise((resolve, reject) => {
+        db.run(`
+          UPDATE shows
+          SET total_tracks = ?,
+              total_duration = ?
+          WHERE id = ?
+        `, [tracks.length, totalDuration, showId], (err) => {
+          if (err) console.error('Error updating show totals:', err);
+          resolve();
+        });
+      });
 
-          res.json({
-            message: `Show created successfully with ${tracks.length} track(s)`,
-            show: {
-              id: show.id,
-              title: show.title,
-              description: show.description,
-              created_date: show.created_date,
-              is_active: show.is_active,
-              total_duration: show.total_duration,
-              total_tracks: show.total_tracks
-            },
-            tracks: tracks
+      // Process tags if provided (comes as comma-separated string from FormData)
+      let tagNames = [];
+      if (tagsRaw) {
+        try {
+          tagNames = JSON.parse(tagsRaw);
+        } catch (e) {
+          tagNames = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+        }
+      }
+
+      for (const tagName of tagNames) {
+        const trimmed = tagName.trim().toLowerCase();
+        if (!trimmed) continue;
+
+        await new Promise((resolve, reject) => {
+          db.run('INSERT INTO tags (name) VALUES (?) ON CONFLICT (name) DO NOTHING', [trimmed], (err) => {
+            if (err) reject(err);
+            else resolve();
           });
         });
+
+        const tag = await new Promise((resolve, reject) => {
+          db.get('SELECT id FROM tags WHERE name = ?', [trimmed], (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+          });
+        });
+
+        if (tag) {
+          await new Promise((resolve, reject) => {
+            db.run('INSERT INTO show_tags (show_id, tag_id) VALUES (?, ?) ON CONFLICT (show_id, tag_id) DO NOTHING', [showId, tag.id], (err) => {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+        }
+      }
+
+      // Get the created show
+      const show = await new Promise((resolve, reject) => {
+        db.get('SELECT * FROM shows WHERE id = ?', [showId], (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
+      });
+
+      res.json({
+        message: `Show created successfully with ${tracks.length} track(s)`,
+        show: {
+          id: show.id,
+          title: show.title,
+          description: show.description,
+          created_date: show.created_date,
+          is_active: show.is_active,
+          total_duration: show.total_duration,
+          total_tracks: show.total_tracks
+        },
+        tracks: tracks
       });
     });
 

@@ -471,7 +471,20 @@
                         <input type="text" id="firstTrackTitle" name="trackTitle" placeholder="Enter custom title for first track">
                         <small>If provided, this will be used for the first track. Otherwise, track names will be extracted from filenames.</small>
                     </div>
-                    
+
+                    <div class="form-group">
+                        <label>Tags</label>
+                        <div class="tag-input-container" id="createShowTagContainer">
+                            <div class="tag-pills" id="createShowTagPills"></div>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="createShowTagInput" placeholder="Type a genre tag..." autocomplete="off" style="flex: 1;">
+                                <button type="button" class="btn-confirm" onclick="addTagFromInput('createShow')" style="padding: 8px 16px;">Add</button>
+                            </div>
+                            <div class="tag-suggestions" id="createShowTagSuggestions"></div>
+                        </div>
+                        <small>Press Enter or click Add. Tags are saved as lowercase.</small>
+                    </div>
+
                     <div id="filePreview" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
                         <strong>Selected Files:</strong>
                         <ul id="fileList" style="margin-top: 10px; list-style: none; padding: 0;"></ul>
@@ -581,6 +594,18 @@
                 <div class="form-group">
                     <label for="editDescription">Show Description</label>
                     <textarea id="editDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tags</label>
+                    <div class="tag-input-container" id="editTagContainer">
+                        <div class="tag-pills" id="editTagPills"></div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="editTagInput" placeholder="Type a genre tag..." autocomplete="off" style="flex: 1;">
+                            <button type="button" class="btn-confirm" onclick="addTagFromInput('edit')" style="padding: 8px 16px;">Add</button>
+                        </div>
+                        <div class="tag-suggestions" id="editTagSuggestions"></div>
+                    </div>
+                    <small>Press Enter or click Add. Tags are saved as lowercase.</small>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
@@ -825,6 +850,81 @@
         .btn-toggle-inactive {
             background: transparent;
             color: black;
+        }
+
+        /* Tag system styles */
+        .tag-input-container {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: #fff;
+        }
+        .tag-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .tag-pills:empty {
+            margin-bottom: 0;
+        }
+        .tag-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #333;
+        }
+        .tag-pill .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+            color: #999;
+            margin-left: 2px;
+        }
+        .tag-pill .tag-remove:hover {
+            color: #dc3545;
+        }
+        .tag-suggestions {
+            position: relative;
+        }
+        .tag-suggestions-list {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .tag-suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .tag-suggestion-item:hover {
+            background: #f0f0f0;
+        }
+        .show-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+        .show-tag-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e9ecef;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #555;
         }
     </style>
     <script src="admin.js"></script>

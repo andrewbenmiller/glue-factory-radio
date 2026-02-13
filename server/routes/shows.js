@@ -12,16 +12,16 @@ router.get('/admin', (req, res) => {
     LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = true
     ORDER BY s.created_date DESC, st.track_order
   `;
-  
+
   db.all(query, [], (err, rows) => {
     if (err) {
       console.error('Error fetching shows:', err);
       return res.status(500).json({ error: 'Failed to fetch shows' });
     }
-    
+
     // Group tracks by show
     const showsMap = new Map();
-    
+
     rows.forEach(row => {
       if (!showsMap.has(row.id)) {
         showsMap.set(row.id, {
@@ -32,10 +32,11 @@ router.get('/admin', (req, res) => {
           is_active: row.is_active,
           total_duration: row.total_duration,
           total_tracks: 0, // Will be calculated from actual tracks
+          tags: [],
           tracks: []
         });
       }
-      
+
       if (row.track_id) {
         showsMap.get(row.id).tracks.push({
           id: row.track_id,
@@ -53,14 +54,42 @@ router.get('/admin', (req, res) => {
         });
       }
     });
-    
+
     // Calculate actual track counts and total duration
     showsMap.forEach((show, showId) => {
       show.total_tracks = show.tracks.length;
       show.total_duration = show.tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
     });
-    
-    res.json(Array.from(showsMap.values()));
+
+    // Fetch tags for all shows
+    const showIds = Array.from(showsMap.keys());
+    if (showIds.length === 0) {
+      return res.json([]);
+    }
+
+    const placeholders = showIds.map(() => '?').join(',');
+    db.all(`
+      SELECT st.show_id, t.name
+      FROM show_tags st
+      JOIN tags t ON st.tag_id = t.id
+      WHERE st.show_id IN (${placeholders})
+      ORDER BY t.name
+    `, showIds, (err, tagRows) => {
+      if (err) {
+        console.error('Error fetching tags:', err);
+        // Return shows without tags rather than failing
+        return res.json(Array.from(showsMap.values()));
+      }
+
+      (tagRows || []).forEach(row => {
+        const show = showsMap.get(row.show_id);
+        if (show) {
+          show.tags.push(row.name);
+        }
+      });
+
+      res.json(Array.from(showsMap.values()));
+    });
   });
 });
 
@@ -73,16 +102,16 @@ router.get('/', (req, res) => {
     WHERE s.is_active = true
     ORDER BY s.created_date DESC, st.track_order
   `;
-  
+
   db.all(query, [], (err, rows) => {
     if (err) {
       console.error('Error fetching shows:', err);
       return res.status(500).json({ error: 'Failed to fetch shows' });
     }
-    
+
     // Group tracks by show
     const showsMap = new Map();
-    
+
     rows.forEach(row => {
       if (!showsMap.has(row.id)) {
         showsMap.set(row.id, {
@@ -91,12 +120,13 @@ router.get('/', (req, res) => {
           description: row.description,
           created_date: row.created_date,
           is_active: row.is_active,
-          total_duration: 0, // Will be calculated from actual tracks
-          total_tracks: 0, // Will be calculated from actual tracks
+          total_duration: 0,
+          total_tracks: 0,
+          tags: [],
           tracks: []
         });
       }
-      
+
       if (row.track_id) {
         showsMap.get(row.id).tracks.push({
           id: row.track_id,
@@ -114,89 +144,191 @@ router.get('/', (req, res) => {
         });
       }
     });
-    
+
     // Calculate actual track counts and total duration
     showsMap.forEach((show, showId) => {
       show.total_tracks = show.tracks.length;
       show.total_duration = show.tracks.reduce((sum, track) => sum + (track.duration || 0), 0);
     });
-    
-    res.json(Array.from(showsMap.values()));
+
+    // Fetch tags for all shows
+    const showIds = Array.from(showsMap.keys());
+    if (showIds.length === 0) {
+      return res.json([]);
+    }
+
+    const placeholders = showIds.map(() => '?').join(',');
+    db.all(`
+      SELECT st.show_id, t.name
+      FROM show_tags st
+      JOIN tags t ON st.tag_id = t.id
+      WHERE st.show_id IN (${placeholders})
+      ORDER BY t.name
+    `, showIds, (err, tagRows) => {
+      if (err) {
+        console.error('Error fetching tags:', err);
+        return res.json(Array.from(showsMap.values()));
+      }
+
+      (tagRows || []).forEach(row => {
+        const show = showsMap.get(row.show_id);
+        if (show) {
+          show.tags.push(row.name);
+        }
+      });
+
+      res.json(Array.from(showsMap.values()));
+    });
+  });
+});
+
+// GET all tags (for autocomplete)
+router.get('/tags/all', (req, res) => {
+  db.all('SELECT name FROM tags ORDER BY name', [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching tags:', err);
+      return res.status(500).json({ error: 'Failed to fetch tags' });
+    }
+    res.json((rows || []).map(r => r.name));
   });
 });
 
 // GET single show by ID with all tracks
 router.get('/:id', (req, res) => {
   const { id } = req.params;
-  
+
   // Get show details
   db.get('SELECT * FROM shows WHERE id = ?', [id], (err, show) => {
     if (err) {
       console.error('Error fetching show:', err);
       return res.status(500).json({ error: 'Failed to fetch show' });
     }
-    
+
     if (!show) {
       return res.status(404).json({ error: 'Show not found' });
     }
-    
+
     // Get all tracks for this show
     db.all(`
-      SELECT * FROM show_tracks 
-      WHERE show_id = ? AND is_active = true 
+      SELECT * FROM show_tracks
+      WHERE show_id = ? AND is_active = true
       ORDER BY track_order
     `, [id], (err, tracks) => {
       if (err) {
         console.error('Error fetching tracks:', err);
         return res.status(500).json({ error: 'Failed to fetch tracks' });
       }
-      
+
       // Add URLs to tracks
       const tracksWithUrls = tracks.map(track => ({
         ...track,
         url: `/audio/${track.filename}`
       }));
-      
-      const showWithTracks = {
-        ...show,
-        tracks: tracksWithUrls
-      };
-      
-      res.json(showWithTracks);
+
+      // Get tags for this show
+      db.all(`
+        SELECT t.name FROM show_tags st
+        JOIN tags t ON st.tag_id = t.id
+        WHERE st.show_id = ?
+        ORDER BY t.name
+      `, [id], (err, tagRows) => {
+        if (err) {
+          console.error('Error fetching tags:', err);
+        }
+
+        const showWithTracks = {
+          ...show,
+          tags: (tagRows || []).map(r => r.name),
+          tracks: tracksWithUrls
+        };
+
+        res.json(showWithTracks);
+      });
     });
   });
 });
 
 // PUT update show
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, description } = req.body;
-  
-  const query = `
-    UPDATE shows 
-    SET title = ?, description = ?
-    WHERE id = ?
-  `;
-  
-  db.run(query, [title, description, id], function(err) {
-    if (err) {
-      console.error('Error updating show:', err);
-      return res.status(500).json({ error: 'Failed to update show' });
+  const { title, description, tags } = req.body;
+
+  try {
+    // Update show fields
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE shows SET title = ?, description = ? WHERE id = ?', [title, description, id], function(err) {
+        if (err) return reject(err);
+        if (this.changes === 0) return reject(new Error('Show not found'));
+        resolve();
+      });
+    });
+
+    // Sync tags if provided
+    if (Array.isArray(tags)) {
+      // Remove existing tag associations
+      await new Promise((resolve, reject) => {
+        db.run('DELETE FROM show_tags WHERE show_id = ?', [id], (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
+      // Add new tags
+      for (const tagName of tags) {
+        const trimmed = tagName.trim().toLowerCase();
+        if (!trimmed) continue;
+
+        // Insert tag if it doesn't exist (ON CONFLICT works in both SQLite 3.24+ and PostgreSQL)
+        await new Promise((resolve, reject) => {
+          db.run('INSERT INTO tags (name) VALUES (?) ON CONFLICT (name) DO NOTHING', [trimmed], (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+
+        // Get tag id
+        const tag = await new Promise((resolve, reject) => {
+          db.get('SELECT id FROM tags WHERE name = ?', [trimmed], (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+          });
+        });
+
+        if (tag) {
+          await new Promise((resolve, reject) => {
+            db.run('INSERT INTO show_tags (show_id, tag_id) VALUES (?, ?) ON CONFLICT (show_id, tag_id) DO NOTHING', [id, tag.id], (err) => {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+        }
+      }
     }
-    
-    if (this.changes === 0) {
+
+    // Get updated show with tags
+    const show = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM shows WHERE id = ?', [id], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    const tagRows = await new Promise((resolve, reject) => {
+      db.all('SELECT t.name FROM show_tags st JOIN tags t ON st.tag_id = t.id WHERE st.show_id = ? ORDER BY t.name', [id], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+
+    res.json({ ...show, tags: tagRows.map(r => r.name) });
+
+  } catch (error) {
+    console.error('Error updating show:', error);
+    if (error.message === 'Show not found') {
       return res.status(404).json({ error: 'Show not found' });
     }
-    
-    // Get the updated show
-    db.get('SELECT * FROM shows WHERE id = ?', [id], (err, row) => {
-      if (err) {
-        return res.status(500).json({ error: 'Show updated but failed to retrieve' });
-      }
-      
-      res.json(row);
-    });
-  });
+    res.status(500).json({ error: 'Failed to update show' });
+  }
 });
 
 // PUT toggle show status (active/inactive)
