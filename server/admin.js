@@ -69,14 +69,17 @@ function setupUploadForm() {
             filePreview.style.display = 'block';
             fileList.innerHTML = '';
             
-            Array.from(files).forEach((file, index) => {
+            let fallbackOrder = 1;
+            Array.from(files).forEach((file) => {
                 const li = document.createElement('li');
                 li.style.padding = '5px 0';
                 li.style.borderBottom = '1px solid #dee2e6';
-                
-                // Extract track name from filename (preview)
+
+                // Extract track name and order from filename (preview)
                 const trackName = extractTrackNameFromFilename(file.name);
-                li.innerHTML = `<strong>${index + 1}.</strong> ${file.name} <em style="color: #666;">→ "${trackName}"</em>`;
+                const fileOrder = extractTrackOrderFromFilename(file.name);
+                const displayOrder = fileOrder !== null ? fileOrder : fallbackOrder++;
+                li.innerHTML = `<strong>${displayOrder}.</strong> ${file.name} <em style="color: #666;">→ "${trackName}"</em>`;
                 fileList.appendChild(li);
             });
         } else {
@@ -334,48 +337,75 @@ function setupUploadForm() {
 // Add Track Form
 function setupAddTrackForm() {
     const form = document.getElementById('addTrackForm');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
+    const submitBtn = document.getElementById('addTrackSubmitBtn');
+    const audioInput = document.getElementById('addTrackAudio');
+    const filePreview = document.getElementById('addTrackFilePreview');
+    const fileList = document.getElementById('addTrackFileList');
+
+    // Show file preview when files are selected
+    audioInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            filePreview.style.display = 'block';
+            fileList.innerHTML = '';
+
+            let fallbackOrder = 1;
+            Array.from(files).forEach((file) => {
+                const li = document.createElement('li');
+                li.style.padding = '5px 0';
+                li.style.borderBottom = '1px solid #dee2e6';
+
+                const trackName = extractTrackNameFromFilename(file.name);
+                const fileOrder = extractTrackOrderFromFilename(file.name);
+                const displayOrder = fileOrder !== null ? fileOrder : fallbackOrder++;
+                li.innerHTML = `<strong>${displayOrder}.</strong> ${file.name} <em style="color: #666;">→ "${trackName}"</em>`;
+                fileList.appendChild(li);
+            });
+        } else {
+            filePreview.style.display = 'none';
+        }
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        console.log('🎵 Add Track form submitted');
-        
-        const formData = new FormData(form);
-        const showId = formData.get('showId');
-        const title = formData.get('title');
-        const audioFile = formData.get('audio');
 
-        console.log('📊 Form data:', { showId, title, audioFile: audioFile ? audioFile.name : 'none' });
+        console.log('🎵 Add Track form submitted');
+
+        const showId = document.getElementById('addTrackShowId').value;
+        const trackTitle = document.getElementById('addTrackFirstTitle').value;
+        const audioFiles = audioInput.files;
+
+        console.log('📊 Form data:', { showId, trackTitle, fileCount: audioFiles ? audioFiles.length : 0 });
 
         if (!showId) {
             showStatus('❌ Show ID is missing', 'error');
             return;
         }
 
-        if (!title.trim()) {
-            showStatus('Please enter a track title', 'error');
+        if (!audioFiles || audioFiles.length === 0) {
+            showStatus('Please select at least one audio file', 'error');
             return;
         }
 
-        if (!audioFile || audioFile.size === 0) {
-            showStatus('Please select an audio file', 'error');
-            return;
+        // Build FormData with all files
+        const formData = new FormData();
+        formData.append('showId', showId);
+        if (trackTitle && trackTitle.trim()) {
+            formData.append('trackTitle', trackTitle.trim());
+        }
+        for (const file of audioFiles) {
+            formData.append('audio', file);
         }
 
         // prevent double submit
-        if (submitBtn) { 
-            submitBtn.disabled = true; 
-            submitBtn.textContent = 'Uploading...'; 
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            const fileCount = audioFiles.length;
+            submitBtn.textContent = `Uploading ${fileCount} track${fileCount > 1 ? 's' : ''}...`;
         }
 
         try {
             console.log('📡 Sending request to:', `${API_BASE_URL}/api/upload/track`);
-            console.log('📁 FormData contents:', {
-                showId: formData.get('showId'),
-                title: formData.get('title'),
-                audioFile: formData.get('audio') ? formData.get('audio').name : 'none'
-            });
 
             const response = await fetch(`${API_BASE_URL}/api/upload/track`, {
                 method: 'POST',
@@ -390,27 +420,29 @@ function setupAddTrackForm() {
             }
 
             const result = await response.json();
-            showStatus(`✅ Successfully added track: ${result.track.title}`, 'success');
-            
+            const tracksCount = result.tracks ? result.tracks.length : 1;
+            showStatus(`✅ Successfully added ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
+
             // Reset form and close modal
             form.reset();
+            filePreview.style.display = 'none';
             closeAddTrackModal();
-            
+
             // Refresh and refill expanded rows so the spinner disappears
+            const showIdNum = Number(showId);
             await loadShows();
             await loadStats();
-            const showIdNum = Number(formData.get('showId'));
             if (expandedShows.has(showIdNum)) {
                 await loadShowTracks(showIdNum);
             }
-            
+
         } catch (error) {
             console.error('Track upload error:', error);
             showStatus(`❌ Track upload failed: ${error.message}`, 'error');
         } finally {
-            if (submitBtn) { 
-                submitBtn.disabled = false; 
-                submitBtn.textContent = 'Add Track'; 
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Add Track(s)';
             }
         }
     });
@@ -508,14 +540,9 @@ function renderShowsTable() {
                                     <button class="btn-toggle" data-action="toggle">
                                         ${show.is_active ? '⏸️ Pause' : '▶️ Activate'}
                                     </button>
-                                    ${show.is_active ? 
-                                        `<button class="btn-delete" data-action="delete">
-                                            🗑️ Delete
-                                        </button>` :
-                                        `<button class="btn-restore" data-action="restore">
-                                            🔄 Restore
-                                        </button>`
-                                    }
+                                    <button class="btn-delete" data-action="delete">
+                                        🗑️ Delete
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -757,6 +784,8 @@ function addTrackToShow(showId) {
 // Close Add Track Modal
 function closeAddTrackModal() {
     document.getElementById('addTrackModal').style.display = 'none';
+    document.getElementById('addTrackForm').reset();
+    document.getElementById('addTrackFilePreview').style.display = 'none';
 }
 
 // Delete Track
@@ -1174,6 +1203,13 @@ async function loadStats() {
             </div>
         `;
     }
+}
+
+// Extract track order number from filename (e.g., "03 - Song.mp3" -> 3, "Song.mp3" -> null)
+function extractTrackOrderFromFilename(filename) {
+    const name = filename.replace(/\.[^/.]+$/, '');
+    const match = name.match(/^(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
 }
 
 // Extract track name from filename (frontend preview - matches backend logic)

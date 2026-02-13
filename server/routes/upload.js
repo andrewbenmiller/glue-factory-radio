@@ -7,6 +7,13 @@ const db = require('../config/database');
 const mp3Duration = require('mp3-duration');
 const cloudStorage = require('../services/cloudStorage');
 
+// Function to extract track order number from filename (e.g., "03 - Song.mp3" -> 3, "Song.mp3" -> null)
+function extractTrackOrderFromFilename(filename) {
+  const name = path.parse(filename).name;
+  const match = name.match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 // Function to extract track name from filename
 function extractTrackNameFromFilename(filename) {
   // Remove file extension
@@ -149,109 +156,139 @@ const imageUpload = multer({
   }
 });
 
-// Upload audio track to existing show
-router.post('/track', upload.single('audio'), async (req, res) => {
+// Upload audio track(s) to existing show
+router.post('/track', upload.array('audio', 50), async (req, res) => {
   try {
-    console.log('📤 Track upload request received:', { body: req.body, file: req.file });
-    
-    const { showId, title } = req.body;
-    const audioFile = req.file;
+    console.log('📤 Track upload request received:', {
+      body: req.body,
+      files: req.files,
+      filesCount: req.files ? req.files.length : 0
+    });
 
-    if (!showId || !title || !audioFile) {
-      return res.status(400).json({ error: 'Show ID, title, and audio file are required' });
+    const { showId, trackTitle } = req.body;
+    const audioFiles = req.files || [];
+
+    if (!showId) {
+      return res.status(400).json({ error: 'Show ID is required' });
+    }
+
+    if (audioFiles.length === 0) {
+      return res.status(400).json({ error: 'At least one audio file is required' });
     }
 
     // Check if show exists
-    db.get('SELECT * FROM shows WHERE id = ?', [showId], (err, show) => {
-      if (err) {
-        console.error('Database error:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      
-      if (!show) {
-        return res.status(404).json({ error: 'Show not found' });
-      }
+    const show = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM shows WHERE id = ?', [showId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
 
-      // Get next track order for this show
-      db.get('SELECT MAX(track_order) as max_order FROM show_tracks WHERE show_id = ?', [showId], (err, result) => {
-        if (err) {
-          console.error('Database error:', err);
-          return res.status(500).json({ error: 'Database error' });
+    if (!show) {
+      return res.status(404).json({ error: 'Show not found' });
+    }
+
+    // Get next fallback track order for files without a number prefix
+    const orderResult = await new Promise((resolve, reject) => {
+      db.get('SELECT MAX(track_order) as max_order FROM show_tracks WHERE show_id = ?', [showId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    let fallbackOrder = (orderResult.max_order || 0) + 1;
+    const tracks = [];
+
+    // Process all uploaded files
+    for (const audioFile of audioFiles) {
+      try {
+        console.log('📁 Processing file:', {
+          filename: audioFile.filename,
+          originalname: audioFile.originalname
+        });
+
+        // Extract duration from the uploaded file
+        const filePath = path.join(__dirname, '../uploads', audioFile.filename);
+        const duration = await extractAudioDuration(filePath);
+
+        // Upload to cloud storage (R2)
+        const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
+
+        if (!storageResult.success) {
+          console.error('Cloud storage upload failed for:', audioFile.filename);
+          continue; // Skip this file but continue with others
         }
 
-        const nextOrder = (result.max_order || 0) + 1;
-        const filename = audioFile.filename;
-        const size = audioFile.size;
-        
-        // Extract duration from the uploaded file
-        const filePath = path.join(__dirname, '../uploads', filename);
-        
-        extractAudioDuration(filePath).then(duration => {
-          // Upload to cloud storage (R2)
-          cloudStorage.uploadFile(filePath, filename).then(storageResult => {
-            if (!storageResult.success) {
-              console.error('Cloud storage upload failed:', storageResult.error);
-              return res.status(500).json({ error: 'Failed to upload file to storage' });
+        // Determine track title: use provided trackTitle for first file, or extract from filename
+        let trackTitleToUse;
+        if (tracks.length === 0 && trackTitle && trackTitle.trim()) {
+          trackTitleToUse = trackTitle.trim();
+        } else {
+          trackTitleToUse = extractTrackNameFromFilename(audioFile.originalname);
+        }
+
+        // Determine track order: use number prefix from filename, or append at end
+        const filenameOrder = extractTrackOrderFromFilename(audioFile.originalname);
+        const trackOrder = filenameOrder !== null ? filenameOrder : fallbackOrder++;
+
+        // Insert track into database
+        await new Promise((resolve, reject) => {
+          db.run(`
+            INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `, [showId, trackTitleToUse, audioFile.filename, audioFile.size, trackOrder, duration], function(err) {
+            if (err) {
+              console.error('Error creating track:', err);
+              reject(err);
+            } else {
+              tracks.push({
+                id: this.lastID,
+                title: trackTitleToUse,
+                filename: audioFile.filename,
+                track_order: trackOrder,
+                duration: duration
+              });
+              resolve();
             }
-
-                      // Insert track with cloud storage URL
-            const query = `
-              INSERT INTO show_tracks (show_id, title, filename, file_size, track_order, duration)
-              VALUES (?, ?, ?, ?, ?, ?)
-              RETURNING id
-            `;
-            
-            console.log('🗄️ Database query:', query);
-            console.log('🗄️ Database values:', [showId, title, filename, size, nextOrder, duration]);
-
-            db.run(query, [showId, title, filename, size, nextOrder, duration], function(err, result) {
-              if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Failed to save track to database' });
-              }
-
-              const trackId = result.rows[0].id;
-
-              // Update show totals
-              db.run(`
-                UPDATE shows 
-                SET total_tracks = total_tracks + 1,
-                    total_duration = (
-                      SELECT COALESCE(SUM(duration), 0) 
-                      FROM show_tracks 
-                      WHERE show_id = ? AND is_active = true
-                    )
-                WHERE id = ?
-              `, [showId, showId], (err) => {
-                if (err) {
-                  console.error('Error updating show totals:', err);
-                }
-              });
-
-              // Get the created track
-              db.get('SELECT * FROM show_tracks WHERE id = ?', [trackId], (err, track) => {
-                if (err) {
-                  return res.status(500).json({ error: 'Track created but failed to retrieve' });
-                }
-
-                res.json({
-                  message: 'Track uploaded successfully',
-                  track: {
-                    ...track,
-                    url: storageResult.url // Use cloud storage URL
-                  }
-                });
-              });
-            });
-          }).catch(error => {
-            console.error('Error uploading to cloud storage:', error);
-            res.status(500).json({ error: 'Failed to upload file to cloud storage' });
           });
-        }).catch(error => {
-          console.error('Error extracting audio duration:', error);
-          res.status(500).json({ error: 'Failed to process audio file' });
         });
+
+      } catch (fileError) {
+        console.error('Error processing file:', audioFile.filename, fileError);
+        // Continue with next file
+      }
+    }
+
+    if (tracks.length === 0) {
+      return res.status(500).json({ error: 'Failed to process any audio files' });
+    }
+
+    // Update show totals
+    const totalDuration = await new Promise((resolve, reject) => {
+      db.get('SELECT COALESCE(SUM(duration), 0) as total FROM show_tracks WHERE show_id = ? AND is_active = true', [showId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row.total || 0);
       });
+    });
+
+    const totalTracks = await new Promise((resolve, reject) => {
+      db.get('SELECT COUNT(*) as count FROM show_tracks WHERE show_id = ?', [showId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row.count || 0);
+      });
+    });
+
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE shows SET total_tracks = ?, total_duration = ? WHERE id = ?',
+        [totalTracks, totalDuration, showId], (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+    });
+
+    res.json({
+      message: `${tracks.length} track(s) uploaded successfully`,
+      tracks: tracks
     });
 
   } catch (error) {
@@ -313,13 +350,14 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
       }
       const tracks = [];
       let totalDuration = 0;
-      let trackOrder = 1;
+      let fallbackOrder = 1;
+      let isFirstTrack = true;
 
       // Process all uploaded files
       for (const audioFile of audioFiles) {
         try {
-          console.log('📁 Processing file:', { 
-            filename: audioFile.filename, 
+          console.log('📁 Processing file:', {
+            filename: audioFile.filename,
             originalname: audioFile.originalname
           });
 
@@ -330,21 +368,25 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
 
           // Upload to cloud storage (R2)
           const storageResult = await cloudStorage.uploadFile(filePath, audioFile.filename);
-          
+
           if (!storageResult.success) {
             console.error('Cloud storage upload failed for:', audioFile.filename);
             continue; // Skip this file but continue with others
           }
 
-          // Determine track title: use provided trackTitle for first file, or extract from filename
+          // Determine track title: use provided trackTitle for first track, or extract from filename
           let trackTitleToUse;
-          if (trackOrder === 1 && trackTitle) {
+          if (isFirstTrack && trackTitle) {
             // Use provided title for first track if given
             trackTitleToUse = trackTitle;
           } else {
             // Extract track name from filename
             trackTitleToUse = extractTrackNameFromFilename(audioFile.originalname);
           }
+
+          // Determine track order: use number prefix from filename, or assign sequentially
+          const filenameOrder = extractTrackOrderFromFilename(audioFile.originalname);
+          const trackOrder = filenameOrder !== null ? filenameOrder : fallbackOrder++;
 
           // Insert track into database
           await new Promise((resolve, reject) => {
@@ -363,7 +405,7 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
                   track_order: trackOrder,
                   duration: duration
                 });
-                trackOrder++;
+                isFirstTrack = false;
                 resolve();
               }
             });
