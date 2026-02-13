@@ -113,6 +113,12 @@ function setupUploadForm() {
             formData.set('trackTitle', trackTitle.trim());
         }
 
+        // Add tags to FormData
+        const createShowTags = getTagsForContext('createShow');
+        if (createShowTags.length > 0) {
+            formData.set('tags', JSON.stringify(createShowTags));
+        }
+
         // Disable upload button and show progress
         uploadBtn.disabled = true;
         const fileCount = audioFiles.length;
@@ -225,7 +231,8 @@ function setupUploadForm() {
                         progressContainer.style.display = 'none';
                         uploadBtn.disabled = false;
                         uploadBtn.textContent = 'Create Show';
-                        
+                        clearTags('createShow');
+
                         // Refresh shows list
                         loadShows();
                         loadStats();
@@ -610,7 +617,14 @@ function renderShowsTable() {
                                 <span class="expand-icon">▶</span>
                                 <strong>${escapeHtml(show.title)}</strong>
                             </td>
-                            <td>${escapeHtml(show.description || 'No description')}</td>
+                            <td>
+                                ${escapeHtml(show.description || 'No description')}
+                                ${show.tags && show.tags.length > 0 ? `
+                                    <div class="show-tags">
+                                        ${show.tags.map(t => `<span class="show-tag-badge">${escapeHtml(t)}</span>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </td>
                             <td>${show.total_tracks || 0}</td>
                             <td>${formatDuration(show.total_duration)}</td>
                             <td>${formatDate(show.created_date)}</td>
@@ -916,7 +930,13 @@ function editShow(showId) {
     document.getElementById('editShowId').value = show.id;
     document.getElementById('editTitle').value = show.title;
     document.getElementById('editDescription').value = show.description || '';
-    
+
+    // Populate tags
+    clearTags('edit');
+    if (show.tags && Array.isArray(show.tags)) {
+        show.tags.forEach(tag => addTag('edit', tag));
+    }
+
     document.getElementById('editModal').style.display = 'block';
 }
 
@@ -939,7 +959,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ title, description })
+            body: JSON.stringify({ title, description, tags: getTagsForContext('edit') })
         });
 
         if (!response.ok) {
@@ -1452,3 +1472,144 @@ document.querySelectorAll('.close').forEach(closeBtn => {
         closeAddTrackModal();
     }
 });
+
+// ========== Tag Management ==========
+
+// Store tags per context (keyed by 'createShow' or 'edit')
+const tagState = {
+    createShow: [],
+    edit: []
+};
+
+// All known tags from the database (for autocomplete)
+let allKnownTags = [];
+
+// Fetch all known tags from server
+async function loadAllTags() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/shows/tags/all`);
+        if (response.ok) {
+            allKnownTags = await response.json();
+        }
+    } catch (e) {
+        console.error('Error loading tags:', e);
+    }
+}
+
+// Load tags on page init
+loadAllTags();
+
+// Get current tags for a context
+function getTagsForContext(context) {
+    return tagState[context] || [];
+}
+
+// Clear all tags for a context
+function clearTags(context) {
+    tagState[context] = [];
+    renderTagPills(context);
+}
+
+// Add a tag to a context
+function addTag(context, tagName) {
+    const trimmed = tagName.trim().toLowerCase();
+    if (!trimmed) return;
+    if (tagState[context].includes(trimmed)) return; // no duplicates
+
+    tagState[context].push(trimmed);
+    renderTagPills(context);
+
+    // Add to known tags if new
+    if (!allKnownTags.includes(trimmed)) {
+        allKnownTags.push(trimmed);
+        allKnownTags.sort();
+    }
+}
+
+// Remove a tag from a context
+function removeTag(context, tagName) {
+    tagState[context] = tagState[context].filter(t => t !== tagName);
+    renderTagPills(context);
+}
+
+// Render tag pills for a context
+function renderTagPills(context) {
+    const pillsContainer = document.getElementById(`${context}TagPills`);
+    if (!pillsContainer) return;
+
+    pillsContainer.innerHTML = tagState[context].map(tag =>
+        `<span class="tag-pill">${escapeHtml(tag)}<span class="tag-remove" onclick="removeTag('${context}', '${escapeHtml(tag)}')">&times;</span></span>`
+    ).join('');
+}
+
+// Add tag from the input field
+function addTagFromInput(context) {
+    const input = document.getElementById(`${context}TagInput`);
+    if (!input) return;
+
+    addTag(context, input.value);
+    input.value = '';
+    hideSuggestions(context);
+}
+
+// Show autocomplete suggestions
+function showSuggestions(context, query) {
+    const suggestionsContainer = document.getElementById(`${context}TagSuggestions`);
+    if (!suggestionsContainer) return;
+
+    const q = query.trim().toLowerCase();
+    if (!q) {
+        hideSuggestions(context);
+        return;
+    }
+
+    const currentTags = tagState[context];
+    const matches = allKnownTags.filter(t => t.includes(q) && !currentTags.includes(t));
+
+    if (matches.length === 0) {
+        hideSuggestions(context);
+        return;
+    }
+
+    suggestionsContainer.innerHTML = `
+        <div class="tag-suggestions-list">
+            ${matches.slice(0, 8).map(tag =>
+                `<div class="tag-suggestion-item" onclick="addTag('${context}', '${escapeHtml(tag)}'); document.getElementById('${context}TagInput').value = ''; hideSuggestions('${context}');">${escapeHtml(tag)}</div>`
+            ).join('')}
+        </div>
+    `;
+}
+
+// Hide suggestions
+function hideSuggestions(context) {
+    const suggestionsContainer = document.getElementById(`${context}TagSuggestions`);
+    if (suggestionsContainer) {
+        suggestionsContainer.innerHTML = '';
+    }
+}
+
+// Setup tag input event listeners
+function setupTagInput(context) {
+    const input = document.getElementById(`${context}TagInput`);
+    if (!input) return;
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTagFromInput(context);
+        }
+    });
+
+    input.addEventListener('input', (e) => {
+        showSuggestions(context, e.target.value);
+    });
+
+    input.addEventListener('blur', () => {
+        // Delay to allow click on suggestion
+        setTimeout(() => hideSuggestions(context), 200);
+    });
+}
+
+// Initialize tag inputs
+setupTagInput('createShow');
+setupTagInput('edit');

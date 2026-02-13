@@ -242,6 +242,39 @@ function initializeSQLiteDatabase() {
     }
   });
 
+  // Tags table - Unique genre/category tags
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating tags table:', err.message);
+    } else {
+      console.log('✅ Tags table ready');
+    }
+  });
+
+  // Show-tags junction table (many-to-many)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS show_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      show_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
+      UNIQUE(show_id, tag_id)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating show_tags table:', err.message);
+    } else {
+      console.log('✅ Show tags table ready');
+    }
+  });
+
   // Create indexes for better performance
   db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`, (err) => {
     if (err) {
@@ -258,6 +291,18 @@ function initializeSQLiteDatabase() {
   });
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tags_show_id ON show_tags(show_id)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tags_tag_id ON show_tags(tag_id)`, (err) => {
     if (err) {
       console.error('Error creating index:', err.message);
     }
@@ -423,6 +468,39 @@ function initializePostgreSQLDatabase() {
     }
   });
 
+  // Tags table - Unique genre/category tags
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id SERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating tags table:', err.message);
+    } else {
+      console.log('✅ Tags table ready');
+    }
+  });
+
+  // Show-tags junction table (many-to-many)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS show_tags (
+      id SERIAL PRIMARY KEY,
+      show_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
+      UNIQUE(show_id, tag_id)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating show_tags table:', err.message);
+    } else {
+      console.log('✅ Show tags table ready');
+    }
+  });
+
   // Create indexes for better performance
   db.run(`CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`, (err) => {
     if (err) {
@@ -439,6 +517,18 @@ function initializePostgreSQLDatabase() {
   });
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tags_show_id ON show_tags(show_id)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_show_tags_tag_id ON show_tags(tag_id)`, (err) => {
     if (err) {
       console.error('Error creating index:', err.message);
     }
