@@ -398,53 +398,140 @@ function setupAddTrackForm() {
         }
 
         // prevent double submit
+        const fileCount = audioFiles.length;
         if (submitBtn) {
             submitBtn.disabled = true;
-            const fileCount = audioFiles.length;
             submitBtn.textContent = `Uploading ${fileCount} track${fileCount > 1 ? 's' : ''}...`;
         }
 
-        try {
-            console.log('📡 Sending request to:', `${API_BASE_URL}/api/upload/track`);
+        // Show progress bar
+        const progressContainer = document.getElementById('addTrackProgress');
+        const progressBar = document.getElementById('addTrackProgressBar');
+        const progressPercent = document.getElementById('addTrackProgressPercent');
+        const progressStatus = document.getElementById('addTrackProgressStatus');
+        const currentFile = document.getElementById('addTrackCurrentFile');
+        const uploadSpeed = document.getElementById('addTrackUploadSpeed');
 
-            const response = await fetch(`${API_BASE_URL}/api/upload/track`, {
-                method: 'POST',
-                body: formData
-            });
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        progressStatus.textContent = 'Preparing upload...';
+        currentFile.textContent = 'Initializing...';
+        uploadSpeed.textContent = '';
 
-            console.log('📡 Response status:', response.status);
+        let lastUpdateTime = Date.now();
+        let lastUploadedBytes = 0;
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Track upload failed: ${response.status}`);
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + '%';
+                progressPercent.textContent = percent + '%';
+
+                const now = Date.now();
+                const timeDiff = (now - lastUpdateTime) / 1000;
+                if (timeDiff >= 0.5) {
+                    const bytesDiff = e.loaded - lastUploadedBytes;
+                    const speed = bytesDiff / timeDiff;
+                    const speedMBps = (speed / (1024 * 1024)).toFixed(2);
+                    const speedKBps = (speed / 1024).toFixed(0);
+
+                    uploadSpeed.textContent = speedMBps >= 1 ? `${speedMBps} MB/s` : `${speedKBps} KB/s`;
+
+                    const remainingBytes = e.total - e.loaded;
+                    if (speed > 0) {
+                        const etaSeconds = Math.round(remainingBytes / speed);
+                        const etaMinutes = Math.floor(etaSeconds / 60);
+                        const etaSecs = etaSeconds % 60;
+                        uploadSpeed.textContent += etaMinutes > 0
+                            ? ` • ${etaMinutes}m ${etaSecs}s remaining`
+                            : ` • ${etaSecs}s remaining`;
+                    }
+
+                    lastUpdateTime = now;
+                    lastUploadedBytes = e.loaded;
+                }
+
+                const fileIndex = Math.floor((e.loaded / e.total) * fileCount);
+                if (fileIndex < fileCount) {
+                    progressStatus.textContent = `Uploading file ${fileIndex + 1} of ${fileCount}...`;
+                    currentFile.textContent = audioFiles[fileIndex] ? audioFiles[fileIndex].name : 'Processing...';
+                } else {
+                    progressStatus.textContent = 'Processing files...';
+                    currentFile.textContent = 'Creating tracks...';
+                }
             }
+        });
 
-            const result = await response.json();
-            const tracksCount = result.tracks ? result.tracks.length : 1;
-            showStatus(`✅ Successfully added ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
+        xhr.addEventListener('load', async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    const tracksCount = result.tracks ? result.tracks.length : 1;
 
-            // Reset form and close modal
-            form.reset();
-            filePreview.style.display = 'none';
-            closeAddTrackModal();
+                    progressBar.style.width = '100%';
+                    progressPercent.textContent = '100%';
+                    progressStatus.textContent = 'Upload complete!';
+                    currentFile.textContent = `Added ${tracksCount} track${tracksCount > 1 ? 's' : ''}`;
+                    uploadSpeed.textContent = '';
 
-            // Refresh and refill expanded rows so the spinner disappears
-            const showIdNum = Number(showId);
-            await loadShows();
-            await loadStats();
-            if (expandedShows.has(showIdNum)) {
-                await loadShowTracks(showIdNum);
+                    showStatus(`✅ Successfully added ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
+
+                    setTimeout(async () => {
+                        form.reset();
+                        filePreview.style.display = 'none';
+                        progressContainer.style.display = 'none';
+                        closeAddTrackModal();
+
+                        const showIdNum = Number(showId);
+                        await loadShows();
+                        await loadStats();
+                        if (expandedShows.has(showIdNum)) {
+                            await loadShowTracks(showIdNum);
+                        }
+                    }, 1500);
+                } catch (error) {
+                    console.error('Error parsing response:', error);
+                    showStatus('❌ Track upload failed: Invalid response', 'error');
+                    progressContainer.style.display = 'none';
+                }
+            } else {
+                let errorMessage = `Track upload failed: ${xhr.status}`;
+                try {
+                    const errorData = JSON.parse(xhr.responseText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {}
+                showStatus(`❌ ${errorMessage}`, 'error');
+                progressContainer.style.display = 'none';
             }
-
-        } catch (error) {
-            console.error('Track upload error:', error);
-            showStatus(`❌ Track upload failed: ${error.message}`, 'error');
-        } finally {
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Add Track(s)';
             }
-        }
+        });
+
+        xhr.addEventListener('error', () => {
+            showStatus('❌ Upload failed: Network error', 'error');
+            progressContainer.style.display = 'none';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Add Track(s)';
+            }
+        });
+
+        xhr.addEventListener('abort', () => {
+            showStatus('❌ Upload cancelled', 'error');
+            progressContainer.style.display = 'none';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Add Track(s)';
+            }
+        });
+
+        xhr.open('POST', `${API_BASE_URL}/api/upload/track`);
+        xhr.send(formData);
     });
 }
 
@@ -786,6 +873,7 @@ function closeAddTrackModal() {
     document.getElementById('addTrackModal').style.display = 'none';
     document.getElementById('addTrackForm').reset();
     document.getElementById('addTrackFilePreview').style.display = 'none';
+    document.getElementById('addTrackProgress').style.display = 'none';
 }
 
 // Delete Track
