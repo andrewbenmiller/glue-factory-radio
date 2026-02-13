@@ -12,6 +12,7 @@ type Props = {
 
 const MAX_WIDTH = 800;
 const MIN_FONT = 80;
+const MIN_VIEWPORT_FONT = 35;
 
 export default function LiveStreamButton({
   isLive,
@@ -50,19 +51,29 @@ export default function LiveStreamButton({
       const measuredWidth = span.offsetWidth;
       document.body.removeChild(span);
 
+      // Step 1: Text-length scaling (fit label within MAX_WIDTH)
+      let textSize: number;
+      let shouldWrap = false;
       if (measuredWidth <= MAX_WIDTH) {
-        setFontSize(null);
-        setAllowWrap(false);
+        textSize = baseFontSize;
       } else {
         const scaled = Math.floor(baseFontSize * (MAX_WIDTH / measuredWidth));
         if (scaled >= MIN_FONT) {
-          setFontSize(scaled);
-          setAllowWrap(false);
+          textSize = scaled;
         } else {
-          setFontSize(MIN_FONT);
-          setAllowWrap(true);
+          textSize = MIN_FONT;
+          shouldWrap = true;
         }
       }
+
+      // Step 2: Viewport-width scaling (shrink below 900px, floor at 35px)
+      const w = window.innerWidth;
+      const vpBreakpoint = baseFontSize === 108 ? 771 : 900;
+      const vpScale = Math.min(1, w / vpBreakpoint);
+      const finalSize = Math.max(MIN_VIEWPORT_FONT, Math.floor(textSize * vpScale));
+
+      setFontSize(finalSize === baseFontSize ? null : finalSize);
+      setAllowWrap(shouldWrap);
     };
 
     measure();

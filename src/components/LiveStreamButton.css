@@ -1,12 +1,15 @@
 /* LiveStreamButton.css */
 
 .live-stream-button {
-  /* True center: fixed position at exact center of viewport */
+  /* Full viewport height, with symmetric padding to center content at 50vh */
+  /* Content can't go above padding-top (80px below logo bottom) */
   position: fixed;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 16px;
+  transform: translateX(-50%);
+  /* 262px = logo top (70) + logo height (112) + 80px gap */
+  padding: 262px 16px;
   box-sizing: border-box;
   z-index: 50;
 
@@ -19,22 +22,25 @@
   user-select: none;
   box-shadow: none;
 
-  /* Use grid to stack elements in same cell - prevents layout shift on hover */
+  /* Grid stacks all items in one cell */
   display: grid;
-  place-items: center;
+  justify-items: center;
 }
 
-/* All content items stack in the same grid cell */
+/* All content items stack in the same grid cell, centered via auto margins */
+/* When content fits: centered at 50vh. When too tall: starts at padding-top (262px) */
 .live-stream-button-status,
 .live-stream-button-play-icon,
 .live-stream-button-stop-icon {
   grid-area: 1 / 1;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 /* Live label text */
 .live-stream-button-status {
   text-transform: uppercase;
-  font-size: 150px;
+  font-size: clamp(35px, 16.67vw, 150px);
   font-weight: 700;
   letter-spacing: 0.6px;
   line-height: 1;
@@ -106,11 +112,12 @@
 /* Mobile styles */
 @media (max-width: 768px) {
   .live-stream-button {
-    padding: 14px;
+    /* 262px = logo top (70) + logo height (112) + 80px gap */
+    padding: 262px 14px;
   }
 
   .live-stream-button-status {
-    font-size: 108px;
+    font-size: clamp(35px, 14vw, 108px);
   }
 
   .live-stream-button-play-icon svg,
@@ -122,10 +129,8 @@
 
 @media (max-width: 480px) {
   .live-stream-button {
-    padding: 12px;
-    /* Force the button to only be as big as the icon, not the hidden text */
-    width: 144px;
-    height: 144px;
+    /* 250px = logo top (65) + logo height (105) + 80px gap */
+    padding: 250px 12px;
   }
 
   /* On mobile: completely hide the "LIVE NOW" text from layout */
