@@ -4,11 +4,24 @@ const db = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 
-// DEBUG: Check database tables (TEMPORARY)
+// DEBUG: Check database tables and try creating show_tags (TEMPORARY)
 router.get('/debug/tables', (req, res) => {
   db.all(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`, [], (err, rows) => {
     if (err) return res.json({ error: err.message });
-    res.json({ tables: rows.map(r => r.table_name) });
+    // Try creating show_tags and report the result
+    db.run(`
+      CREATE TABLE IF NOT EXISTS show_tags (
+        id SERIAL PRIMARY KEY, show_id INTEGER NOT NULL, tag_id INTEGER NOT NULL,
+        FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
+        UNIQUE(show_id, tag_id)
+      )
+    `, function(createErr) {
+      res.json({
+        tables: rows.map(r => r.table_name),
+        show_tags_create: createErr ? createErr.message : 'OK'
+      });
+    });
   });
 });
 
