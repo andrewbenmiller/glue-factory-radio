@@ -4,6 +4,14 @@ const db = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 
+// DEBUG: Check database tables (TEMPORARY)
+router.get('/debug/tables', (req, res) => {
+  db.all(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`, [], (err, rows) => {
+    if (err) return res.json({ error: err.message });
+    res.json({ tables: rows.map(r => r.table_name) });
+  });
+});
+
 // GET all shows (admin endpoint - includes inactive)
 router.get('/admin', (req, res) => {
   const query = `
