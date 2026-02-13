@@ -340,155 +340,128 @@ function initializeSQLiteDatabase() {
   });
 }
 
+// Helper: run a query and log result, but don't throw on failure
+async function safeQuery(client, label, sql, params) {
+  try {
+    await client.query(sql, params || []);
+    console.log(`✅ ${label}`);
+  } catch (err) {
+    console.error(`❌ ${label}: ${err.message}`);
+  }
+}
+
 // Initialize PostgreSQL database tables (sequential to respect foreign key dependencies)
 async function initializePostgreSQLDatabase() {
+  let client;
   try {
-    // Use a single connection to guarantee sequential execution
-    const client = await pool.connect();
-    try {
-      // Base tables (no foreign key dependencies)
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS shows (
-          id SERIAL PRIMARY KEY,
-          title TEXT NOT NULL,
-          description TEXT,
-          created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          is_active BOOLEAN DEFAULT TRUE,
-          total_duration REAL DEFAULT 0,
-          total_tracks INTEGER DEFAULT 0
-        )
-      `);
-      console.log('✅ Shows table ready');
-
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS users (
-          id SERIAL PRIMARY KEY,
-          username TEXT UNIQUE NOT NULL,
-          email TEXT UNIQUE NOT NULL,
-          password_hash TEXT NOT NULL,
-          role TEXT DEFAULT 'admin',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      console.log('✅ Users table ready');
-
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS playlists (
-          id SERIAL PRIMARY KEY,
-          name TEXT NOT NULL,
-          description TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          is_active BOOLEAN DEFAULT TRUE
-        )
-      `);
-      console.log('✅ Playlists table ready');
-
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS background_images (
-          id SERIAL PRIMARY KEY,
-          filename TEXT NOT NULL,
-          original_name TEXT NOT NULL,
-          file_size INTEGER NOT NULL,
-          upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          is_active BOOLEAN DEFAULT TRUE,
-          display_order INTEGER DEFAULT 0,
-          url TEXT
-        )
-      `);
-      console.log('✅ Background images table ready');
-
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS page_content (
-          id SERIAL PRIMARY KEY,
-          page_name TEXT UNIQUE NOT NULL,
-          content TEXT,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      console.log('✅ Page content table ready');
-
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS tags (
-          id SERIAL PRIMARY KEY,
-          name TEXT UNIQUE NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      console.log('✅ Tags table ready');
-
-      // Dependent tables (have foreign keys to base tables)
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS show_tracks (
-          id SERIAL PRIMARY KEY,
-          show_id INTEGER NOT NULL,
-          title TEXT NOT NULL,
-          filename TEXT NOT NULL,
-          duration REAL DEFAULT 0,
-          file_size INTEGER,
-          track_order INTEGER DEFAULT 0,
-          upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          is_active BOOLEAN DEFAULT TRUE,
-          play_count INTEGER DEFAULT 0,
-          last_played TIMESTAMP,
-          FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE
-        )
-      `);
-      console.log('✅ Show tracks table ready');
-
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS playlist_items (
-          id SERIAL PRIMARY KEY,
-          playlist_id INTEGER NOT NULL,
-          show_id INTEGER NOT NULL,
-          track_id INTEGER,
-          position INTEGER DEFAULT 0,
-          added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (playlist_id) REFERENCES playlists (id) ON DELETE CASCADE,
-          FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
-          FOREIGN KEY (track_id) REFERENCES show_tracks (id) ON DELETE CASCADE
-        )
-      `);
-      console.log('✅ Playlist items table ready');
-
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS show_tags (
-          id SERIAL PRIMARY KEY,
-          show_id INTEGER NOT NULL,
-          tag_id INTEGER NOT NULL,
-          FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
-          FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
-          UNIQUE(show_id, tag_id)
-        )
-      `);
-      console.log('✅ Show tags table ready');
-
-      // Add url column if it doesn't exist (for existing databases)
-      await client.query(`ALTER TABLE background_images ADD COLUMN IF NOT EXISTS url TEXT`);
-
-      // Insert default pages
-      const defaultPages = ['about', 'events', 'contact', 'live_label'];
-      for (const pageName of defaultPages) {
-        const defaultContent = pageName === 'live_label' ? 'LIVE NOW' : '';
-        await client.query(
-          `INSERT INTO page_content (page_name, content) VALUES ($1, $2) ON CONFLICT (page_name) DO NOTHING`,
-          [pageName, defaultContent]
-        );
-      }
-
-      // Create indexes
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`);
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_show_tracks_active ON show_tracks(is_active)`);
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`);
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_show_tags_show_id ON show_tags(show_id)`);
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_show_tags_tag_id ON show_tags(tag_id)`);
-      console.log('✅ Database indexes ready');
-
-    } finally {
-      client.release();
-    }
-    console.log('✅ Database schema is up to date');
+    client = await pool.connect();
   } catch (err) {
-    console.error('Error initializing PostgreSQL database:', err.message);
+    console.error('Failed to connect for DB init:', err.message);
+    return;
+  }
+
+  try {
+    // Base tables (no foreign key dependencies)
+    await safeQuery(client, 'Shows table', `
+      CREATE TABLE IF NOT EXISTS shows (
+        id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT,
+        created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE, total_duration REAL DEFAULT 0,
+        total_tracks INTEGER DEFAULT 0
+      )
+    `);
+
+    await safeQuery(client, 'Users table', `
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL,
+        role TEXT DEFAULT 'admin', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await safeQuery(client, 'Playlists table', `
+      CREATE TABLE IF NOT EXISTS playlists (
+        id SERIAL PRIMARY KEY, name TEXT NOT NULL, description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, is_active BOOLEAN DEFAULT TRUE
+      )
+    `);
+
+    await safeQuery(client, 'Background images table', `
+      CREATE TABLE IF NOT EXISTS background_images (
+        id SERIAL PRIMARY KEY, filename TEXT NOT NULL, original_name TEXT NOT NULL,
+        file_size INTEGER NOT NULL, upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE, display_order INTEGER DEFAULT 0, url TEXT
+      )
+    `);
+
+    await safeQuery(client, 'Page content table', `
+      CREATE TABLE IF NOT EXISTS page_content (
+        id SERIAL PRIMARY KEY, page_name TEXT UNIQUE NOT NULL, content TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await safeQuery(client, 'Tags table', `
+      CREATE TABLE IF NOT EXISTS tags (
+        id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Dependent tables (have foreign keys to base tables)
+    await safeQuery(client, 'Show tracks table', `
+      CREATE TABLE IF NOT EXISTS show_tracks (
+        id SERIAL PRIMARY KEY, show_id INTEGER NOT NULL, title TEXT NOT NULL,
+        filename TEXT NOT NULL, duration REAL DEFAULT 0, file_size INTEGER,
+        track_order INTEGER DEFAULT 0, upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE, play_count INTEGER DEFAULT 0, last_played TIMESTAMP,
+        FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE
+      )
+    `);
+
+    await safeQuery(client, 'Playlist items table', `
+      CREATE TABLE IF NOT EXISTS playlist_items (
+        id SERIAL PRIMARY KEY, playlist_id INTEGER NOT NULL, show_id INTEGER NOT NULL,
+        track_id INTEGER, position INTEGER DEFAULT 0,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (playlist_id) REFERENCES playlists (id) ON DELETE CASCADE,
+        FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
+        FOREIGN KEY (track_id) REFERENCES show_tracks (id) ON DELETE CASCADE
+      )
+    `);
+
+    await safeQuery(client, 'Show tags table', `
+      CREATE TABLE IF NOT EXISTS show_tags (
+        id SERIAL PRIMARY KEY, show_id INTEGER NOT NULL, tag_id INTEGER NOT NULL,
+        FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
+        UNIQUE(show_id, tag_id)
+      )
+    `);
+
+    // Migrations for existing databases
+    await safeQuery(client, 'Add url column', `ALTER TABLE background_images ADD COLUMN IF NOT EXISTS url TEXT`);
+
+    // Insert default pages
+    const defaultPages = ['about', 'events', 'contact', 'live_label'];
+    for (const pageName of defaultPages) {
+      const defaultContent = pageName === 'live_label' ? 'LIVE NOW' : '';
+      await safeQuery(client, `Default page: ${pageName}`,
+        `INSERT INTO page_content (page_name, content) VALUES ($1, $2) ON CONFLICT (page_name) DO NOTHING`,
+        [pageName, defaultContent]
+      );
+    }
+
+    // Create indexes
+    await safeQuery(client, 'Index: show_tracks.show_id', `CREATE INDEX IF NOT EXISTS idx_show_tracks_show_id ON show_tracks(show_id)`);
+    await safeQuery(client, 'Index: show_tracks.is_active', `CREATE INDEX IF NOT EXISTS idx_show_tracks_active ON show_tracks(is_active)`);
+    await safeQuery(client, 'Index: shows.is_active', `CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`);
+    await safeQuery(client, 'Index: show_tags.show_id', `CREATE INDEX IF NOT EXISTS idx_show_tags_show_id ON show_tags(show_id)`);
+    await safeQuery(client, 'Index: show_tags.tag_id', `CREATE INDEX IF NOT EXISTS idx_show_tags_tag_id ON show_tags(tag_id)`);
+
+    console.log('✅ Database schema is up to date');
+  } finally {
+    client.release();
   }
 }
 
