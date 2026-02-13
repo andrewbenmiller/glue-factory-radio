@@ -467,8 +467,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="trackTitle">First Track Title (Optional)</label>
-                        <input type="text" id="trackTitle" name="trackTitle" placeholder="Enter custom title for first track">
+                        <label for="firstTrackTitle">First Track Title (Optional)</label>
+                        <input type="text" id="firstTrackTitle" name="trackTitle" placeholder="Enter custom title for first track">
                         <small>If provided, this will be used for the first track. Otherwise, track names will be extracted from filenames.</small>
                     </div>
                     
@@ -594,20 +594,26 @@
     <div id="addTrackModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3>Add Track to Show</h3>
+            <h3>Add Track(s) to Show</h3>
             <form id="addTrackForm">
                 <input type="hidden" id="addTrackShowId" name="showId">
                 <div class="form-group">
-                    <label for="trackTitle">Track Title *</label>
-                    <input type="text" id="trackTitle" name="title" required placeholder="Enter track title">
+                    <label for="addTrackAudio">Audio File(s) *</label>
+                    <input type="file" id="addTrackAudio" name="audio" accept="audio/*" multiple required>
+                    <small>Select one or multiple audio files. Track names will be extracted from filenames automatically.</small>
                 </div>
                 <div class="form-group">
-                    <label for="trackAudio">Audio File *</label>
-                    <input type="file" id="trackAudio" name="audio" accept="audio/*" required>
+                    <label for="addTrackFirstTitle">First Track Title (Optional)</label>
+                    <input type="text" id="addTrackFirstTitle" name="trackTitle" placeholder="Enter custom title for first track">
+                    <small>If provided, this will be used for the first track only.</small>
+                </div>
+                <div id="addTrackFilePreview" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <strong>Selected Files:</strong>
+                    <ul id="addTrackFileList" style="margin-top: 10px; list-style: none; padding: 0;"></ul>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="btn-cancel" onclick="closeAddTrackModal()">Cancel</button>
-                    <button type="submit" class="btn-confirm">Add Track</button>
+                    <button type="submit" class="btn-confirm" id="addTrackSubmitBtn">Add Track(s)</button>
                 </div>
             </form>
         </div>
