@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import './App.css';
 import AudioPlayer, { Track, AudioPlayerHandle } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
@@ -23,6 +23,11 @@ function App() {
   // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Live stream status and audio context
   const { isLive, nowPlaying, streamUrl } = useLiveStatus();
@@ -82,6 +87,11 @@ function App() {
     console.log("[AUDIO SOURCE]", source);
   }, [source]);
 
+  // Fetch all tags on mount
+  useEffect(() => {
+    apiService.getTags().then(tags => setAllTags(tags)).catch(err => console.error('Error fetching tags:', err));
+  }, []);
+
   // Fetch all page content on mount
   useEffect(() => {
     const fetchAllPages = async () => {
@@ -140,6 +150,79 @@ function App() {
     console.log('App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);
   };
   
+  // Search overlay handlers
+  const openSearch = useCallback(() => {
+    setSearchOpen(true);
+    setSearchQuery('');
+    setSelectedTags([]);
+    // Auto-focus search input after overlay renders
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+  }, []);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSelectedTags([]);
+  }, []);
+
+  const addTag = useCallback((tag: string) => {
+    setSelectedTags(prev => prev.includes(tag) ? prev : [...prev, tag]);
+  }, []);
+
+  const removeTag = useCallback((tag: string) => {
+    setSelectedTags(prev => prev.filter(t => t !== tag));
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleSearchSelect = useCallback((showIndex: number) => {
+    handleShowChange(showIndex);
+    closeSearch();
+  }, [closeSearch]);
+
+  // Filter shows based on search query and selected tags
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const hasQuery = query.length > 0;
+    const hasTags = selectedTags.length > 0;
+
+    // No filters active = no results (empty state)
+    if (!hasQuery && !hasTags) return [];
+
+    return shows
+      .map((show, index) => {
+        // Tag filter (AND logic: show must have all selected tags)
+        if (hasTags) {
+          const showTags = show.tags || [];
+          const hasAllTags = selectedTags.every(tag => showTags.includes(tag));
+          if (!hasAllTags) return null;
+        }
+
+        // Text filter
+        let score = 0;
+        if (hasQuery) {
+          const titleMatch = show.title.toLowerCase().includes(query);
+          const descMatch = show.description?.toLowerCase().includes(query);
+          if (titleMatch) score = 2;
+          else if (descMatch) score = 1;
+          else return null; // No text match
+        } else {
+          score = 1; // Tags only, equal relevance
+        }
+
+        return { show, index, score };
+      })
+      .filter((r): r is { show: Show; index: number; score: number } => r !== null)
+      .sort((a, b) => {
+        // Sort by relevance (title > description), then newest first
+        if (b.score !== a.score) return b.score - a.score;
+        return new Date(b.show.created_date).getTime() - new Date(a.show.created_date).getTime();
+      });
+  }, [shows, searchQuery, selectedTags]);
+
+  const availableTags = useMemo(() => {
+    return allTags.filter(tag => !selectedTags.includes(tag));
+  }, [allTags, selectedTags]);
+
   // Handle track navigation from AudioPlayer (currently unused but kept for future use)
   // const handleTrackChange = (newTrackIndex: number) => {
   //   setCurrentTrackIndex(newTrackIndex);
@@ -244,6 +327,7 @@ function App() {
           showName={shows[validShowIndex]?.title || "CD Mode"}
           archiveExpanded={archiveExpanded}
           onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
+          onSearchOpen={openSearch}
         />
 
         {archiveExpanded && (
@@ -330,6 +414,76 @@ function App() {
                 </form>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Search overlay */}
+      {searchOpen && (
+        <div className="page-overlay search-overlay">
+          <button className="page-overlay-close" onClick={closeSearch} aria-label="Close search" />
+          <div className="search-overlay-content">
+            {/* Search input with selected tags */}
+            <div className="search-input-wrapper">
+              <svg className="search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              {selectedTags.map(tag => (
+                <span key={tag} className="search-tag-selected" onClick={() => removeTag(tag)}>
+                  {tag}
+                  <span className="search-tag-x">&times;</span>
+                </span>
+              ))}
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="search-input"
+                placeholder={selectedTags.length > 0 ? '' : 'Search shows...'}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Available tag pills */}
+            {availableTags.length > 0 && (
+              <div className="search-available-tags">
+                {availableTags.map(tag => (
+                  <span key={tag} className="search-tag-pill" onClick={() => addTag(tag)}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Results or empty state */}
+            <div className="search-results">
+              {searchQuery.trim() === '' && selectedTags.length === 0 ? (
+                <div className="search-empty-state">Search shows...</div>
+              ) : searchResults.length === 0 ? (
+                <div className="search-empty-state">No shows found</div>
+              ) : (
+                searchResults.map(result => (
+                  <div
+                    key={result.show.id}
+                    className="search-result-item"
+                    onClick={() => handleSearchSelect(result.index)}
+                  >
+                    <span className="search-result-title">{result.show.title}</span>
+                    <span className="search-result-meta">
+                      {result.show.total_tracks} track{result.show.total_tracks !== 1 ? 's' : ''}
+                      {result.show.tags && result.show.tags.length > 0 && (
+                        <span className="search-result-tags">
+                          {result.show.tags.map(tag => (
+                            <span key={tag} className="search-result-tag">{tag}</span>
+                          ))}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
