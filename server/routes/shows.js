@@ -4,27 +4,6 @@ const db = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 
-// DEBUG: Check database tables and try creating show_tags (TEMPORARY)
-router.get('/debug/tables', (req, res) => {
-  db.all(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`, [], (err, rows) => {
-    if (err) return res.json({ error: err.message });
-    // Try creating show_tags and report the result
-    db.run(`
-      CREATE TABLE IF NOT EXISTS show_tags (
-        id SERIAL PRIMARY KEY, show_id INTEGER NOT NULL, tag_id INTEGER NOT NULL,
-        FOREIGN KEY (show_id) REFERENCES shows (id) ON DELETE CASCADE,
-        FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE,
-        UNIQUE(show_id, tag_id)
-      )
-    `, function(createErr) {
-      res.json({
-        tables: rows.map(r => r.table_name),
-        show_tags_create: createErr ? createErr.message : 'OK'
-      });
-    });
-  });
-});
-
 // GET all shows (admin endpoint - includes inactive)
 router.get('/admin', (req, res) => {
   const query = `
@@ -348,7 +327,7 @@ router.put('/:id', async (req, res) => {
     if (error.message === 'Show not found') {
       return res.status(404).json({ error: 'Show not found' });
     }
-    res.status(500).json({ error: 'Failed to update show', details: error.message });
+    res.status(500).json({ error: 'Failed to update show' });
   }
 });
 
