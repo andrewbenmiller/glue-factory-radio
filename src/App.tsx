@@ -116,19 +116,21 @@ function App() {
   }, []);
   
   // Handle show selection
-  const handleShowChange = (newShowIndex: number) => {
+  const handleShowChange = useCallback((newShowIndex: number) => {
     console.log('App: Changing show to:', newShowIndex);
 
-    if (newShowIndex !== currentShowIndex) {
-      setCurrentShowIndex(newShowIndex);
-      setCurrentTrackIndex(0);
-    }
+    setCurrentShowIndex(prev => {
+      if (prev !== newShowIndex) {
+        setCurrentTrackIndex(0);
+      }
+      return newShowIndex;
+    });
 
     // Always trigger playback (handles first load where show is already selected)
     requestAnimationFrame(() => {
       playerRef.current?.playFromUI(0);
     });
-  };
+  }, []);
   
   // Handle track selection from ShowList
   const handleTrackSelect = (showIndex: number, trackIndex: number) => {
@@ -173,11 +175,10 @@ function App() {
     setSelectedTags(prev => prev.filter(t => t !== tag));
   }, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleSearchSelect = useCallback((showIndex: number) => {
     handleShowChange(showIndex);
     closeSearch();
-  }, [closeSearch]);
+  }, [handleShowChange, closeSearch]);
 
   // Filter shows based on search query and selected tags
   const searchResults = useMemo(() => {
