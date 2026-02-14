@@ -171,6 +171,52 @@
   text-align: right;
 }
 
+/* Search bar row */
+.search-bar-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px max(20px, calc(50vw - 700px));
+  border-top: 1px solid rgba(255, 25, 0, 0.25);
+  background: white;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.search-bar-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 25, 0, 0.4);
+  /* Match transport controls: 3 × 170px buttons + 2 × 12px gaps = 534px */
+  width: 534px;
+  max-width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.search-bar-row:hover .search-bar-field {
+  border-color: #ff1900;
+  background: #fff5f3;
+}
+
+.search-bar-icon {
+  width: 18px;
+  height: 18px;
+  color: #ff1900;
+  flex-shrink: 0;
+}
+
+.search-bar-placeholder {
+  font-size: 16px;
+  font-weight: 400;
+  color: #ff1900;
+  opacity: 0.5;
+}
+
 /* Show desktop icons by default, hide mobile icons */
 .desktop-icon {
   display: inline;
@@ -232,6 +278,19 @@
   .archive-info-track {
     font-size: 16px;
     padding: 15px;
+  }
+
+  .search-bar-row {
+    padding: 10px max(15px, calc(50vw - 700px));
+  }
+
+  .search-bar-field {
+    /* Match transport: 3 × 130px + 2 × 12px = 414px */
+    width: 414px;
+  }
+
+  .search-bar-placeholder {
+    font-size: 14px;
   }
 }
 
@@ -302,6 +361,26 @@
     font-size: 12px;
     padding: 5px 0 0 0;
     text-align: left;
+  }
+
+  .search-bar-row {
+    padding: 8px max(10px, calc(50vw - 700px));
+  }
+
+  .search-bar-field {
+    /* Match transport: 3 × 100px + 2 × 8px = 316px */
+    width: 316px;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+
+  .search-bar-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .search-bar-placeholder {
+    font-size: 13px;
   }
 }
 

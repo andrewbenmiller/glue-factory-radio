@@ -29,10 +29,11 @@ type Props = {
   showName?: string;
   archiveExpanded?: boolean;
   onArchiveToggle?: () => void;
+  onSearchOpen?: () => void;
 };
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
-  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle },
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen },
   ref
 ) {
   const audio = useAudio();
@@ -321,6 +322,17 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                   style={{ width: "48px", height: "48px" }}
                 />
               </button>
+            </div>
+
+            {/* Search bar row */}
+            <div className="search-bar-row" onClick={onSearchOpen}>
+              <div className="search-bar-field">
+                <svg className="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span className="search-bar-placeholder">Search shows...</span>
+              </div>
             </div>
 
             {/* Now playing info row */}

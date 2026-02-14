@@ -25,6 +25,7 @@ export interface Show {
   total_duration: number;
   total_tracks: number;
   tracks: Track[];
+  tags?: string[];
 }
 
 export interface UploadResponse {
@@ -102,6 +103,15 @@ class ApiService {
   // Get the full URL for a show
   getShowUrl(filename: string): string {
     return `${this.baseUrl}/uploads/${filename}`;
+  }
+
+  // Get all tags
+  async getTags(): Promise<string[]> {
+    const response = await fetch(`${this.baseUrl}/api/shows/tags/all`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch tags: ${response.status}`);
+    }
+    return response.json();
   }
 
   // Get page content by name
