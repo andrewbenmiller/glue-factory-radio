@@ -28,6 +28,7 @@ function App() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchOpenedAt = useRef<number>(0);
 
   // Live stream status and audio context
   const { isLive, nowPlaying, streamUrl } = useLiveStatus();
@@ -154,6 +155,7 @@ function App() {
   
   // Search overlay handlers
   const openSearch = useCallback(() => {
+    searchOpenedAt.current = Date.now();
     setSearchOpen(true);
     setSearchQuery('');
     setSelectedTags([]);
@@ -168,6 +170,8 @@ function App() {
   }, []);
 
   const addTag = useCallback((tag: string) => {
+    // Guard against ghost clicks from the touch that opened the search overlay
+    if (Date.now() - searchOpenedAt.current < 400) return;
     setSelectedTags(prev => prev.includes(tag) ? prev : [...prev, tag]);
   }, []);
 
@@ -460,7 +464,7 @@ function App() {
             {/* Results or empty state */}
             <div className="search-results">
               {searchQuery.trim() === '' && selectedTags.length === 0 ? (
-                <div className="search-empty-state">Search shows...</div>
+                null
               ) : searchResults.length === 0 ? (
                 <div className="search-empty-state">No shows found</div>
               ) : (
