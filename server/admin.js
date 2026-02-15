@@ -1400,27 +1400,30 @@ function renderDescriptionWithLinks(text) {
     );
 }
 
-// Insert a markdown link into a textarea at cursor position
+// Insert a markdown link into a textarea (Gmail-style: select text first, then add URL)
 function insertLink(textareaId) {
     const textarea = document.getElementById(textareaId);
     if (!textarea) return;
 
-    const url = prompt('Enter the URL:');
-    if (!url) return;
-
-    const displayText = prompt('Enter the display text:', url);
-    if (!displayText) return;
-
-    const linkMarkdown = `[${displayText}](${url})`;
-
-    // Insert at cursor position
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    if (!selectedText) {
+        alert('Select the text you want to turn into a link first, then click Insert Link.');
+        textarea.focus();
+        return;
+    }
+
+    const url = prompt('Enter the URL for "' + selectedText + '":');
+    if (!url) return;
+
+    const linkMarkdown = `[${selectedText}](${url})`;
     const before = textarea.value.substring(0, start);
     const after = textarea.value.substring(end);
     textarea.value = before + linkMarkdown + after;
 
-    // Move cursor to end of inserted text
+    // Move cursor to end of inserted link
     const newPos = start + linkMarkdown.length;
     textarea.selectionStart = newPos;
     textarea.selectionEnd = newPos;
