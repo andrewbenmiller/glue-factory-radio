@@ -28,7 +28,7 @@ function App() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchOpenedAt = useRef<number>(0);
+  const [searchInteractive, setSearchInteractive] = useState(true);
 
   // Live stream status and audio context
   const { isLive, nowPlaying, streamUrl } = useLiveStatus();
@@ -155,12 +155,14 @@ function App() {
   
   // Search overlay handlers
   const openSearch = useCallback(() => {
-    searchOpenedAt.current = Date.now();
+    setSearchInteractive(false);
     setSearchOpen(true);
     setSearchQuery('');
     setSelectedTags([]);
     // Auto-focus search input after overlay renders
     setTimeout(() => searchInputRef.current?.focus(), 100);
+    // Block pointer interaction briefly to prevent iOS touch passthrough
+    setTimeout(() => setSearchInteractive(true), 600);
   }, []);
 
   const closeSearch = useCallback(() => {
@@ -170,8 +172,6 @@ function App() {
   }, []);
 
   const addTag = useCallback((tag: string) => {
-    // Guard against ghost clicks from the touch that opened the search overlay
-    if (Date.now() - searchOpenedAt.current < 400) return;
     setSelectedTags(prev => prev.includes(tag) ? prev : [...prev, tag]);
   }, []);
 
@@ -452,7 +452,7 @@ function App() {
 
             {/* Available tag pills */}
             {availableTags.length > 0 && (
-              <div className="search-available-tags">
+              <div className="search-available-tags" style={{ pointerEvents: searchInteractive ? 'auto' : 'none' }}>
                 {availableTags.map(tag => (
                   <span key={tag} className="search-tag-pill" onClick={() => addTag(tag)}>
                     {tag}

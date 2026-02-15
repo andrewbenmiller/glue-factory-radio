@@ -325,7 +325,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
             </div>
 
             {/* Search bar row */}
-            <div className="search-bar-row" onClick={onSearchOpen}>
+            <div className="search-bar-row" onClick={onSearchOpen} onTouchEnd={(e) => { e.preventDefault(); onSearchOpen?.(); }}>
               <div className="search-bar-field">
                 <svg className="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" />
