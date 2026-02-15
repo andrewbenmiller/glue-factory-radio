@@ -618,7 +618,7 @@ function renderShowsTable() {
                                 <strong>${escapeHtml(show.title)}</strong>
                             </td>
                             <td>
-                                ${escapeHtml(show.description || 'No description')}
+                                ${renderDescriptionWithLinks(show.description)}
                                 ${show.tags && show.tags.length > 0 ? `
                                     <div class="show-tags">
                                         ${show.tags.map(t => `<span class="show-tag-badge">${escapeHtml(t)}</span>`).join('')}
@@ -1388,6 +1388,43 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Render description text with [text](url) markdown links converted to <a> tags
+function renderDescriptionWithLinks(text) {
+    if (!text) return 'No description';
+    // First escape the entire text, then convert [text](url) patterns to links
+    const escaped = escapeHtml(text);
+    return escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">$1</a>'
+    );
+}
+
+// Insert a markdown link into a textarea at cursor position
+function insertLink(textareaId) {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+
+    const url = prompt('Enter the URL:');
+    if (!url) return;
+
+    const displayText = prompt('Enter the display text:', url);
+    if (!displayText) return;
+
+    const linkMarkdown = `[${displayText}](${url})`;
+
+    // Insert at cursor position
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+    textarea.value = before + linkMarkdown + after;
+
+    // Move cursor to end of inserted text
+    const newPos = start + linkMarkdown.length;
+    textarea.selectionStart = newPos;
+    textarea.selectionEnd = newPos;
+    textarea.focus();
 }
 
 // Toggle background image active status
