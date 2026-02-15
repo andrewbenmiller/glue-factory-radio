@@ -196,6 +196,7 @@
   max-width: 100%;
   box-sizing: border-box;
   transition: border-color 0.2s, background 0.2s;
+  border-radius: 24px;
 }
 
 .search-bar-row:hover .search-bar-field {
