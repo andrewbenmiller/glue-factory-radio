@@ -6,6 +6,7 @@ import BackgroundManager from './components/BackgroundManager';
 import LiveStreamTicker from './components/LiveStreamTicker';
 import LiveStreamButton from './components/LiveStreamButton';
 import { useLiveStatus } from './hooks/useLiveStatus';
+import { useMediaSession } from './hooks/useMediaSession';
 import { useAudio } from './audio/AudioProvider';
 import { apiService, Show, PageContent } from './services/api';
 import logo from './logo.png';
@@ -31,9 +32,41 @@ function App() {
   const [searchInteractive, setSearchInteractive] = useState(true);
 
   // Live stream status and audio context
-  const { isLive, nowPlaying, streamUrl } = useLiveStatus();
+  const { isLive, nowPlaying, showTitle, streamUrl } = useLiveStatus();
   const { source, playLive, stopLive, trackNowPlaying } = useAudio();
   const livePlaying = source === "live";
+
+  // Media Session API — lock screen controls, AirPlay Now Playing, hardware keys
+  const handleMediaPlay = useCallback(() => {
+    if (source === "live") playLive(streamUrl);
+    else if (source === "track") playerRef.current?.resumeOrStart();
+  }, [source, playLive, streamUrl]);
+
+  const handleMediaPause = useCallback(() => {
+    if (source === "live") stopLive();
+    else if (source === "track") playerRef.current?.pause();
+  }, [source, stopLive]);
+
+  const handleMediaNext = useCallback(() => {
+    playerRef.current?.next();
+  }, []);
+
+  const handleMediaPrev = useCallback(() => {
+    playerRef.current?.prev();
+  }, []);
+
+  useMediaSession({
+    source,
+    trackTitle: trackNowPlaying,
+    showName: shows[currentShowIndex]?.title || "Glue Factory Radio",
+    liveNowPlaying: nowPlaying,
+    liveShowTitle: showTitle,
+    artworkUrl: logo,
+    onPlay: handleMediaPlay,
+    onPause: handleMediaPause,
+    onNext: handleMediaNext,
+    onPrev: handleMediaPrev,
+  });
   
   // Custom live stream label from admin (defaults to "LIVE NOW")
   const liveLabel = pageCache.live_label?.content || 'LIVE NOW';

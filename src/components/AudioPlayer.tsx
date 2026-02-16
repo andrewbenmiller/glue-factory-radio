@@ -20,6 +20,9 @@ export type AudioPlayerHandle = {
   /** Called from a user click (e.g. track dropdown) to start a specific track */
   playFromUI: (i?: number) => void;
   pause: () => void;
+  next: () => void;
+  prev: () => void;
+  resumeOrStart: () => void;
 };
 
 type Props = {
@@ -266,8 +269,11 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         startTrack(target);
       },
       pause: pauseInternal,
+      next: nextInternal,
+      prev: prevInternal,
+      resumeOrStart,
     }),
-    [index, startTrack, pauseInternal]
+    [index, startTrack, pauseInternal, nextInternal, prevInternal, resumeOrStart]
   );
 
   const title = tracks[index]?.title ?? `Track ${index + 1}`;
