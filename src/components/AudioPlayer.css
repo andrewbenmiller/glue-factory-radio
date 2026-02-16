@@ -176,8 +176,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 12px max(20px, calc(50vw - 700px));
-  border-top: 1px solid rgba(255, 25, 0, 0.25);
+  padding: 0 max(20px, calc(50vw - 700px)) 12px;
   background: white;
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -282,7 +281,7 @@
   }
 
   .search-bar-row {
-    padding: 10px max(15px, calc(50vw - 700px));
+    padding: 0 max(15px, calc(50vw - 700px)) 10px;
   }
 
   .search-bar-field {
@@ -365,7 +364,7 @@
   }
 
   .search-bar-row {
-    padding: 8px max(10px, calc(50vw - 700px));
+    padding: 0 max(10px, calc(50vw - 700px)) 8px;
   }
 
   .search-bar-field {
