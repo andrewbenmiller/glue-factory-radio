@@ -77,9 +77,27 @@ export function useMediaSession(config: MediaSessionConfig): void {
 
     if (source === "live") {
       handlers.push(
-        ["play", () => onPlay?.()],
-        ["pause", () => onPause?.()],
-        ["stop", () => onPause?.()],
+        [
+          "play",
+          () => {
+            onPlay?.();
+            navigator.mediaSession.playbackState = "playing";
+          },
+        ],
+        [
+          "pause",
+          () => {
+            onPause?.();
+            navigator.mediaSession.playbackState = "paused";
+          },
+        ],
+        [
+          "stop",
+          () => {
+            onPause?.();
+            navigator.mediaSession.playbackState = "paused";
+          },
+        ],
         ["nexttrack", null],
         ["previoustrack", null],
       );

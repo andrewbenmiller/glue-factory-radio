@@ -26,6 +26,7 @@ type AudioContextValue = {
   playLive: (url: string) => Promise<void>;
   stopLive: () => void;
   pauseLive: () => void;
+  resumeLive: () => void;
 };
 
 const Ctx = createContext<AudioContextValue | null>(null);
@@ -54,17 +55,21 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setSource((s) => (s === "live" ? "none" : s));
   }, []);
 
-  // Pause without clearing src — keeps iOS audio session alive for lock screen controls
+  // Pause without clearing src or changing source — mirrors how archive pause works.
+  // Keeps iOS audio session alive for lock screen controls.
   const pauseLive = useCallback(() => {
     const a = liveAudioRef.current;
     if (!a) return;
-
-    genRef.current += 1;
     playPromiseRef.current = null;
-
     try { a.pause(); } catch {}
+    // source stays "live" — same pattern as notifyTrackPaused
+  }, []);
 
-    setSource((s) => (s === "live" ? "none" : s));
+  // Resume a paused live stream
+  const resumeLive = useCallback(() => {
+    const a = liveAudioRef.current;
+    if (!a) return;
+    a.play().catch(() => {});
   }, []);
 
   const playLive = useCallback(async (url: string) => {
@@ -145,8 +150,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       playLive,
       stopLive,
       pauseLive,
+      resumeLive,
     }),
-    [source, trackNowPlaying, notifyTrackWillPlay, notifyTrackDidStop, notifyTrackPaused, playLive, stopLive, pauseLive]
+    [source, trackNowPlaying, notifyTrackWillPlay, notifyTrackDidStop, notifyTrackPaused, playLive, stopLive, pauseLive, resumeLive]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
