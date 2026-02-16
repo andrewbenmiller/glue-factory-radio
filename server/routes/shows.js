@@ -188,7 +188,7 @@ router.get('/tags/all', (req, res) => {
     `SELECT DISTINCT t.name FROM tags t
      JOIN show_tags st ON t.id = st.tag_id
      JOIN shows s ON st.show_id = s.id
-     WHERE s.is_active = 1
+     WHERE s.is_active = true
      ORDER BY t.name`,
     [],
     (err, rows) => {
