@@ -182,23 +182,15 @@ router.get('/', (req, res) => {
   });
 });
 
-// GET all tags (for autocomplete) - only tags used by active shows
+// GET all tags (for autocomplete)
 router.get('/tags/all', (req, res) => {
-  db.all(
-    `SELECT DISTINCT t.name FROM tags t
-     JOIN show_tags st ON t.id = st.tag_id
-     JOIN shows s ON st.show_id = s.id
-     WHERE s.is_active = true
-     ORDER BY t.name`,
-    [],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching tags:', err);
-        return res.status(500).json({ error: 'Failed to fetch tags' });
-      }
-      res.json((rows || []).map(r => r.name));
+  db.all('SELECT name FROM tags ORDER BY name', [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching tags:', err);
+      return res.status(500).json({ error: 'Failed to fetch tags' });
     }
-  );
+    res.json((rows || []).map(r => r.name));
+  });
 });
 
 // GET single show by ID with all tracks

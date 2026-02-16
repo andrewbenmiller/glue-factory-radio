@@ -1,6 +1,6 @@
 export const config = { runtime: "nodejs" };
 
-const UPSTREAM = "http://broadcast.shoutstream.co.uk:8126/status-json.xsl";
+const UPSTREAM = "https://stream.gluefactoryradio.com/status-json.xsl";
 
 export default async function handler(req, res) {
   try {

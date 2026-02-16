@@ -2,38 +2,6 @@ import React, { useState } from 'react';
 import './ShowList.css';
 import { Show } from '../services/api';
 
-// Parse [text](url) markdown links into React elements
-function renderDescription(text: string): React.ReactNode[] {
-  const parts: React.ReactNode[] = [];
-  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
-  let lastIndex = 0;
-  let match;
-
-  while ((match = linkRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-    parts.push(
-      <a
-        key={match.index}
-        href={match[2]}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {match[1]}
-      </a>
-    );
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
-  return parts;
-}
-
 interface ShowListProps {
   shows: Show[];
   currentShowIndex: number;
@@ -112,7 +80,7 @@ const ShowList: React.FC<ShowListProps> = ({
 
               {/* Description (shown when expanded) */}
               {show.description && (
-                <p className="show-item-description">{renderDescription(show.description)}</p>
+                <p className="show-item-description">{show.description}</p>
               )}
 
               {/* Tracks dropdown */}

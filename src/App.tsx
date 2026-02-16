@@ -49,7 +49,7 @@ function App() {
     if (source === "track") {
       return `PLAYING NOW: ${trackNowPlaying ?? "Track"}`;
     }
-    return "GLUE FACTORY RADIO";
+    return "NOTHING CURRENTLY PLAYING";
   }, [source, nowPlaying, trackNowPlaying, liveLabel]);
   
   const tickerIsEmpty = source === "none";
@@ -225,25 +225,8 @@ function App() {
   }, [shows, searchQuery, selectedTags]);
 
   const availableTags = useMemo(() => {
-    if (selectedTags.length === 0) {
-      // No tags selected: show all tags from active shows
-      return allTags;
-    }
-    // Find shows that have ALL selected tags, then collect their other tags
-    const matchingShows = shows.filter(show => {
-      const showTags = show.tags || [];
-      return selectedTags.every(tag => showTags.includes(tag));
-    });
-    const compatibleTags = new Set<string>();
-    matchingShows.forEach(show => {
-      (show.tags || []).forEach(tag => {
-        if (!selectedTags.includes(tag)) {
-          compatibleTags.add(tag);
-        }
-      });
-    });
-    return Array.from(compatibleTags).sort();
-  }, [shows, allTags, selectedTags]);
+    return allTags.filter(tag => !selectedTags.includes(tag));
+  }, [allTags, selectedTags]);
 
   // Handle track navigation from AudioPlayer (currently unused but kept for future use)
   // const handleTrackChange = (newTrackIndex: number) => {
@@ -255,9 +238,14 @@ function App() {
   //   setAutoPlay(!autoPlay);
   // };
   
-  // Loading gate: keep components from rendering until shows are fetched
+  // Loading state
   if (isLoading) {
-    return <div />;
+    return (
+      <div className="loading-state">
+        <h2>Loading Glue Factory Radio...</h2>
+        <p>Please wait while we fetch your shows.</p>
+      </div>
+    );
   }
   
   // Error state
