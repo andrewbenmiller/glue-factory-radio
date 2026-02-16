@@ -28,7 +28,6 @@ function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [allTags, setAllTags] = useState<string[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchInteractive, setSearchInteractive] = useState(true);
 
@@ -121,11 +120,6 @@ function App() {
   useEffect(() => {
     console.log("[AUDIO SOURCE]", source);
   }, [source]);
-
-  // Fetch all tags on mount
-  useEffect(() => {
-    apiService.getTags().then(tags => setAllTags(tags)).catch(err => console.error('Error fetching tags:', err));
-  }, []);
 
   // Fetch all page content on mount
   useEffect(() => {
@@ -259,8 +253,24 @@ function App() {
   }, [shows, searchQuery, selectedTags]);
 
   const availableTags = useMemo(() => {
-    return allTags.filter(tag => !selectedTags.includes(tag));
-  }, [allTags, selectedTags]);
+    // Find shows that match ALL selected tags (or all shows if none selected)
+    const matchingShows = selectedTags.length === 0
+      ? shows
+      : shows.filter(show => {
+          const showTags = show.tags || [];
+          return selectedTags.every(tag => showTags.includes(tag));
+        });
+    // Collect tags from matching shows, excluding already-selected ones
+    const compatibleTags = new Set<string>();
+    matchingShows.forEach(show => {
+      (show.tags || []).forEach(tag => {
+        if (!selectedTags.includes(tag)) {
+          compatibleTags.add(tag);
+        }
+      });
+    });
+    return Array.from(compatibleTags).sort();
+  }, [shows, selectedTags]);
 
   // Handle track navigation from AudioPlayer (currently unused but kept for future use)
   // const handleTrackChange = (newTrackIndex: number) => {
