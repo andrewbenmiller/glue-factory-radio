@@ -46,10 +46,13 @@ function App() {
 
   // Media Session API — lock screen controls, AirPlay Now Playing, hardware keys
   const handleMediaPlay = useCallback(() => {
-    if (source === "live") resumeLive();
-    else if (source === "track") playerRef.current?.resumeOrStart();
-    else if (source === "none") {
-      // Resume whatever was last playing
+    if (source === "live") {
+      // Source is still "live" after pauseLive — stop keep-alive and reconnect stream
+      resumeLive();
+      playLive(streamUrl);
+    } else if (source === "track") {
+      playerRef.current?.resumeOrStart();
+    } else if (source === "none") {
       if (lastSourceRef.current === "live") playLive(streamUrl);
       else playerRef.current?.resumeOrStart();
     }
