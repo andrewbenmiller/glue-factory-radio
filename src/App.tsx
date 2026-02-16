@@ -238,14 +238,9 @@ function App() {
   //   setAutoPlay(!autoPlay);
   // };
   
-  // Loading state
+  // Loading gate: keep components from rendering until shows are fetched
   if (isLoading) {
-    return (
-      <div className="loading-state">
-        <h2>Loading Glue Factory Radio...</h2>
-        <p>Please wait while we fetch your shows.</p>
-      </div>
-    );
+    return <div />;
   }
   
   // Error state
