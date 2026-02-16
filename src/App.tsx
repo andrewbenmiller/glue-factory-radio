@@ -10,7 +10,7 @@ import { useMediaSession } from './hooks/useMediaSession';
 import { useAudio } from './audio/AudioProvider';
 import { apiService, Show, PageContent } from './services/api';
 import logo from './logo.png';
-import logoBW from './logoDNU.png';
+const lockScreenArt = window.location.origin + '/web-app-manifest-512x512.png';
 
 function App() {
   const playerRef = useRef<AudioPlayerHandle | null>(null);
@@ -62,7 +62,7 @@ function App() {
     showName: shows[currentShowIndex]?.title || "Glue Factory Radio",
     liveNowPlaying: nowPlaying,
     liveShowTitle: showTitle,
-    artworkUrl: logoBW,
+    artworkUrl: lockScreenArt,
     onPlay: handleMediaPlay,
     onPause: handleMediaPause,
     onNext: handleMediaNext,
