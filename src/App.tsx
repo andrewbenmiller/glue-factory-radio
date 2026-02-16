@@ -272,14 +272,9 @@ function App() {
   //   setAutoPlay(!autoPlay);
   // };
   
-  // Loading state
+  // Loading state - render blank page to avoid flash of text
   if (isLoading) {
-    return (
-      <div className="loading-state">
-        <h2>Loading Glue Factory Radio...</h2>
-        <p>Please wait while we fetch your shows.</p>
-      </div>
-    );
+    return <div />;
   }
   
   // Error state
