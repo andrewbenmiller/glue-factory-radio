@@ -55,21 +55,19 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setSource((s) => (s === "live" ? "none" : s));
   }, []);
 
-  // Pause without clearing src or changing source — mirrors how archive pause works.
-  // Keeps iOS audio session alive for lock screen controls.
+  // "Pause" live by muting — stream keeps playing silently so iOS preserves
+  // the audio session and lock screen controls stay visible.
   const pauseLive = useCallback(() => {
     const a = liveAudioRef.current;
     if (!a) return;
-    playPromiseRef.current = null;
-    try { a.pause(); } catch {}
-    // source stays "live" — same pattern as notifyTrackPaused
+    a.volume = 0;
   }, []);
 
-  // Resume a paused live stream
+  // Resume by unmuting
   const resumeLive = useCallback(() => {
     const a = liveAudioRef.current;
     if (!a) return;
-    a.play().catch(() => {});
+    a.volume = 1;
   }, []);
 
   const playLive = useCallback(async (url: string) => {
