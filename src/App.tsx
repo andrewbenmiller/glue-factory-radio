@@ -225,8 +225,25 @@ function App() {
   }, [shows, searchQuery, selectedTags]);
 
   const availableTags = useMemo(() => {
-    return allTags.filter(tag => !selectedTags.includes(tag));
-  }, [allTags, selectedTags]);
+    if (selectedTags.length === 0) {
+      // No tags selected: show all tags from active shows
+      return allTags;
+    }
+    // Find shows that have ALL selected tags, then collect their other tags
+    const matchingShows = shows.filter(show => {
+      const showTags = show.tags || [];
+      return selectedTags.every(tag => showTags.includes(tag));
+    });
+    const compatibleTags = new Set<string>();
+    matchingShows.forEach(show => {
+      (show.tags || []).forEach(tag => {
+        if (!selectedTags.includes(tag)) {
+          compatibleTags.add(tag);
+        }
+      });
+    });
+    return Array.from(compatibleTags).sort();
+  }, [shows, allTags, selectedTags]);
 
   // Handle track navigation from AudioPlayer (currently unused but kept for future use)
   // const handleTrackChange = (newTrackIndex: number) => {
