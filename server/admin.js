@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupUploadForm();
     setupAddTrackForm();
     setupEventDelegation();
+    setupPasteToLink('description');
+    setupPasteToLink('editDescription');
     loadShows();
     loadStats();
 });
@@ -618,7 +620,7 @@ function renderShowsTable() {
                                 <strong>${escapeHtml(show.title)}</strong>
                             </td>
                             <td>
-                                ${escapeHtml(show.description || 'No description')}
+                                ${renderDescriptionWithLinks(show.description)}
                                 ${show.tags && show.tags.length > 0 ? `
                                     <div class="show-tags">
                                         ${show.tags.map(t => `<span class="show-tag-badge">${escapeHtml(t)}</span>`).join('')}
@@ -1388,6 +1390,35 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Render description text with [text](url) markdown links converted to <a> tags
+function renderDescriptionWithLinks(text) {
+    if (!text) return 'No description';
+    const escaped = escapeHtml(text);
+    return escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #007bff; text-decoration: underline;">$1</a>'
+    );
+}
+
+// Paste-to-link: if text is selected in a textarea and a URL is pasted, wrap selection as markdown link
+function setupPasteToLink(textareaId) {
+    const textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    textarea.addEventListener('paste', function(e) {
+        const selected = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
+        if (!selected) return; // No selection, let normal paste happen
+        const pasted = (e.clipboardData || window.clipboardData).getData('text');
+        if (!pasted.match(/^https?:\/\//)) return; // Not a URL, let normal paste happen
+        e.preventDefault();
+        const before = textarea.value.substring(0, textarea.selectionStart);
+        const after = textarea.value.substring(textarea.selectionEnd);
+        const link = '[' + selected + '](' + pasted + ')';
+        textarea.value = before + link + after;
+        const newPos = before.length + link.length;
+        textarea.selectionStart = newPos;
+        textarea.selectionEnd = newPos;
+    });
 }
 
 // Toggle background image active status
