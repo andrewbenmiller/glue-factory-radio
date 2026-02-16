@@ -25,6 +25,7 @@ type AudioContextValue = {
   // called by live button
   playLive: (url: string) => Promise<void>;
   stopLive: () => void;
+  pauseLive: () => void;
 };
 
 const Ctx = createContext<AudioContextValue | null>(null);
@@ -49,6 +50,19 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     try { a.pause(); } catch {}
     a.src = "";
+
+    setSource((s) => (s === "live" ? "none" : s));
+  }, []);
+
+  // Pause without clearing src — keeps iOS audio session alive for lock screen controls
+  const pauseLive = useCallback(() => {
+    const a = liveAudioRef.current;
+    if (!a) return;
+
+    genRef.current += 1;
+    playPromiseRef.current = null;
+
+    try { a.pause(); } catch {}
 
     setSource((s) => (s === "live" ? "none" : s));
   }, []);
@@ -130,8 +144,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       notifyTrackPaused,
       playLive,
       stopLive,
+      pauseLive,
     }),
-    [source, trackNowPlaying, notifyTrackWillPlay, notifyTrackDidStop, notifyTrackPaused, playLive, stopLive]
+    [source, trackNowPlaying, notifyTrackWillPlay, notifyTrackDidStop, notifyTrackPaused, playLive, stopLive, pauseLive]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

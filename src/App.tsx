@@ -33,7 +33,7 @@ function App() {
 
   // Live stream status and audio context
   const { isLive, nowPlaying, showTitle, streamUrl } = useLiveStatus();
-  const { source, playLive, stopLive, trackNowPlaying } = useAudio();
+  const { source, playLive, stopLive, pauseLive, trackNowPlaying } = useAudio();
   const livePlaying = source === "live";
 
   // Remember last active source so lock screen play can resume after pause
@@ -56,9 +56,9 @@ function App() {
   }, [source, playLive, streamUrl]);
 
   const handleMediaPause = useCallback(() => {
-    if (source === "live") stopLive();
+    if (source === "live") pauseLive();
     else if (source === "track") playerRef.current?.pause();
-  }, [source, stopLive]);
+  }, [source, pauseLive]);
 
   const handleMediaNext = useCallback(() => {
     playerRef.current?.next();
