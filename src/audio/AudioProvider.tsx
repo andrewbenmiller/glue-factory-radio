@@ -57,17 +57,18 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   // "Pause" live by muting — stream keeps playing silently so iOS preserves
   // the audio session and lock screen controls stay visible.
+  // Note: iOS ignores a.volume but does support a.muted.
   const pauseLive = useCallback(() => {
     const a = liveAudioRef.current;
     if (!a) return;
-    a.volume = 0;
+    a.muted = true;
   }, []);
 
   // Resume by unmuting
   const resumeLive = useCallback(() => {
     const a = liveAudioRef.current;
     if (!a) return;
-    a.volume = 1;
+    a.muted = false;
   }, []);
 
   const playLive = useCallback(async (url: string) => {
