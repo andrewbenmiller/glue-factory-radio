@@ -508,6 +508,7 @@
 .search-available-tags {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
   padding: 16px 0;
   width: 100%;
