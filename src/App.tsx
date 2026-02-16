@@ -36,10 +36,23 @@ function App() {
   const { source, playLive, stopLive, trackNowPlaying } = useAudio();
   const livePlaying = source === "live";
 
+  // Remember last active source so lock screen play can resume after pause
+  const lastSourceRef = useRef<"track" | "live">("track");
+  useEffect(() => {
+    if (source === "track" || source === "live") {
+      lastSourceRef.current = source;
+    }
+  }, [source]);
+
   // Media Session API — lock screen controls, AirPlay Now Playing, hardware keys
   const handleMediaPlay = useCallback(() => {
     if (source === "live") playLive(streamUrl);
     else if (source === "track") playerRef.current?.resumeOrStart();
+    else if (source === "none") {
+      // Resume whatever was last playing
+      if (lastSourceRef.current === "live") playLive(streamUrl);
+      else playerRef.current?.resumeOrStart();
+    }
   }, [source, playLive, streamUrl]);
 
   const handleMediaPause = useCallback(() => {

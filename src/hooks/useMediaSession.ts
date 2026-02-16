@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type MediaSessionConfig = {
   source: "none" | "track" | "live";
@@ -27,13 +27,21 @@ export function useMediaSession(config: MediaSessionConfig): void {
     onPrev,
   } = config;
 
+  // Remember the last active source so we can keep lock screen controls after pause/stop
+  const lastSourceRef = useRef<"track" | "live">("track");
+  useEffect(() => {
+    if (source === "track" || source === "live") {
+      lastSourceRef.current = source;
+    }
+  }, [source]);
+
   // Sync metadata and playback state
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
 
     if (source === "none") {
-      navigator.mediaSession.metadata = null;
-      navigator.mediaSession.playbackState = "none";
+      // Keep metadata visible with "paused" state so lock screen play button works
+      navigator.mediaSession.playbackState = "paused";
       return;
     }
 
@@ -102,8 +110,15 @@ export function useMediaSession(config: MediaSessionConfig): void {
         ["previoustrack", () => onPrev?.()],
       );
     } else {
+      // source === "none": keep play handler so user can resume from lock screen
       handlers.push(
-        ["play", null],
+        [
+          "play",
+          () => {
+            onPlay?.();
+            navigator.mediaSession.playbackState = "playing";
+          },
+        ],
         ["pause", null],
         ["stop", null],
         ["nexttrack", null],
