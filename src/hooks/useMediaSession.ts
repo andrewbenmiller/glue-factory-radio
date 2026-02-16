@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 type MediaSessionConfig = {
   source: "none" | "track" | "live";
@@ -27,21 +27,13 @@ export function useMediaSession(config: MediaSessionConfig): void {
     onPrev,
   } = config;
 
-  // Remember the last active source so we can keep lock screen controls after pause/stop
-  const lastSourceRef = useRef<"track" | "live">("track");
-  useEffect(() => {
-    if (source === "track" || source === "live") {
-      lastSourceRef.current = source;
-    }
-  }, [source]);
-
   // Sync metadata and playback state
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
 
     if (source === "none") {
-      // Keep metadata visible with "paused" state so lock screen play button works
-      navigator.mediaSession.playbackState = "paused";
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = "none";
       return;
     }
 
@@ -77,27 +69,9 @@ export function useMediaSession(config: MediaSessionConfig): void {
 
     if (source === "live") {
       handlers.push(
-        [
-          "play",
-          () => {
-            onPlay?.();
-            navigator.mediaSession.playbackState = "playing";
-          },
-        ],
-        [
-          "pause",
-          () => {
-            onPause?.();
-            navigator.mediaSession.playbackState = "paused";
-          },
-        ],
-        [
-          "stop",
-          () => {
-            onPause?.();
-            navigator.mediaSession.playbackState = "paused";
-          },
-        ],
+        ["play", () => onPlay?.()],
+        ["pause", () => onPause?.()],
+        ["stop", () => onPause?.()],
         ["nexttrack", null],
         ["previoustrack", null],
       );
@@ -128,15 +102,8 @@ export function useMediaSession(config: MediaSessionConfig): void {
         ["previoustrack", () => onPrev?.()],
       );
     } else {
-      // source === "none": keep play handler so user can resume from lock screen
       handlers.push(
-        [
-          "play",
-          () => {
-            onPlay?.();
-            navigator.mediaSession.playbackState = "playing";
-          },
-        ],
+        ["play", null],
         ["pause", null],
         ["stop", null],
         ["nexttrack", null],

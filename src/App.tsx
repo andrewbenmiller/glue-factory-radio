@@ -10,6 +10,7 @@ import { useMediaSession } from './hooks/useMediaSession';
 import { useAudio } from './audio/AudioProvider';
 import { apiService, Show, PageContent } from './services/api';
 import logo from './logo.png';
+import logoBW from './logoDNU.png';
 
 function App() {
   const playerRef = useRef<AudioPlayerHandle | null>(null);
@@ -33,35 +34,19 @@ function App() {
 
   // Live stream status and audio context
   const { isLive, nowPlaying, showTitle, streamUrl } = useLiveStatus();
-  const { source, playLive, stopLive, pauseLive, resumeLive, trackNowPlaying } = useAudio();
+  const { source, playLive, stopLive, trackNowPlaying } = useAudio();
   const livePlaying = source === "live";
-
-  // Remember last active source so lock screen play can resume after pause
-  const lastSourceRef = useRef<"track" | "live">("track");
-  useEffect(() => {
-    if (source === "track" || source === "live") {
-      lastSourceRef.current = source;
-    }
-  }, [source]);
 
   // Media Session API — lock screen controls, AirPlay Now Playing, hardware keys
   const handleMediaPlay = useCallback(() => {
-    if (source === "live") {
-      // Source is still "live" after pauseLive — stop keep-alive and reconnect stream
-      resumeLive();
-      playLive(streamUrl);
-    } else if (source === "track") {
-      playerRef.current?.resumeOrStart();
-    } else if (source === "none") {
-      if (lastSourceRef.current === "live") playLive(streamUrl);
-      else playerRef.current?.resumeOrStart();
-    }
-  }, [source, resumeLive, playLive, streamUrl]);
+    if (source === "live") playLive(streamUrl);
+    else if (source === "track") playerRef.current?.resumeOrStart();
+  }, [source, playLive, streamUrl]);
 
   const handleMediaPause = useCallback(() => {
-    if (source === "live") pauseLive();
+    if (source === "live") stopLive();
     else if (source === "track") playerRef.current?.pause();
-  }, [source, pauseLive]);
+  }, [source, stopLive]);
 
   const handleMediaNext = useCallback(() => {
     playerRef.current?.next();
@@ -77,7 +62,7 @@ function App() {
     showName: shows[currentShowIndex]?.title || "Glue Factory Radio",
     liveNowPlaying: nowPlaying,
     liveShowTitle: showTitle,
-    artworkUrl: logo,
+    artworkUrl: logoBW,
     onPlay: handleMediaPlay,
     onPause: handleMediaPause,
     onNext: handleMediaNext,
