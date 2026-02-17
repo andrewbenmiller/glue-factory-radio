@@ -85,6 +85,7 @@
 
 .tickerChunk-empty {
   gap: 0;             /* No gap when empty (no bullets) */
+  opacity: 0.85;
 }
 
 .tickerChunk .bullet {
@@ -96,11 +97,6 @@
   flex-shrink: 0;
   white-space: nowrap;
   text-transform: uppercase; /* optional; remove if you don't want */
-}
-
-/* Optional empty state styling */
-.tickerChunk-empty {
-  opacity: 0.85;
 }
 
 .liveStreamTicker-empty {

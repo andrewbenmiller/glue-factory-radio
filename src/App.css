@@ -7,23 +7,6 @@
   flex-direction: column;
 }
 
-.App-header {
-  text-align: center;
-  padding: 30px 20px;
-  color: #FF5F1F;
-}
-
-/* Center section - fills available space, centers content vertically */
-.App-center {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  /* Account for footer height when collapsed */
-  padding-bottom: 80px;
-}
 
 .logo-container {
   position: fixed;
@@ -47,34 +30,6 @@
   object-fit: contain;
 }
 
-.app-logo {
-  font-size: 3.5rem;
-  font-weight: bold;
-  margin: 0 0 10px 0;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-  letter-spacing: 2px;
-}
-
-.tagline {
-  font-size: 1.2rem;
-  margin: 0;
-  opacity: 0.9;
-  font-style: italic;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-}
-
-.app-logo {
-  max-width: 400px;
-  height: auto;
-  margin: 0 auto;
-  display: block;
-}
-
-.App-main {
-  padding: 40px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
 /* Archive footer - fixed to bottom, expands upward */
 .App-footer-archive {
@@ -96,46 +51,15 @@
   overflow-y: auto;
 }
 
-.App-footer {
-  text-align: center;
-  padding: 30px 20px;
-  background: #f8f9fa;
-  color: #FF5F1F;
-  font-size: 0.9rem;
-  margin-top: 40px;
-  border-top: 1px solid rgba(255, 25, 0, 0.25);
-}
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-  .App-header {
-    padding: 30px 15px;
-  }
-
-  .App-center {
-    padding: 15px;
-    padding-bottom: 70px;
-  }
-
   .logo-container {
     top: 70px;
   }
 
   .logo-image {
     height: 112px;
-  }
-
-  .app-logo {
-    font-size: 2.5rem;
-    letter-spacing: 1px;
-  }
-
-  .tagline {
-    font-size: 1rem;
-  }
-
-  .App-main {
-    padding: 30px 15px;
   }
 
   .App-footer-archive {
@@ -149,34 +73,12 @@
 }
 
 @media (max-width: 480px) {
-  .App-header {
-    padding: 20px 10px;
-  }
-
-  .App-center {
-    padding: 10px;
-    padding-bottom: 60px;
-  }
-
   .logo-container {
     top: 65px;
   }
 
   .logo-image {
     height: 105px;
-  }
-
-  .app-logo {
-    font-size: 2rem;
-    letter-spacing: 0.5px;
-  }
-
-  .tagline {
-    font-size: 0.9rem;
-  }
-
-  .App-main {
-    padding: 20px 10px;
   }
 
   .App-footer-archive {
@@ -190,8 +92,7 @@
   }
 }
 
-/* Loading, Error, and No Shows States */
-.loading-state,
+/* Error and No Shows States */
 .error-state,
 .no-shows-state {
   text-align: center;
@@ -202,10 +103,6 @@
   border: 1px solid rgba(255, 25, 0, 0.25);
 }
 
-.loading-state p {
-  color: #FF5F1F;
-  font-size: 18px;
-}
 
 .error-state {
   background: #f8d7da;
@@ -227,7 +124,7 @@
   background: #c82333;
 }
 
-.no-shows-state h3 {
+.no-shows-state h2 {
   color: #FF5F1F;
   margin-bottom: 10px;
 }
@@ -617,49 +514,11 @@
   .search-result-meta {
     font-size: 12px;
   }
-}
 
-@media (max-width: 480px) {
-  .search-overlay-content {
-    padding: 40px 15px 10px;
-  }
-
-  .search-input {
-    font-size: 16px; /* Must be >= 16px to prevent iOS Safari auto-zoom on focus */
-  }
-
-  .search-tag-selected {
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-
-  .search-tag-pill {
-    font-size: 11px;
-    padding: 5px 10px;
-  }
-
-  .search-result-title {
-    font-size: 14px;
-  }
-
-  .search-empty-state {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 768px) {
   .page-text {
     font-size: 16px;
   }
-}
 
-@media (max-width: 480px) {
-  .page-text {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 768px) {
   .page-overlay {
     /* Match expanded archive height on tablet */
     height: 80vh;
@@ -688,6 +547,36 @@
 }
 
 @media (max-width: 480px) {
+  .search-overlay-content {
+    padding: 40px 15px 10px;
+  }
+
+  .search-input {
+    font-size: 16px; /* Must be >= 16px to prevent iOS Safari auto-zoom on focus */
+  }
+
+  .search-tag-selected {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .search-tag-pill {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .search-result-title {
+    font-size: 14px;
+  }
+
+  .search-empty-state {
+    font-size: 14px;
+  }
+
+  .page-text {
+    font-size: 14px;
+  }
+
   .page-overlay {
     /* Match expanded archive height on mobile */
     height: calc(100vh - 210px);

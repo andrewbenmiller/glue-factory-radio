@@ -8,5 +8,5 @@
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0; /* Ensure it's behind other content */
-  transition: background-image 1s ease-in-out; /* Smooth transition */
+  transition: opacity 1s ease-in-out;
 }

@@ -105,15 +105,6 @@ class ApiService {
     return `${this.baseUrl}/uploads/${filename}`;
   }
 
-  // Get all tags
-  async getTags(): Promise<string[]> {
-    const response = await fetch(`${this.baseUrl}/api/shows/tags/all`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch tags: ${response.status}`);
-    }
-    return response.json();
-  }
-
   // Get page content by name
   async getPageContent(pageName: string): Promise<PageContent> {
     const response = await fetch(`${this.baseUrl}/api/pages/${pageName}`);
