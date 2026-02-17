@@ -112,7 +112,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const notifyTrackPaused = useCallback(() => {
-    // keep source as "track" (no change)
+    setSource((s) => (s === "track" ? "none" : s));
   }, []);
 
   const value = useMemo<AudioContextValue>(

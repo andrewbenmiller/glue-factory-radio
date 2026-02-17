@@ -82,7 +82,7 @@ function App() {
     if (source === "track") {
       return `PLAYING NOW: ${trackNowPlaying ?? "Track"}`;
     }
-    return "NOTHING CURRENTLY PLAYING";
+    return "GLUE FACTORY RADIO";
   }, [source, nowPlaying, trackNowPlaying, liveLabel]);
   
   const tickerIsEmpty = source === "none";
