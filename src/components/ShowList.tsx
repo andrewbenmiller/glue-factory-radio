@@ -50,19 +50,22 @@ const ShowList: React.FC<ShowListProps> = ({
   onTrackSelect,
 }) => {
   const [expandedShows, setExpandedShows] = useState<Set<number>>(new Set());
-  const lastVersionRef = useRef(-1);
+  const lastVersionRef = useRef(0);
+  const showIndexRef = useRef(currentShowIndex);
+  showIndexRef.current = currentShowIndex;
 
   // Expand and scroll to the selected show when explicitly triggered by parent
   useEffect(() => {
     if (showSelectionVersion === lastVersionRef.current) return;
     lastVersionRef.current = showSelectionVersion;
 
-    setExpandedShows(new Set([currentShowIndex]));
+    const idx = showIndexRef.current;
+    setExpandedShows(new Set([idx]));
     // Wait for React to re-render with the expanded state, then measure and scroll
     const timer = setTimeout(() => {
       const scrollContainer = document.querySelector('.App-footer-archive');
       const stickyBlock = document.querySelector('.archive-sticky-block');
-      const el = document.querySelector(`[data-show-index="${currentShowIndex}"]`);
+      const el = document.querySelector(`[data-show-index="${idx}"]`);
       if (scrollContainer && stickyBlock && el) {
         const stickyHeight = stickyBlock.getBoundingClientRect().height;
         const elTop = (el as HTMLElement).offsetTop;
@@ -70,7 +73,8 @@ const ShowList: React.FC<ShowListProps> = ({
       }
     }, 50);
     return () => clearTimeout(timer);
-  }, [showSelectionVersion, currentShowIndex]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSelectionVersion]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
