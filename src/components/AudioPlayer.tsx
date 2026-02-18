@@ -33,10 +33,11 @@ type Props = {
   archiveExpanded?: boolean;
   onArchiveToggle?: () => void;
   onSearchOpen?: () => void;
+  onPlay?: () => void;
 };
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
-  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen },
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay },
   ref
 ) {
   const audio = useAudio();
@@ -285,51 +286,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         {/* Expanded content - header is now rendered in App.tsx */}
         {archiveExpanded && (
           <>
-            {/* Transport controls row */}
-            <div className="archive-controls-row">
-              <button
-                className="control-btn skip-btn"
-                onClick={prevInternal}
-                title="Previous Track"
-              >
-                <span className="desktop-icon">⏮</span>
-                <img
-                  src={prevIcon}
-                  alt="Previous"
-                  className="mobile-icon"
-                  style={{ width: "48px", height: "48px" }}
-                />
-              </button>
-
-              <button
-                className="control-btn play-btn"
-                onClick={() => (isPlaying ? pauseInternal() : resumeOrStart())}
-                title={isPlaying ? "Pause" : "Play"}
-              >
-                <span className="desktop-icon">{isPlaying ? "⏸" : "▶"}</span>
-                <img
-                  src={isPlaying ? pauseIcon : playIcon}
-                  alt={isPlaying ? "Pause" : "Play"}
-                  className="mobile-icon"
-                  style={{ width: "48px", height: "48px" }}
-                />
-              </button>
-
-              <button
-                className="control-btn skip-btn"
-                onClick={nextInternal}
-                title="Next Track"
-              >
-                <span className="desktop-icon">⏭</span>
-                <img
-                  src={nextIcon}
-                  alt="Next"
-                  className="mobile-icon"
-                  style={{ width: "48px", height: "48px" }}
-                />
-              </button>
-            </div>
-
             {/* Search bar row */}
             <div className="search-bar-row" onClick={onSearchOpen} onTouchEnd={(e) => { e.preventDefault(); onSearchOpen?.(); }}>
               <div className="search-bar-field">
@@ -341,8 +297,31 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
               </div>
             </div>
 
-            {/* Now playing info row */}
+            {/* Info row with inline transport controls */}
             <div className="archive-info-row">
+              <div className="archive-info-controls">
+                <button
+                  className="info-control-btn"
+                  onClick={prevInternal}
+                  title="Previous Track"
+                >
+                  <img src={prevIcon} alt="Previous" />
+                </button>
+                <button
+                  className="info-control-btn"
+                  onClick={() => { if (isPlaying) { pauseInternal(); } else { resumeOrStart(); onPlay?.(); } }}
+                  title={isPlaying ? "Pause" : "Play"}
+                >
+                  <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? "Pause" : "Play"} />
+                </button>
+                <button
+                  className="info-control-btn"
+                  onClick={nextInternal}
+                  title="Next Track"
+                >
+                  <img src={nextIcon} alt="Next" />
+                </button>
+              </div>
               <span className="archive-info-show">
                 <span className="archive-info-label">Currently loaded:</span> {showName}
               </span>

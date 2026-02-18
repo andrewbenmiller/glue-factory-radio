@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ShowList.css';
 import { Show } from '../services/api';
 
@@ -37,6 +37,7 @@ function renderDescription(text: string): React.ReactNode[] {
 interface ShowListProps {
   shows: Show[];
   currentShowIndex: number;
+  showSelectionVersion: number;
   onShowSelect: (index: number) => void;
   onTrackSelect: (showIndex: number, trackIndex: number) => void;
 }
@@ -44,10 +45,32 @@ interface ShowListProps {
 const ShowList: React.FC<ShowListProps> = ({
   shows,
   currentShowIndex,
+  showSelectionVersion,
   onShowSelect,
   onTrackSelect,
 }) => {
   const [expandedShows, setExpandedShows] = useState<Set<number>>(new Set());
+  const lastVersionRef = useRef(showSelectionVersion);
+
+  // Expand and scroll to the selected show when explicitly triggered by parent
+  useEffect(() => {
+    if (showSelectionVersion === lastVersionRef.current) return;
+    lastVersionRef.current = showSelectionVersion;
+
+    setExpandedShows(new Set([currentShowIndex]));
+    // Wait for React to re-render with the expanded state, then measure and scroll
+    const timer = setTimeout(() => {
+      const scrollContainer = document.querySelector('.App-footer-archive');
+      const stickyBlock = document.querySelector('.archive-sticky-block');
+      const el = document.querySelector(`[data-show-index="${currentShowIndex}"]`);
+      if (scrollContainer && stickyBlock && el) {
+        const stickyHeight = stickyBlock.getBoundingClientRect().height;
+        const elTop = (el as HTMLElement).offsetTop;
+        scrollContainer.scrollTop = elTop - stickyHeight;
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [showSelectionVersion, currentShowIndex]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -89,6 +112,7 @@ const ShowList: React.FC<ShowListProps> = ({
           return (
             <div
               key={show.id}
+              data-show-index={index}
               className={`show-item ${index === currentShowIndex ? 'active' : ''} ${isExpanded ? 'expanded' : ''}`}
             >
               {/* Main row: # | Title | Duration | Play */}

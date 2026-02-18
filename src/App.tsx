@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import './App.css';
 import AudioPlayer, { Track, AudioPlayerHandle } from './components/AudioPlayer';
 import ShowList from './components/ShowList';
@@ -12,12 +13,23 @@ import { apiService, Show, PageContent } from './services/api';
 import logo from './logo.png';
 const lockScreenArt = window.location.origin + '/web-app-manifest-512x512.png';
 
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 function App() {
+  const location = useLocation();
   const playerRef = useRef<AudioPlayerHandle | null>(null);
   const [shows, setShows] = useState<Show[]>([]);
   const [currentShowIndex, setCurrentShowIndex] = useState(0);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [archiveExpanded, setArchiveExpanded] = useState(false);
+  const [showSelectionVersion, setShowSelectionVersion] = useState(0);
   const [activePage, setActivePage] = useState<'about' | 'events' | 'contact' | null>(null);
   const [pageCache, setPageCache] = useState<Record<string, PageContent>>({});
   const [contactCopied, setContactCopied] = useState(false);
@@ -87,7 +99,7 @@ function App() {
   
   const tickerIsEmpty = source === "none";
   
-  // Fetch shows on component mount
+  // Fetch shows on component mount, resolve deep link if present
   useEffect(() => {
     const fetchShows = async () => {
       try {
@@ -99,6 +111,19 @@ function App() {
           console.log(`App: Show ${idx}: "${show.title}" with ${show.tracks?.length || 0} tracks`);
         });
         setShows(fetchedShows);
+
+        // Resolve deep link: /show/:slug
+        const match = location.pathname.match(/^\/show\/(.+)$/);
+        if (match && fetchedShows.length > 0) {
+          const slug = match[1];
+          const idx = fetchedShows.findIndex(s => generateSlug(s.title) === slug);
+          if (idx !== -1) {
+            setCurrentShowIndex(idx);
+            setArchiveExpanded(true);
+            setShowSelectionVersion(v => v + 1);
+          }
+        }
+
         setError(null);
       } catch (err) {
         console.error('App: Error fetching shows:', err);
@@ -107,8 +132,9 @@ function App() {
         setIsLoading(false);
       }
     };
-    
+
     fetchShows();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   // Monitor state changes for debugging
@@ -144,6 +170,12 @@ function App() {
     fetchAllPages();
   }, []);
   
+  // Update URL to reflect the currently loaded show
+  const updateShowUrl = useCallback((show: Show) => {
+    const slug = generateSlug(show.title);
+    window.history.replaceState(null, '', `/show/${slug}`);
+  }, []);
+
   // Handle show selection
   const handleShowChange = useCallback((newShowIndex: number) => {
     console.log('App: Changing show to:', newShowIndex);
@@ -155,29 +187,45 @@ function App() {
       return newShowIndex;
     });
 
+    // Signal ShowList to expand + scroll to this show
+    setShowSelectionVersion(v => v + 1);
+
+    // Update URL
+    if (shows[newShowIndex]) {
+      updateShowUrl(shows[newShowIndex]);
+    }
+
     // Always trigger playback (handles first load where show is already selected)
     requestAnimationFrame(() => {
       playerRef.current?.playFromUI(0);
     });
-  }, []);
+  }, [shows, updateShowUrl]);
   
   // Handle track selection from ShowList
   const handleTrackSelect = (showIndex: number, trackIndex: number) => {
     console.log('App: handleTrackSelect CALLED!');
     console.log('App: Track selected - Show:', showIndex, 'Track:', trackIndex);
     console.log('App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
-    
+
     // 1) Switch show/track state so UI reflects selection
     if (showIndex !== currentShowIndex) setCurrentShowIndex(showIndex);
     setCurrentTrackIndex(trackIndex);
 
-    // 2) MOST IMPORTANT: start playback in the same user click
+    // Signal ShowList to expand + scroll to this show
+    setShowSelectionVersion(v => v + 1);
+
+    // 2) Update URL
+    if (shows[showIndex]) {
+      updateShowUrl(shows[showIndex]);
+    }
+
+    // 3) MOST IMPORTANT: start playback in the same user click
     //    This satisfies autoplay policies reliably.
     //    We also pass the target index explicitly.
     requestAnimationFrame(() => {
       playerRef.current?.playFromUI(trackIndex);
     });
-    
+
     console.log('App: Updated currentShowIndex to:', showIndex, 'and currentTrackIndex to:', trackIndex);
   };
   
@@ -352,33 +400,37 @@ function App() {
 
       {/* Archive footer - fixed to bottom, expands upward */}
       <div className={`App-footer-archive ${archiveExpanded ? 'expanded' : ''}`}>
-        {/* Sticky header row - must be direct child of scroll container */}
-        <div
-          className="archive-header-row clickable"
-          onClick={() => setArchiveExpanded(!archiveExpanded)}
-        >
-          <span className="archive-header-text">{archiveExpanded ? 'CLOSE THE ARCHIVE' : 'OPEN THE ARCHIVE'}</span>
-          <span className={`archive-arrow ${archiveExpanded ? 'expanded' : ''}`}>
-            ▼
-          </span>
-        </div>
+        {/* Sticky block: header + controls + search + info stay pinned */}
+        <div className="archive-sticky-block">
+          <div
+            className="archive-header-row clickable"
+            onClick={() => setArchiveExpanded(!archiveExpanded)}
+          >
+            <span className="archive-header-text">{archiveExpanded ? 'CLOSE THE ARCHIVE' : 'OPEN THE ARCHIVE'}</span>
+            <span className={`archive-arrow ${archiveExpanded ? 'expanded' : ''}`}>
+              ▼
+            </span>
+          </div>
 
-        <AudioPlayer
-          key={shows[validShowIndex]?.id ?? validShowIndex}
-          ref={playerRef}
-          tracks={currentTracks}
-          initialIndex={currentTrackIndex}
-          showName={shows[validShowIndex]?.title || "CD Mode"}
-          archiveExpanded={archiveExpanded}
-          onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
-          onSearchOpen={openSearch}
-        />
+          <AudioPlayer
+            key={shows[validShowIndex]?.id ?? validShowIndex}
+            ref={playerRef}
+            tracks={currentTracks}
+            initialIndex={currentTrackIndex}
+            showName={shows[validShowIndex]?.title || "CD Mode"}
+            archiveExpanded={archiveExpanded}
+            onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
+            onSearchOpen={openSearch}
+            onPlay={() => { if (shows[validShowIndex]) updateShowUrl(shows[validShowIndex]); }}
+          />
+        </div>
 
         {archiveExpanded && (
           <>
             <ShowList
               shows={shows}
               currentShowIndex={validShowIndex}
+              showSelectionVersion={showSelectionVersion}
               onShowSelect={handleShowChange}
               onTrackSelect={handleTrackSelect}
             />

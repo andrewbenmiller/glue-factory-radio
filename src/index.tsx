@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import { AudioProvider } from './audio/AudioProvider';
@@ -11,11 +12,13 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <SplashGate>
-      <AudioProvider>
-        <App />
-      </AudioProvider>
-    </SplashGate>
+    <BrowserRouter>
+      <SplashGate>
+        <AudioProvider>
+          <App />
+        </AudioProvider>
+      </SplashGate>
+    </BrowserRouter>
   </React.StrictMode>
 );
 
