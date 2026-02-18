@@ -69,7 +69,7 @@ const ShowList: React.FC<ShowListProps> = ({
       if (scrollContainer && stickyBlock && el) {
         const stickyHeight = stickyBlock.getBoundingClientRect().height;
         const elTop = (el as HTMLElement).offsetTop;
-        scrollContainer.scrollTop = elTop - stickyHeight - 1;
+        scrollContainer.scrollTop = elTop - stickyHeight + 1;
       }
     }, 50);
     return () => clearTimeout(timer);
