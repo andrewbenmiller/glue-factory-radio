@@ -157,8 +157,8 @@
   border-top: 1px solid rgba(255, 25, 0, 0.25);
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  padding-left: max(20px, calc(50vw - 700px));
-  padding-right: max(20px, calc(50vw - 700px));
+  padding-left: calc(max(20px, calc(50vw - 700px)) + 25px);
+  padding-right: calc(max(20px, calc(50vw - 700px)) + 25px);
   box-sizing: border-box;
   background: white; /* Extend white background to page edges */
 }
@@ -265,8 +265,8 @@
   }
 
   .tracks-dropdown {
-    padding-left: max(15px, calc(50vw - 700px));
-    padding-right: max(15px, calc(50vw - 700px));
+    padding-left: calc(max(15px, calc(50vw - 700px)) + 20px);
+    padding-right: calc(max(15px, calc(50vw - 700px)) + 20px);
   }
 
   .show-item-row {
@@ -336,8 +336,8 @@
   }
 
   .tracks-dropdown {
-    padding-left: max(10px, calc(50vw - 700px));
-    padding-right: max(10px, calc(50vw - 700px));
+    padding-left: calc(max(10px, calc(50vw - 700px)) + 15px);
+    padding-right: calc(max(10px, calc(50vw - 700px)) + 15px);
   }
 
   .show-item-row {
