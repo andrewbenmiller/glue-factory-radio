@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './SplashGate.css';
 
-const SPLASH_DOMAINS = ['gluefactoryradio.com', 'www.gluefactoryradio.com'];
+const SPLASH_DOMAINS = ['radio.gluefactorymusic.com', 'www.radio.gluefactorymusic.com'];
 const PASSWORD = 'gluefactory';
 const STORAGE_KEY = 'gfr-authenticated';
 
