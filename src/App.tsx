@@ -208,14 +208,11 @@ function App() {
     console.log('App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
 
     // 1) Switch show/track state so UI reflects selection
-    const showChanged = showIndex !== currentShowIndex;
-    if (showChanged) setCurrentShowIndex(showIndex);
+    if (showIndex !== currentShowIndex) setCurrentShowIndex(showIndex);
     setCurrentTrackIndex(trackIndex);
 
-    // Only auto-expand + scroll when switching to a different show
-    if (showChanged) {
-      setShowSelectionVersion(v => v + 1);
-    }
+    // Never auto-scroll on track clicks — preserve the user's scroll position.
+    // Auto-scroll only happens via handleShowChange (play button, search, deep link).
 
     // 2) Update URL
     if (shows[showIndex]) {
