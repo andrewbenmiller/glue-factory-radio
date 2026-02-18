@@ -430,6 +430,7 @@ function App() {
             onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
             onSearchOpen={openSearch}
             onPlay={() => { if (shows[validShowIndex]) updateShowUrl(shows[validShowIndex]); }}
+            onShowNavigate={() => { setShowSelectionVersion(v => v + 1); }}
           />
         </div>
 

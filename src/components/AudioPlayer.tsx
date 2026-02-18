@@ -34,10 +34,11 @@ type Props = {
   onArchiveToggle?: () => void;
   onSearchOpen?: () => void;
   onPlay?: () => void;
+  onShowNavigate?: () => void;
 };
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
-  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay },
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay, onShowNavigate },
   ref
 ) {
   const audio = useAudio();
@@ -346,7 +347,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                   <img src={nextIcon} alt="Next" />
                 </button>
               </div>
-              <span className="archive-info-show">
+              <span className="archive-info-show" onClick={onShowNavigate} style={{ cursor: onShowNavigate ? 'pointer' : undefined }}>
                 <span className="archive-info-label">Currently loaded:</span> {showName}
               </span>
               <span className="archive-info-track">
