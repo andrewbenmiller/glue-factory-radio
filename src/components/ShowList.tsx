@@ -50,7 +50,7 @@ const ShowList: React.FC<ShowListProps> = ({
   onTrackSelect,
 }) => {
   const [expandedShows, setExpandedShows] = useState<Set<number>>(new Set());
-  const lastVersionRef = useRef(showSelectionVersion);
+  const lastVersionRef = useRef(-1);
 
   // Expand and scroll to the selected show when explicitly triggered by parent
   useEffect(() => {
@@ -66,7 +66,7 @@ const ShowList: React.FC<ShowListProps> = ({
       if (scrollContainer && stickyBlock && el) {
         const stickyHeight = stickyBlock.getBoundingClientRect().height;
         const elTop = (el as HTMLElement).offsetTop;
-        scrollContainer.scrollTop = elTop - stickyHeight;
+        scrollContainer.scrollTop = elTop - stickyHeight - 1;
       }
     }, 50);
     return () => clearTimeout(timer);

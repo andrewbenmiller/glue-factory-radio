@@ -208,11 +208,14 @@ function App() {
     console.log('App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
 
     // 1) Switch show/track state so UI reflects selection
-    if (showIndex !== currentShowIndex) setCurrentShowIndex(showIndex);
+    const showChanged = showIndex !== currentShowIndex;
+    if (showChanged) setCurrentShowIndex(showIndex);
     setCurrentTrackIndex(trackIndex);
 
-    // Signal ShowList to expand + scroll to this show
-    setShowSelectionVersion(v => v + 1);
+    // Only auto-expand + scroll when switching to a different show
+    if (showChanged) {
+      setShowSelectionVersion(v => v + 1);
+    }
 
     // 2) Update URL
     if (shows[showIndex]) {
@@ -397,6 +400,14 @@ function App() {
         liveLabel={liveLabel}
         onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
       />
+
+      {/* Tap-away overlay: covers area above archive to close it */}
+      {archiveExpanded && (
+        <div
+          className="archive-dismiss-overlay"
+          onClick={() => setArchiveExpanded(false)}
+        />
+      )}
 
       {/* Archive footer - fixed to bottom, expands upward */}
       <div className={`App-footer-archive ${archiveExpanded ? 'expanded' : ''}`}>

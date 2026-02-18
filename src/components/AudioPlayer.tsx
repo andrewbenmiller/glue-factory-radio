@@ -172,12 +172,6 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     startTrack(nxt);
   }, [index, startTrack]);
 
-  const prevInternal = useCallback(() => {
-    if (!howlsRef.current.length) return;
-    const prv = (index - 1 + howlsRef.current.length) % howlsRef.current.length;
-    startTrack(prv);
-  }, [index, startTrack]);
-
   const resumeOrStart = useCallback(() => {
     const h = current();
     if (!h) return;
@@ -199,6 +193,35 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
       startTrack(index);
     }
   }, [current, startTrack, index, audio]);
+
+  // CD-style prev: single tap restarts track, double tap goes to previous
+  const prevTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const prevInternal = useCallback(() => {
+    if (!howlsRef.current.length) return;
+
+    if (prevTimerRef.current !== null) {
+      // Second tap within window → go to previous track
+      clearTimeout(prevTimerRef.current);
+      prevTimerRef.current = null;
+      const prv = (index - 1 + howlsRef.current.length) % howlsRef.current.length;
+      startTrack(prv);
+    } else {
+      // First tap → wait to see if double tap
+      prevTimerRef.current = setTimeout(() => {
+        prevTimerRef.current = null;
+        const h = howlsRef.current[index];
+        if (h && h.state() === "loaded") {
+          h.seek(0);
+          if (!isPlaying) {
+            resumeOrStart();
+          }
+        } else {
+          startTrack(index);
+        }
+      }, 300);
+    }
+  }, [index, startTrack, isPlaying, resumeOrStart]);
 
   // Build/unload Howls when the track list changes
   useEffect(() => {
@@ -238,6 +261,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     return () => {
       Howler.stop();
       setIsPlaying(false);
+      if (prevTimerRef.current) clearTimeout(prevTimerRef.current);
       howlsRef.current.forEach((h) => {
         try {
           h.unload();

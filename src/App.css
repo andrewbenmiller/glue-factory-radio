@@ -13,7 +13,7 @@
   top: 70px; /* Below the ticker, with 10px extra padding */
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
+  z-index: 98;
 }
 
 .logo-image-container {
@@ -31,6 +31,17 @@
 }
 
 
+/* Tap-away overlay above expanded archive */
+.archive-dismiss-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  cursor: pointer;
+}
+
 /* Archive footer - fixed to bottom, expands upward */
 .App-footer-archive {
   position: fixed;
@@ -40,8 +51,8 @@
   background: white;
   z-index: 100;
   transition: height 0.3s ease, max-height 0.3s ease;
-  height: 62px; /* Collapsed: 60px header + 2px border */
-  max-height: 62px;
+  height: 52px; /* Collapsed: 50px header + 2px border */
+  max-height: 52px;
   overflow: hidden;
 }
 
