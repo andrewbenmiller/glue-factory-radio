@@ -140,7 +140,7 @@ const ShowList: React.FC<ShowListProps> = ({
 
               {/* Description (shown when expanded) */}
               {show.description && (
-                <p className="show-item-description">{renderDescription(show.description)}</p>
+                <p className="show-item-description" onClick={(e) => toggleShowExpansion(index, e)}>{renderDescription(show.description)}</p>
               )}
 
               {/* Tracks dropdown */}
