@@ -402,7 +402,7 @@ function App() {
       {archiveExpanded && (
         <div
           className="archive-dismiss-overlay"
-          onClick={() => setArchiveExpanded(false)}
+          onClick={() => { setArchiveExpanded(false); setActivePage(null); }}
         />
       )}
 
@@ -412,7 +412,7 @@ function App() {
         <div className="archive-sticky-block">
           <div
             className="archive-header-row clickable"
-            onClick={() => setArchiveExpanded(!archiveExpanded)}
+            onClick={() => { setArchiveExpanded(!archiveExpanded); if (archiveExpanded) setActivePage(null); }}
           >
             <span className="archive-header-text">{archiveExpanded ? 'CLOSE THE ARCHIVE' : 'OPEN THE ARCHIVE'}</span>
             <span className={`archive-arrow ${archiveExpanded ? 'expanded' : ''}`}>
