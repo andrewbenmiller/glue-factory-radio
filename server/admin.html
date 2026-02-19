@@ -468,12 +468,6 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="firstTrackTitle">First Track Title (Optional)</label>
-                        <input type="text" id="firstTrackTitle" name="trackTitle" placeholder="Enter custom title for first track">
-                        <small>If provided, this will be used for the first track. Otherwise, track names will be extracted from filenames.</small>
-                    </div>
-
-                    <div class="form-group">
                         <label>Tags</label>
                         <div class="tag-input-container" id="createShowTagContainer">
                             <div class="tag-pills" id="createShowTagPills"></div>
@@ -598,6 +592,11 @@
                     <small style="color: #666;">To add a link: highlight text, then paste a URL</small>
                 </div>
                 <div class="form-group">
+                    <label for="editCreatedDate">Created Date</label>
+                    <input type="datetime-local" id="editCreatedDate">
+                    <small>Change this to reorder the show in the archive.</small>
+                </div>
+                <div class="form-group">
                     <label>Tags</label>
                     <div class="tag-input-container" id="editTagContainer">
                         <div class="tag-pills" id="editTagPills"></div>
@@ -628,11 +627,6 @@
                     <label for="addTrackAudio">Audio File(s) *</label>
                     <input type="file" id="addTrackAudio" name="audio" accept="audio/*" multiple required>
                     <small>Select one or multiple audio files. Track names will be extracted from filenames automatically.</small>
-                </div>
-                <div class="form-group">
-                    <label for="addTrackFirstTitle">First Track Title (Optional)</label>
-                    <input type="text" id="addTrackFirstTitle" name="trackTitle" placeholder="Enter custom title for first track">
-                    <small>If provided, this will be used for the first track only.</small>
                 </div>
                 <div id="addTrackFilePreview" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
                     <strong>Selected Files:</strong>

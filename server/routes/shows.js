@@ -251,12 +251,18 @@ router.get('/:id', (req, res) => {
 // PUT update show
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, description, tags } = req.body;
+  const { title, description, tags, created_date } = req.body;
 
   try {
     // Update show fields
+    const sql = created_date
+      ? 'UPDATE shows SET title = ?, description = ?, created_date = ? WHERE id = ?'
+      : 'UPDATE shows SET title = ?, description = ? WHERE id = ?';
+    const params = created_date
+      ? [title, description, created_date, id]
+      : [title, description, id];
     await new Promise((resolve, reject) => {
-      db.run('UPDATE shows SET title = ?, description = ? WHERE id = ?', [title, description, id], function(err) {
+      db.run(sql, params, function(err) {
         if (err) return reject(err);
         if (this.changes === 0) return reject(new Error('Show not found'));
         resolve();

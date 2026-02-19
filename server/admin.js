@@ -933,6 +933,13 @@ function editShow(showId) {
     document.getElementById('editTitle').value = show.title;
     document.getElementById('editDescription').value = show.description || '';
 
+    // Populate created date
+    if (show.created_date) {
+        const dt = new Date(show.created_date);
+        const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        document.getElementById('editCreatedDate').value = local;
+    }
+
     // Populate tags
     clearTags('edit');
     if (show.tags && Array.isArray(show.tags)) {
@@ -954,6 +961,8 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     const showId = document.getElementById('editShowId').value;
     const title = document.getElementById('editTitle').value;
     const description = document.getElementById('editDescription').value;
+    const createdDateInput = document.getElementById('editCreatedDate').value;
+    const created_date = createdDateInput ? new Date(createdDateInput).toISOString() : undefined;
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/shows/${showId}`, {
@@ -961,7 +970,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ title, description, tags: getTagsForContext('edit') })
+            body: JSON.stringify({ title, description, created_date, tags: getTagsForContext('edit') })
         });
 
         if (!response.ok) {
@@ -1573,12 +1582,13 @@ function renderTagPills(context) {
     ).join('');
 }
 
-// Add tag from the input field
+// Add tag from the input field (supports comma-separated tags)
 function addTagFromInput(context) {
     const input = document.getElementById(`${context}TagInput`);
     if (!input) return;
 
-    addTag(context, input.value);
+    const tags = input.value.split(',').map(t => t.trim()).filter(Boolean);
+    tags.forEach(tag => addTag(context, tag));
     input.value = '';
     hideSuggestions(context);
 }
