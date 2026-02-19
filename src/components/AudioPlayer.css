@@ -156,10 +156,21 @@
   color: #ff1900;
   padding: 20px;
   flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.archive-info-show:hover {
+  color: #d41500;
 }
 
 .archive-info-label {
   text-transform: uppercase;
+  background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='6' x2='6' y2='0' stroke='rgba(255%2C25%2C0%2C0.25)' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 6px 6px;
+  padding: 4px 6px;
+}
+
+.archive-info-show-name {
 }
 
 .archive-info-track {
@@ -341,13 +352,18 @@
   }
 
   .archive-info-show {
-    font-size: 12px;
+    font-size: 14px;
+    padding: 0;
+  }
+
+  .archive-info-label {
+    background-image: none;
     padding: 0;
   }
 
   .archive-info-track {
     font-size: 12px;
-    padding: 4px 0 0 0;
+    padding: 6px 0 0 0;
     text-align: center;
   }
 

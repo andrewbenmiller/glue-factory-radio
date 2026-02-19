@@ -86,6 +86,22 @@
   box-sizing: border-box;
 }
 
+/* Expand chevron */
+.show-item-chevron {
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+  opacity: 0.5;
+  transform-origin: center;
+  position: relative;
+  top: 0;
+  margin-left: 12px;
+}
+
+.show-item.expanded .show-item-chevron {
+  transform: rotate(90deg);
+}
+
 /* Duration column */
 .show-item-duration {
   font-size: 18px;
@@ -354,6 +370,12 @@
   .show-item-title {
     font-size: 14px;
     padding: 10px;
+  }
+
+  .show-item-chevron {
+    top: -1px;
+    width: 6px;
+    height: 10px;
   }
 
   .show-item-duration {

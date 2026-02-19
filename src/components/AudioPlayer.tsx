@@ -348,7 +348,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                 </button>
               </div>
               <span className="archive-info-show" onClick={onShowNavigate} style={{ cursor: onShowNavigate ? 'pointer' : undefined }}>
-                <span className="archive-info-label">Currently loaded:</span> {showName}
+                <span className="archive-info-label">Currently loaded:</span> <span className="archive-info-show-name">{showName}</span>
               </span>
               <span className="archive-info-track">
                 Track {index + 1}/{tracks.length}: {title}
