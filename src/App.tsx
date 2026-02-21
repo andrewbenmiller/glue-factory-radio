@@ -9,7 +9,7 @@ import LiveStreamButton from './components/LiveStreamButton';
 import { useLiveStatus } from './hooks/useLiveStatus';
 import { useMediaSession } from './hooks/useMediaSession';
 import { useAudio } from './audio/AudioProvider';
-import { apiService, Show, PageContent } from './services/api';
+import { apiService, API_BASE_URL, Show, PageContent } from './services/api';
 import logo from './logo.png';
 const lockScreenArt = window.location.origin + '/web-app-manifest-512x512.png';
 
@@ -363,7 +363,7 @@ function App() {
   // Convert show tracks to EpisodePlayer format
   const convertShowToTracks = (show: Show): Track[] => {
     return show.tracks.map(track => ({
-      src: `https://glue-factory-radio-production.up.railway.app/api${track.url}`,
+      src: `${API_BASE_URL}/api${track.url}`,
       title: track.title
     }));
   };

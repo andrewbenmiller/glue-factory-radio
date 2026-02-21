@@ -22,7 +22,7 @@ const corsOptions = {
       'https://radio.gluefactorymusic.com',
       'https://gluefactoryradio.com',
       'https://www.gluefactoryradio.com',
-      process.env.CORS_ORIGIN
+      ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()) : [])
     ].filter(Boolean);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -106,7 +106,7 @@ app.get("/api/images/:filename", async (req, res) => {
     }
 
     // Construct the key for the image in R2
-    const key = `uploads/images/${filename}`;
+    const key = `${cloudStorage.keyPrefix}uploads/images/${filename}`;
     
     const { GetObjectCommand } = require('@aws-sdk/client-s3');
     const command = new GetObjectCommand({
@@ -145,7 +145,7 @@ app.get("/api/audio/:filename", async (req, res) => {
   try {
     const cloudStorage = require("./services/cloudStorage");
     const Bucket = process.env.S3_BUCKET_NAME;
-    const Key = `uploads/${filename}`;
+    const Key = `${cloudStorage.keyPrefix}uploads/${filename}`;
 
     // We need the true total size for Content-Range math.
     // R2/S3 doesn't always include ContentLength on ranged GetObject the way you want,

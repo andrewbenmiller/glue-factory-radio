@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../services/api';
 import './BackgroundManager.css';
 
 interface BackgroundImage {
@@ -22,7 +23,7 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
   const fetchBackgroundImages = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('https://glue-factory-radio-production.up.railway.app/api/upload/background-images');
+      const response = await fetch(`${API_BASE_URL}/api/upload/background-images`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch background images: ${response.status}`);

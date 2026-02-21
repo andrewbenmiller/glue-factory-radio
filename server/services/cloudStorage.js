@@ -6,6 +6,9 @@ class CloudStorageService {
   constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
     
+    // Optional key prefix for environment isolation (e.g., "staging/" keeps staging files separate)
+    this.keyPrefix = process.env.R2_KEY_PREFIX || '';
+
     if (this.isProduction) {
       // Production: Use Cloudflare R2 or AWS S3
       this.s3Client = new S3Client({
@@ -17,7 +20,7 @@ class CloudStorageService {
         },
         forcePathStyle: true, // Required for some S3-compatible services
       });
-      
+
       this.bucketName = process.env.S3_BUCKET_NAME;
     }
   }
@@ -36,7 +39,7 @@ class CloudStorageService {
 
     try {
       const fileStream = fs.createReadStream(filePath);
-      const key = `uploads/${fileName}`;
+      const key = `${this.keyPrefix}uploads/${fileName}`;
 
       const uploadParams = {
         Bucket: this.bucketName,

@@ -7,6 +7,8 @@ const db = require('../config/database');
 const mp3Duration = require('mp3-duration');
 const cloudStorage = require('../services/cloudStorage');
 
+const BACKEND_URL = process.env.BACKEND_URL || 'https://glue-factory-radio-production.up.railway.app';
+
 // Function to extract track order number from filename (e.g., "03 - Song.mp3" -> 3, "Song.mp3" -> null)
 function extractTrackOrderFromFilename(filename) {
   const name = path.parse(filename).name;
@@ -545,7 +547,7 @@ router.post('/background-image', imageUpload.single('image'), async (req, res) =
           message: 'Background image uploaded successfully',
           image: {
             ...image,
-            url: `https://glue-factory-radio-production.up.railway.app/api/images/${filename}`
+            url: `${BACKEND_URL}/api/images/${filename}`
           }
         });
       });
@@ -569,7 +571,7 @@ router.get('/background-images', (req, res) => {
       // Use proxy route for images (similar to audio files)
       const imagesWithUrls = images.map(image => ({
         ...image,
-        url: `https://glue-factory-radio-production.up.railway.app/api/images/${image.filename}`
+        url: `${BACKEND_URL}/api/images/${image.filename}`
       }));
 
       res.json(imagesWithUrls);
