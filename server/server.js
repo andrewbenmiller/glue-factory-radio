@@ -236,7 +236,20 @@ app.get("/api/db-status", (req, res) => {
         res.json({ engine: 'sqlite', tables: (rows2 || []).map(r => r.name) });
       });
     } else {
-      res.json({ engine: 'postgresql', tables: (rows || []).map(r => r.table_name) });
+      const tables = (rows || []).map(r => r.table_name);
+      if (!tables.includes('series')) {
+        db.run("CREATE TABLE IF NOT EXISTS series (id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", (createErr) => {
+          db.all("SELECT column_name FROM information_schema.columns WHERE table_name = 'shows' ORDER BY ordinal_position", [], (colErr, colRows) => {
+            res.json({
+              engine: 'postgresql', tables,
+              seriesCreateAttempt: createErr ? createErr.message : 'success',
+              showsColumns: colErr ? colErr.message : (colRows || []).map(r => r.column_name)
+            });
+          });
+        });
+      } else {
+        res.json({ engine: 'postgresql', tables });
+      }
     }
   });
 });
