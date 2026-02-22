@@ -225,6 +225,22 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Database diagnostic endpoint
+app.get("/api/db-status", (req, res) => {
+  const db = require('./config/database');
+  db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name", [], (err, rows) => {
+    if (err) {
+      // Might be SQLite
+      db.all("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name", [], (err2, rows2) => {
+        if (err2) return res.json({ error: err2.message, pgError: err.message });
+        res.json({ engine: 'sqlite', tables: (rows2 || []).map(r => r.name) });
+      });
+    } else {
+      res.json({ engine: 'postgresql', tables: (rows || []).map(r => r.table_name) });
+    }
+  });
+});
+
 // R2 diagnostic endpoint - check cloud storage connection
 app.get("/api/r2-status", async (req, res) => {
   const cloudStorage = require('./services/cloudStorage');
