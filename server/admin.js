@@ -1686,15 +1686,13 @@ setupTagInput('edit');
 // Load series list for dropdowns
 async function loadSeriesList() {
     try {
-        console.log('📚 Loading series list from:', `${API_BASE_URL}/api/series/admin`);
         const response = await fetch(`${API_BASE_URL}/api/series/admin`);
         if (!response.ok) throw new Error(`Failed to fetch series: ${response.status}`);
         allSeries = await response.json();
-        console.log('📚 Series loaded:', allSeries.length, 'series');
         populateSeriesDropdowns();
         return allSeries;
     } catch (error) {
-        console.error('📚 Error loading series:', error);
+        console.error('Error loading series:', error);
         return [];
     }
 }
@@ -1761,11 +1759,9 @@ function setupCreateSeriesForm() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        console.log('📚 Series form submitted');
 
         const title = document.getElementById('seriesTitle').value.trim();
         const description = document.getElementById('seriesDescription').value.trim();
-        console.log('📚 Series data:', { title, description });
 
         if (!title) {
             showStatus('Series title is required', 'error');
@@ -1777,32 +1773,25 @@ function setupCreateSeriesForm() {
         btn.textContent = 'Creating...';
 
         try {
-            const url = `${API_BASE_URL}/api/series`;
-            console.log('📚 Posting to:', url);
-            const response = await fetch(url, {
+            const response = await fetch(`${API_BASE_URL}/api/series`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, description })
             });
-            console.log('📚 Response status:', response.status);
 
             if (!response.ok) {
-                const errText = await response.text();
-                console.error('📚 Error response body:', errText);
-                let errMsg = 'Failed to create series';
-                try { errMsg = JSON.parse(errText).error || errMsg; } catch(e) {}
-                throw new Error(errMsg);
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to create series');
             }
 
             const result = await response.json();
-            console.log('📚 Series created:', result);
             showStatus(`Created series "${result.title}"`, 'success');
             form.reset();
             await loadSeriesList();
             loadSeriesManagement();
 
         } catch (error) {
-            console.error('📚 Series creation failed:', error);
+            console.error('Series creation error:', error);
             showStatus(`Failed to create series: ${error.message}`, 'error');
         } finally {
             btn.disabled = false;
