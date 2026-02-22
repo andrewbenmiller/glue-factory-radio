@@ -225,32 +225,48 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Database diagnostic endpoint
+// Database diagnostic endpoint - also runs missing migrations
 app.get("/api/db-status", (req, res) => {
   const db = require('./config/database');
+  const results = {};
+
   db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name", [], (err, rows) => {
     if (err) {
-      // Might be SQLite
       db.all("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name", [], (err2, rows2) => {
         if (err2) return res.json({ error: err2.message, pgError: err.message });
         res.json({ engine: 'sqlite', tables: (rows2 || []).map(r => r.name) });
       });
-    } else {
-      const tables = (rows || []).map(r => r.table_name);
-      if (!tables.includes('series')) {
-        db.run("CREATE TABLE IF NOT EXISTS series (id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", (createErr) => {
-          db.all("SELECT column_name FROM information_schema.columns WHERE table_name = 'shows' ORDER BY ordinal_position", [], (colErr, colRows) => {
-            res.json({
-              engine: 'postgresql', tables,
-              seriesCreateAttempt: createErr ? createErr.message : 'success',
-              showsColumns: colErr ? colErr.message : (colRows || []).map(r => r.column_name)
+      return;
+    }
+
+    results.engine = 'postgresql';
+    results.tables = (rows || []).map(r => r.table_name);
+
+    // Ensure series table exists
+    db.run("CREATE TABLE IF NOT EXISTS series (id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", (e1) => {
+      results.seriesTable = e1 ? e1.message : 'ok';
+
+      // Ensure series_id column on shows
+      db.run("ALTER TABLE shows ADD COLUMN IF NOT EXISTS series_id INTEGER REFERENCES series(id) ON DELETE SET NULL", (e2) => {
+        results.addSeriesId = e2 ? e2.message : 'ok';
+
+        // Ensure episode_number column on shows
+        db.run("ALTER TABLE shows ADD COLUMN IF NOT EXISTS episode_number INTEGER", (e3) => {
+          results.addEpisodeNumber = e3 ? e3.message : 'ok';
+
+          // Ensure index
+          db.run("CREATE INDEX IF NOT EXISTS idx_shows_series_id ON shows(series_id)", (e4) => {
+            results.addIndex = e4 ? e4.message : 'ok';
+
+            // Report final columns
+            db.all("SELECT column_name FROM information_schema.columns WHERE table_name = 'shows' ORDER BY ordinal_position", [], (colErr, colRows) => {
+              results.showsColumns = colErr ? colErr.message : (colRows || []).map(r => r.column_name);
+              res.json(results);
             });
           });
         });
-      } else {
-        res.json({ engine: 'postgresql', tables });
-      }
-    }
+      });
+    });
   });
 });
 
