@@ -3,6 +3,7 @@ const API_BASE_URL = window.location.origin; // Use the same domain as the admin
 
 // Global variables
 let shows = [];
+let allSeries = [];
 let currentDeleteId = null;
 let expandedShows = new Set();
 
@@ -17,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setupPasteToLink('editDescription');
     loadShows();
     loadStats();
+    loadSeriesList();
+    setupSeriesSelect();
+    setupCreateSeriesForm();
 });
 
 
@@ -51,6 +55,8 @@ function setupTabNavigation() {
                 loadPages();
             } else if (targetTab === 'stats') {
                 loadStats();
+            } else if (targetTab === 'series') {
+                loadSeriesManagement();
             }
         });
     });
@@ -119,6 +125,16 @@ function setupUploadForm() {
         const createShowTags = getTagsForContext('createShow');
         if (createShowTags.length > 0) {
             formData.set('tags', JSON.stringify(createShowTags));
+        }
+
+        // Add series info to FormData
+        const seriesId = document.getElementById('seriesSelect').value;
+        if (seriesId) {
+            formData.set('series_id', seriesId);
+            const epNum = document.getElementById('episodeNumber').value;
+            if (epNum) {
+                formData.set('episode_number', epNum);
+            }
         }
 
         // Disable upload button and show progress
@@ -234,6 +250,8 @@ function setupUploadForm() {
                         uploadBtn.disabled = false;
                         uploadBtn.textContent = 'Create Show';
                         clearTags('createShow');
+                        document.getElementById('seriesSelect').value = '';
+                        document.getElementById('episodeNumberGroup').style.display = 'none';
 
                         // Refresh shows list
                         loadShows();
@@ -618,6 +636,7 @@ function renderShowsTable() {
                             <td>
                                 <span class="expand-icon">▶</span>
                                 <strong>${escapeHtml(show.title)}</strong>
+                                ${show.series_title ? `<br><small style="color:#666;">Series: ${escapeHtml(show.series_title)} &bull; Ep. ${show.episode_number || '?'}</small>` : ''}
                             </td>
                             <td>
                                 ${renderDescriptionWithLinks(show.description)}
@@ -940,6 +959,11 @@ function editShow(showId) {
         document.getElementById('editCreatedDate').value = local;
     }
 
+    // Populate series fields
+    document.getElementById('editSeriesSelect').value = show.series_id || '';
+    document.getElementById('editEpisodeNumber').value = show.episode_number || '';
+    document.getElementById('editEpisodeNumberGroup').style.display = show.series_id ? 'block' : 'none';
+
     // Populate tags
     clearTags('edit');
     if (show.tags && Array.isArray(show.tags)) {
@@ -963,6 +987,8 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     const description = document.getElementById('editDescription').value;
     const createdDateInput = document.getElementById('editCreatedDate').value;
     const created_date = createdDateInput ? new Date(createdDateInput).toISOString() : undefined;
+    const series_id = document.getElementById('editSeriesSelect').value || null;
+    const episode_number = document.getElementById('editEpisodeNumber').value || null;
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/shows/${showId}`, {
@@ -970,7 +996,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ title, description, created_date, tags: getTagsForContext('edit') })
+            body: JSON.stringify({ title, description, created_date, tags: getTagsForContext('edit'), series_id, episode_number })
         });
 
         if (!response.ok) {
@@ -1654,3 +1680,206 @@ function setupTagInput(context) {
 // Initialize tag inputs
 setupTagInput('createShow');
 setupTagInput('edit');
+
+// ========== Series Management ==========
+
+// Load series list for dropdowns
+async function loadSeriesList() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/series/admin`);
+        if (!response.ok) throw new Error(`Failed to fetch series: ${response.status}`);
+        allSeries = await response.json();
+        populateSeriesDropdowns();
+        return allSeries;
+    } catch (error) {
+        console.error('Error loading series:', error);
+        return [];
+    }
+}
+
+// Populate series dropdowns on create and edit forms
+function populateSeriesDropdowns() {
+    const selects = [
+        document.getElementById('seriesSelect'),
+        document.getElementById('editSeriesSelect')
+    ];
+
+    selects.forEach(select => {
+        if (!select) return;
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">-- Standalone Show --</option>';
+        allSeries.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.title;
+            select.appendChild(opt);
+        });
+        select.value = currentValue;
+    });
+}
+
+// Setup series select change handlers (show/hide episode number)
+function setupSeriesSelect() {
+    const seriesSelect = document.getElementById('seriesSelect');
+    const epGroup = document.getElementById('episodeNumberGroup');
+    const epInput = document.getElementById('episodeNumber');
+
+    if (seriesSelect) {
+        seriesSelect.addEventListener('change', async () => {
+            if (seriesSelect.value) {
+                epGroup.style.display = 'block';
+                try {
+                    const resp = await fetch(`${API_BASE_URL}/api/series/${seriesSelect.value}/next-episode`);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        epInput.placeholder = `Auto: ${data.next_episode}`;
+                        epInput.value = '';
+                    }
+                } catch (e) { /* ignore */ }
+            } else {
+                epGroup.style.display = 'none';
+                epInput.value = '';
+            }
+        });
+    }
+
+    const editSeriesSelect = document.getElementById('editSeriesSelect');
+    const editEpGroup = document.getElementById('editEpisodeNumberGroup');
+    if (editSeriesSelect) {
+        editSeriesSelect.addEventListener('change', () => {
+            editEpGroup.style.display = editSeriesSelect.value ? 'block' : 'none';
+        });
+    }
+}
+
+// Setup create series form
+function setupCreateSeriesForm() {
+    const form = document.getElementById('createSeriesForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('seriesTitle').value.trim();
+        const description = document.getElementById('seriesDescription').value.trim();
+
+        if (!title) {
+            showStatus('Series title is required', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('createSeriesBtn');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/series`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to create series');
+            }
+
+            const result = await response.json();
+            showStatus(`Created series "${result.title}"`, 'success');
+            form.reset();
+            await loadSeriesList();
+            loadSeriesManagement();
+
+        } catch (error) {
+            showStatus(`Failed to create series: ${error.message}`, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Create Series';
+        }
+    });
+}
+
+// Render series management list in the Series tab
+async function loadSeriesManagement() {
+    const container = document.getElementById('seriesListContainer');
+    if (!container) return;
+
+    try {
+        const series = await loadSeriesList();
+        if (series.length === 0) {
+            container.innerHTML = '<p>No series created yet.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <h3>Existing Series</h3>
+            <table class="shows-table">
+                <thead><tr>
+                    <th>Title</th><th>Description</th><th>Episodes</th><th>Actions</th>
+                </tr></thead>
+                <tbody>
+                    ${series.map(s => `
+                        <tr>
+                            <td><strong>${escapeHtml(s.title)}</strong></td>
+                            <td>${escapeHtml(s.description || '')}</td>
+                            <td>${s.episode_count || 0}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-edit" onclick="editSeries(${s.id})">Edit</button>
+                                    <button class="btn-delete" onclick="deleteSeries(${s.id}, '${escapeHtml(s.title).replace(/'/g, "\\'")}')">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (error) {
+        container.innerHTML = `<p>Error loading series: ${error.message}</p>`;
+    }
+}
+
+// Edit series
+function editSeries(seriesId) {
+    const series = allSeries.find(s => s.id === seriesId);
+    if (!series) return;
+
+    const newTitle = prompt('Series title:', series.title);
+    if (newTitle === null) return;
+    const newDescription = prompt('Series description:', series.description || '');
+    if (newDescription === null) return;
+
+    fetch(`${API_BASE_URL}/api/series/${seriesId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle, description: newDescription })
+    })
+    .then(resp => {
+        if (!resp.ok) throw new Error('Failed to update series');
+        return resp.json();
+    })
+    .then(() => {
+        showStatus('Series updated', 'success');
+        loadSeriesList();
+        loadSeriesManagement();
+    })
+    .catch(err => showStatus(`Failed to update series: ${err.message}`, 'error'));
+}
+
+// Delete series
+function deleteSeries(seriesId, seriesTitle) {
+    if (!confirm(`Delete series "${seriesTitle}"? Episodes will become standalone shows.`)) return;
+
+    fetch(`${API_BASE_URL}/api/series/${seriesId}`, { method: 'DELETE' })
+    .then(resp => {
+        if (!resp.ok) throw new Error('Failed to delete series');
+        return resp.json();
+    })
+    .then(() => {
+        showStatus('Series deleted, episodes are now standalone shows', 'success');
+        loadSeriesList();
+        loadSeriesManagement();
+        loadShows();
+    })
+    .catch(err => showStatus(`Failed to delete series: ${err.message}`, 'error'));
+}

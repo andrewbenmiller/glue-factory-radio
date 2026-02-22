@@ -308,7 +308,7 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
       filesCount: req.files ? req.files.length : 0
     });
     
-    const { title, description, trackTitle, tags: tagsRaw } = req.body;
+    const { title, description, trackTitle, tags: tagsRaw, series_id, episode_number } = req.body;
     const audioFiles = req.files || [];
 
     if (!title) {
@@ -321,10 +321,13 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
     }
 
     // Create the show first
+    const seriesIdParsed = series_id ? parseInt(series_id, 10) : null;
+    const episodeNumberParsed = episode_number ? parseInt(episode_number, 10) : null;
+
     db.run(`
-      INSERT INTO shows (title, description)
-      VALUES (?, ?)
-    `, [title, description || ''], async function(err) {
+      INSERT INTO shows (title, description, series_id, episode_number)
+      VALUES (?, ?, ?, ?)
+    `, [title, description || '', seriesIdParsed, episodeNumberParsed], async function(err) {
       if (err) {
         console.error('Error creating show:', err);
         return res.status(500).json({ error: 'Failed to create show' });

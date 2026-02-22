@@ -26,6 +26,18 @@ export interface Show {
   total_tracks: number;
   tracks: Track[];
   tags?: string[];
+  series_id?: number | null;
+  series_title?: string | null;
+  episode_number?: number | null;
+}
+
+export interface Series {
+  id: number;
+  title: string;
+  description?: string;
+  created_at: string;
+  episode_count: number;
+  total_duration: number;
 }
 
 export interface UploadResponse {
@@ -103,6 +115,24 @@ class ApiService {
   // Get the full URL for a show
   getShowUrl(filename: string): string {
     return `${this.baseUrl}/uploads/${filename}`;
+  }
+
+  // Get all series (public)
+  async getSeries(): Promise<Series[]> {
+    const response = await fetch(`${this.baseUrl}/api/series`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch series: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // Get single series with episodes
+  async getSeriesDetail(id: number): Promise<Series & { episodes: Show[] }> {
+    const response = await fetch(`${this.baseUrl}/api/series/${id}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch series: ${response.status}`);
+    }
+    return response.json();
   }
 
   // Get page content by name

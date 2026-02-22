@@ -264,6 +264,35 @@ function initializeSQLiteDatabase() {
     }
   });
 
+  // Series table - Groups of related shows
+  db.run(`
+    CREATE TABLE IF NOT EXISTS series (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating series table:', err.message);
+    } else {
+      console.log('✅ Series table ready');
+    }
+  });
+
+  // Add series_id and episode_number columns to shows (for existing databases)
+  db.run(`ALTER TABLE shows ADD COLUMN series_id INTEGER REFERENCES series(id) ON DELETE SET NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding series_id column:', err.message);
+    }
+  });
+
+  db.run(`ALTER TABLE shows ADD COLUMN episode_number INTEGER`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding episode_number column:', err.message);
+    }
+  });
+
   // Tags table - Unique genre/category tags
   db.run(`
     CREATE TABLE IF NOT EXISTS tags (
@@ -325,6 +354,12 @@ function initializeSQLiteDatabase() {
   });
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_show_tags_tag_id ON show_tags(tag_id)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shows_series_id ON shows(series_id)`, (err) => {
     if (err) {
       console.error('Error creating index:', err.message);
     }
@@ -401,6 +436,13 @@ async function initializePostgreSQLDatabase() {
       )
     `);
 
+    await safeQuery(client, 'Series table', `
+      CREATE TABLE IF NOT EXISTS series (
+        id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await safeQuery(client, 'Tags table', `
       CREATE TABLE IF NOT EXISTS tags (
         id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL,
@@ -441,6 +483,8 @@ async function initializePostgreSQLDatabase() {
 
     // Migrations for existing databases
     await safeQuery(client, 'Add url column', `ALTER TABLE background_images ADD COLUMN IF NOT EXISTS url TEXT`);
+    await safeQuery(client, 'Add series_id column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS series_id INTEGER REFERENCES series(id) ON DELETE SET NULL`);
+    await safeQuery(client, 'Add episode_number column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS episode_number INTEGER`);
 
     // Insert default pages
     const defaultPages = ['about', 'events', 'contact', 'live_label'];
@@ -458,6 +502,7 @@ async function initializePostgreSQLDatabase() {
     await safeQuery(client, 'Index: shows.is_active', `CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`);
     await safeQuery(client, 'Index: show_tags.show_id', `CREATE INDEX IF NOT EXISTS idx_show_tags_show_id ON show_tags(show_id)`);
     await safeQuery(client, 'Index: show_tags.tag_id', `CREATE INDEX IF NOT EXISTS idx_show_tags_tag_id ON show_tags(tag_id)`);
+    await safeQuery(client, 'Index: shows.series_id', `CREATE INDEX IF NOT EXISTS idx_shows_series_id ON shows(series_id)`);
 
     console.log('✅ Database schema is up to date');
   } finally {

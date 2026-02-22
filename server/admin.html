@@ -442,6 +442,7 @@
                 <li class="nav-tab" data-tab="backgrounds">🖼️ Background Images</li>
                 <li class="nav-tab" data-tab="pages">📄 Pages</li>
                 <li class="nav-tab" data-tab="stats">📊 Statistics</li>
+                <li class="nav-tab" data-tab="series">📚 Series</li>
             </ul>
         </div>
 
@@ -461,6 +462,19 @@
                         <small style="color: #666;">To add a link: highlight text, then paste a URL</small>
                     </div>
                     
+                    <div class="form-group">
+                        <label for="seriesSelect">Series (optional)</label>
+                        <select id="seriesSelect" name="series_id">
+                            <option value="">-- Standalone Show --</option>
+                        </select>
+                        <small>Assign this show to a series. Episode number auto-assigned.</small>
+                    </div>
+                    <div class="form-group" id="episodeNumberGroup" style="display: none;">
+                        <label for="episodeNumber">Episode Number</label>
+                        <input type="number" id="episodeNumber" name="episode_number" min="1" placeholder="Auto-assigned">
+                        <small>Override the auto-assigned episode number.</small>
+                    </div>
+
                     <div class="form-group">
                         <label for="audio">Audio File(s) *</label>
                         <input type="file" id="audio" name="audio" accept="audio/*" multiple>
@@ -570,6 +584,35 @@
                 </div>
             </div>
         </div>
+
+        <!-- Series Tab -->
+        <div id="series" class="tab-content">
+            <h2>Series Management</h2>
+
+            <div class="upload-section">
+                <h3>Create New Series</h3>
+                <form id="createSeriesForm">
+                    <div class="form-group">
+                        <label for="seriesTitle">Series Title *</label>
+                        <input type="text" id="seriesTitle" name="title" required placeholder="Enter series title (e.g. Monday Mix)">
+                    </div>
+                    <div class="form-group">
+                        <label for="seriesDescription">Series Description</label>
+                        <textarea id="seriesDescription" name="description" placeholder="Enter series description"></textarea>
+                    </div>
+                    <button type="submit" class="upload-button" id="createSeriesBtn">
+                        Create Series
+                    </button>
+                </form>
+            </div>
+
+            <div id="seriesListContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading series...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Status Messages -->
@@ -595,6 +638,16 @@
                     <label for="editCreatedDate">Created Date</label>
                     <input type="datetime-local" id="editCreatedDate">
                     <small>Change this to reorder the show in the archive.</small>
+                </div>
+                <div class="form-group">
+                    <label for="editSeriesSelect">Series</label>
+                    <select id="editSeriesSelect">
+                        <option value="">-- Standalone Show --</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editEpisodeNumberGroup" style="display: none;">
+                    <label for="editEpisodeNumber">Episode Number</label>
+                    <input type="number" id="editEpisodeNumber" min="1" placeholder="Auto-assigned">
                 </div>
                 <div class="form-group">
                     <label>Tags</label>

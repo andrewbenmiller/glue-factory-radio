@@ -7,8 +7,10 @@ const path = require('path');
 // GET all shows (admin endpoint - includes inactive)
 router.get('/admin', (req, res) => {
   const query = `
-    SELECT s.*, st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
+    SELECT s.*, ser.title as series_title,
+           st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
     FROM shows s
+    LEFT JOIN series ser ON s.series_id = ser.id
     LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = true
     ORDER BY s.created_date DESC, st.track_order
   `;
@@ -32,6 +34,9 @@ router.get('/admin', (req, res) => {
           is_active: row.is_active,
           total_duration: row.total_duration,
           total_tracks: 0, // Will be calculated from actual tracks
+          series_id: row.series_id || null,
+          series_title: row.series_title || null,
+          episode_number: row.episode_number || null,
           tags: [],
           tracks: []
         });
@@ -96,8 +101,10 @@ router.get('/admin', (req, res) => {
 // GET all shows (public endpoint - only active)
 router.get('/', (req, res) => {
   const query = `
-    SELECT s.*, st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
+    SELECT s.*, ser.title as series_title,
+           st.filename, st.duration, st.file_size, st.title as track_title, st.id as track_id, st.track_order, st.upload_date, st.is_active as track_active, st.play_count, st.last_played
     FROM shows s
+    LEFT JOIN series ser ON s.series_id = ser.id
     LEFT JOIN show_tracks st ON s.id = st.show_id AND st.is_active = true
     WHERE s.is_active = true
     ORDER BY s.created_date DESC, st.track_order
@@ -122,6 +129,9 @@ router.get('/', (req, res) => {
           is_active: row.is_active,
           total_duration: 0,
           total_tracks: 0,
+          series_id: row.series_id || null,
+          series_title: row.series_title || null,
+          episode_number: row.episode_number || null,
           tags: [],
           tracks: []
         });
@@ -251,16 +261,19 @@ router.get('/:id', (req, res) => {
 // PUT update show
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, description, tags, created_date } = req.body;
+  const { title, description, tags, created_date, series_id, episode_number } = req.body;
 
   try {
     // Update show fields
-    const sql = created_date
-      ? 'UPDATE shows SET title = ?, description = ?, created_date = ? WHERE id = ?'
-      : 'UPDATE shows SET title = ?, description = ? WHERE id = ?';
-    const params = created_date
-      ? [title, description, created_date, id]
-      : [title, description, id];
+    const fields = ['title = ?', 'description = ?'];
+    const params = [title, description];
+
+    if (created_date) { fields.push('created_date = ?'); params.push(created_date); }
+    if (series_id !== undefined) { fields.push('series_id = ?'); params.push(series_id || null); }
+    if (episode_number !== undefined) { fields.push('episode_number = ?'); params.push(episode_number || null); }
+
+    params.push(id);
+    const sql = `UPDATE shows SET ${fields.join(', ')} WHERE id = ?`;
     await new Promise((resolve, reject) => {
       db.run(sql, params, function(err) {
         if (err) return reject(err);
