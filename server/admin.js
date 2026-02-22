@@ -1,4 +1,5 @@
 // Glue Factory Radio Admin Portal JavaScript
+alert('admin.js loaded v2');
 const API_BASE_URL = window.location.origin; // Use the same domain as the admin interface
 
 // Global variables
