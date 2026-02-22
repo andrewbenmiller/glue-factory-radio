@@ -75,8 +75,11 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
                 onClick={() => onEpisodeSelect(ep)}
               >
                 <span className="episode-info">
-                  <span className="episode-number">Ep. {ep.episode_number}</span>
-                  <span className="episode-title">{ep.title}</span>
+                  <span className="episode-title">
+                    {selectedSeries.title && ep.episode_number
+                      ? `${selectedSeries.title} - Ep. ${ep.episode_number}: ${ep.title}`
+                      : ep.title}
+                  </span>
                 </span>
                 <span className="episode-meta">
                   <span className="episode-tracks">{ep.total_tracks} track{ep.total_tracks !== 1 ? 's' : ''}</span>
