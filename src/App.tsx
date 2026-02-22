@@ -586,7 +586,11 @@ function App() {
                     className="search-result-item"
                     onClick={() => handleSearchSelect(result.index)}
                   >
-                    <span className="search-result-title">{result.show.title}</span>
+                    <span className="search-result-title">
+                      {result.show.series_title && result.show.episode_number
+                        ? `${result.show.series_title} - Ep. ${result.show.episode_number}: ${result.show.title}`
+                        : result.show.title}
+                    </span>
                     <span className="search-result-meta">
                       {result.show.total_tracks} track{result.show.total_tracks !== 1 ? 's' : ''}
                       {result.show.tags && result.show.tags.length > 0 && (
