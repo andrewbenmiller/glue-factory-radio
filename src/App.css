@@ -217,6 +217,16 @@
   letter-spacing: 1px;
 }
 
+/* List-mode overlay: top-aligned, full-width content (used by Series page) */
+.page-overlay-list {
+  align-items: flex-start;
+}
+
+.page-overlay-list .page-overlay-content {
+  width: 100%;
+  text-align: left;
+}
+
 .page-text {
   font-size: 20px;
   line-height: 1.7;

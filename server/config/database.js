@@ -270,6 +270,7 @@ function initializeSQLiteDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       description TEXT,
+      cover_image TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `, (err) => {
@@ -277,6 +278,13 @@ function initializeSQLiteDatabase() {
       console.error('Error creating series table:', err.message);
     } else {
       console.log('✅ Series table ready');
+    }
+  });
+
+  // Add cover_image column to series (for existing databases)
+  db.run(`ALTER TABLE series ADD COLUMN cover_image TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding cover_image column:', err.message);
     }
   });
 
@@ -439,7 +447,7 @@ async function initializePostgreSQLDatabase() {
     await safeQuery(client, 'Series table', `
       CREATE TABLE IF NOT EXISTS series (
         id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        cover_image TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -484,6 +492,7 @@ async function initializePostgreSQLDatabase() {
     // Migrations for existing databases
     await safeQuery(client, 'Add url column', `ALTER TABLE background_images ADD COLUMN IF NOT EXISTS url TEXT`);
     await safeQuery(client, 'Add series_id column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS series_id INTEGER REFERENCES series(id) ON DELETE SET NULL`);
+    await safeQuery(client, 'Add cover_image column to series', `ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_image TEXT`);
     await safeQuery(client, 'Add episode_number column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS episode_number INTEGER`);
 
     // Insert default pages

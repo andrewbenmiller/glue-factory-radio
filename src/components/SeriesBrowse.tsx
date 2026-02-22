@@ -55,6 +55,11 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
         <button className="series-back" onClick={() => setSelectedSeries(null)}>
           ← ALL SERIES
         </button>
+        {selectedSeries.cover_image_url && (
+          <div className="series-detail-cover">
+            <img src={selectedSeries.cover_image_url} alt={selectedSeries.title} />
+          </div>
+        )}
         <h2 className="series-detail-title">{selectedSeries.title}</h2>
         {selectedSeries.description && (
           <p className="series-detail-description">{selectedSeries.description}</p>
@@ -69,9 +74,14 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
                 className="series-episode-item"
                 onClick={() => onEpisodeSelect(ep)}
               >
-                <span className="episode-number">Ep. {ep.episode_number}</span>
-                <span className="episode-title">{ep.title}</span>
-                <span className="episode-duration">{formatDuration(ep.total_duration)}</span>
+                <span className="episode-info">
+                  <span className="episode-number">Ep. {ep.episode_number}</span>
+                  <span className="episode-title">{ep.title}</span>
+                </span>
+                <span className="episode-meta">
+                  <span className="episode-tracks">{ep.total_tracks} track{ep.total_tracks !== 1 ? 's' : ''}</span>
+                  <span className="episode-duration">{formatDuration(ep.total_duration)}</span>
+                </span>
               </div>
             ))
           )}
@@ -80,18 +90,25 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
     );
   }
 
-  // Browse view
+  // Browse view — grid of square cards
   return (
     <div className="series-browse">
       {seriesList.length === 0 ? (
         <div className="series-empty">No series yet</div>
       ) : (
         seriesList.map(s => (
-          <div key={s.id} className="series-card" onClick={() => openSeriesDetail(s.id)}>
-            <span className="series-card-title">{s.title}</span>
-            <span className="series-card-meta">
-              {s.episode_count} episode{s.episode_count !== 1 ? 's' : ''}
-            </span>
+          <div
+            key={s.id}
+            className="series-card"
+            onClick={() => openSeriesDetail(s.id)}
+            style={s.cover_image_url ? { backgroundImage: `url(${s.cover_image_url})` } : undefined}
+          >
+            <div className="series-card-overlay">
+              <span className="series-card-title">{s.title}</span>
+              <span className="series-card-meta">
+                {s.episode_count} episode{s.episode_count !== 1 ? 's' : ''}
+              </span>
+            </div>
           </div>
         ))
       )}

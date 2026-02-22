@@ -600,6 +600,11 @@
                         <label for="seriesDescription">Series Description</label>
                         <textarea id="seriesDescription" name="description" placeholder="Enter series description"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label for="seriesCoverImage">Cover Image (optional)</label>
+                        <input type="file" id="seriesCoverImage" name="cover_image" accept="image/jpeg,image/jpg,image/png,image/webp">
+                        <small>JPG, PNG, or WebP. Maximum 10MB.</small>
+                    </div>
                     <button type="submit" class="upload-button" id="createSeriesBtn">
                         Create Series
                     </button>

@@ -459,7 +459,7 @@ function App() {
 
       {/* Page overlay for nav items */}
       {activePage && (
-        <div className="page-overlay">
+        <div className={`page-overlay${activePage === 'series' ? ' page-overlay-list' : ''}`}>
           <button className="page-overlay-close" onClick={() => setActivePage(null)} aria-label="Close">
           </button>
           <div className="page-overlay-content">

@@ -244,8 +244,12 @@ app.get("/api/db-status", (req, res) => {
     results.tables = (rows || []).map(r => r.table_name);
 
     // Ensure series table exists
-    db.run("CREATE TABLE IF NOT EXISTS series (id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", (e1) => {
+    db.run("CREATE TABLE IF NOT EXISTS series (id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, cover_image TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", (e1) => {
       results.seriesTable = e1 ? e1.message : 'ok';
+
+      // Ensure cover_image column on series
+      db.run("ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_image TEXT", (e1b) => {
+        results.addCoverImage = e1b ? e1b.message : 'ok';
 
       // Ensure series_id column on shows
       db.run("ALTER TABLE shows ADD COLUMN IF NOT EXISTS series_id INTEGER REFERENCES series(id) ON DELETE SET NULL", (e2) => {
@@ -266,6 +270,7 @@ app.get("/api/db-status", (req, res) => {
             });
           });
         });
+      });
       });
     });
   });

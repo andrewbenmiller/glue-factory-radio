@@ -1785,7 +1785,26 @@ function setupCreateSeriesForm() {
             }
 
             const result = await response.json();
-            showStatus(`Created series "${result.title}"`, 'success');
+
+            // Upload cover image if selected
+            const coverInput = document.getElementById('seriesCoverImage');
+            if (coverInput.files.length > 0) {
+                btn.textContent = 'Uploading cover...';
+                const formData = new FormData();
+                formData.append('image', coverInput.files[0]);
+                const coverResp = await fetch(`${API_BASE_URL}/api/series/${result.id}/cover`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!coverResp.ok) {
+                    showStatus(`Series created but cover upload failed`, 'error');
+                } else {
+                    showStatus(`Created series "${result.title}" with cover`, 'success');
+                }
+            } else {
+                showStatus(`Created series "${result.title}"`, 'success');
+            }
+
             form.reset();
             await loadSeriesList();
             loadSeriesManagement();
@@ -1816,17 +1835,25 @@ async function loadSeriesManagement() {
             <h3>Existing Series</h3>
             <table class="shows-table">
                 <thead><tr>
-                    <th>Title</th><th>Description</th><th>Episodes</th><th>Actions</th>
+                    <th>Cover</th><th>Title</th><th>Description</th><th>Episodes</th><th>Actions</th>
                 </tr></thead>
                 <tbody>
                     ${series.map(s => `
                         <tr>
+                            <td style="width: 80px;">
+                                ${s.cover_image_url
+                                    ? `<img src="${s.cover_image_url}" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #ddd;">`
+                                    : `<span style="display: inline-block; width: 60px; height: 60px; background: #f0f0f0; border: 1px solid #ddd; text-align: center; line-height: 60px; font-size: 11px; color: #999;">No cover</span>`
+                                }
+                            </td>
                             <td><strong>${escapeHtml(s.title)}</strong></td>
                             <td>${escapeHtml(s.description || '')}</td>
                             <td>${s.episode_count || 0}</td>
                             <td>
                                 <div class="action-buttons">
                                     <button class="btn-edit" onclick="editSeries(${s.id})">Edit</button>
+                                    <label class="btn-edit" style="cursor: pointer;">Cover <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="uploadSeriesCover(${s.id}, this)"></label>
+                                    ${s.cover_image ? `<button class="btn-delete" onclick="removeSeriesCover(${s.id})">Remove Cover</button>` : ''}
                                     <button class="btn-delete" onclick="deleteSeries(${s.id}, '${escapeHtml(s.title).replace(/'/g, "\\'")}')">Delete</button>
                                 </div>
                             </td>
@@ -1883,4 +1910,35 @@ function deleteSeries(seriesId, seriesTitle) {
         loadShows();
     })
     .catch(err => showStatus(`Failed to delete series: ${err.message}`, 'error'));
+}
+
+// Upload cover image for an existing series
+async function uploadSeriesCover(seriesId, input) {
+    if (!input.files.length) return;
+    const formData = new FormData();
+    formData.append('image', input.files[0]);
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/series/${seriesId}/cover`, {
+            method: 'POST',
+            body: formData
+        });
+        if (!resp.ok) throw new Error('Upload failed');
+        showStatus('Cover image uploaded', 'success');
+        loadSeriesManagement();
+    } catch (err) {
+        showStatus(`Failed to upload cover: ${err.message}`, 'error');
+    }
+}
+
+// Remove cover image from a series
+async function removeSeriesCover(seriesId) {
+    if (!confirm('Remove cover image?')) return;
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/series/${seriesId}/cover`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Delete failed');
+        showStatus('Cover image removed', 'success');
+        loadSeriesManagement();
+    } catch (err) {
+        showStatus(`Failed to remove cover: ${err.message}`, 'error');
+    }
 }

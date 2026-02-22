@@ -1,6 +1,47 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const db = require('../config/database');
+const cloudStorage = require('../services/cloudStorage');
+
+const BACKEND_URL = process.env.BACKEND_URL || 'https://glue-factory-radio-production.up.railway.app';
+
+// Reuse same image upload config as upload.js
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadsDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const originalName = file.originalname.replace(/\s+/g, '_');
+    cb(null, `${timestamp}_${originalName}`);
+  }
+});
+
+const imageUpload = multer({
+  storage: imageStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = /image\/(jpeg|jpg|png|webp)/;
+    const allowedExtensions = /\.(jpg|jpeg|png|webp)$/i;
+    if (allowedMimeTypes.test(file.mimetype) || allowedExtensions.test(file.originalname)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG, PNG, and WebP images are allowed'), false);
+    }
+  }
+});
+
+function seriesCoverUrl(coverImage) {
+  if (!coverImage) return null;
+  return `${BACKEND_URL}/api/images/${coverImage}`;
+}
 
 // GET all series (public - only series with active episodes)
 router.get('/', (req, res) => {
@@ -20,7 +61,7 @@ router.get('/', (req, res) => {
       console.error('Error fetching series:', err);
       return res.status(500).json({ error: 'Failed to fetch series' });
     }
-    res.json(rows || []);
+    res.json((rows || []).map(r => ({ ...r, cover_image_url: seriesCoverUrl(r.cover_image) })));
   });
 });
 
@@ -40,7 +81,7 @@ router.get('/admin', (req, res) => {
       console.error('Error fetching series:', err);
       return res.status(500).json({ error: 'Failed to fetch series' });
     }
-    res.json(rows || []);
+    res.json((rows || []).map(r => ({ ...r, cover_image_url: seriesCoverUrl(r.cover_image) })));
   });
 });
 
@@ -118,7 +159,7 @@ router.get('/:id', (req, res) => {
       // Fetch tags for episodes
       const showIds = Array.from(showsMap.keys());
       if (showIds.length === 0) {
-        return res.json({ ...series, episodes: [] });
+        return res.json({ ...series, cover_image_url: seriesCoverUrl(series.cover_image), episodes: [] });
       }
 
       const placeholders = showIds.map(() => '?').join(',');
@@ -136,6 +177,7 @@ router.get('/:id', (req, res) => {
 
         res.json({
           ...series,
+          cover_image_url: seriesCoverUrl(series.cover_image),
           episodes: Array.from(showsMap.values())
         });
       });
@@ -227,6 +269,81 @@ router.delete('/:id', (req, res) => {
         return res.status(404).json({ error: 'Series not found' });
       }
       res.json({ message: 'Series deleted, episodes converted to standalone shows' });
+    });
+  });
+});
+
+// POST upload cover image for a series
+router.post('/:id/cover', imageUpload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const imageFile = req.file;
+
+    if (!imageFile) {
+      return res.status(400).json({ error: 'Image file is required' });
+    }
+
+    // Check series exists
+    db.get('SELECT * FROM series WHERE id = ?', [id], async (err, series) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      if (!series) return res.status(404).json({ error: 'Series not found' });
+
+      const filename = imageFile.filename;
+      const filePath = path.join(__dirname, '../uploads', filename);
+
+      // Upload to R2
+      const storageResult = await cloudStorage.uploadFile(filePath, `images/${filename}`);
+      if (!storageResult.success) {
+        return res.status(500).json({ error: 'Failed to upload image to storage' });
+      }
+
+      // Delete old cover image from R2 if it exists
+      if (series.cover_image) {
+        try {
+          await cloudStorage.deleteFile(`images/${series.cover_image}`);
+        } catch (e) {
+          console.error('Error deleting old cover image:', e);
+        }
+      }
+
+      // Update series with new cover_image
+      db.run('UPDATE series SET cover_image = ? WHERE id = ?', [filename, id], function(err) {
+        if (err) {
+          console.error('Error updating series cover:', err);
+          return res.status(500).json({ error: 'Failed to update series cover' });
+        }
+        res.json({
+          message: 'Cover image uploaded',
+          cover_image: filename,
+          cover_image_url: seriesCoverUrl(filename)
+        });
+      });
+    });
+  } catch (error) {
+    console.error('Error uploading series cover:', error);
+    res.status(500).json({ error: 'Failed to upload cover image' });
+  }
+});
+
+// DELETE cover image for a series
+router.delete('/:id/cover', (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT cover_image FROM series WHERE id = ?', [id], async (err, series) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (!series) return res.status(404).json({ error: 'Series not found' });
+    if (!series.cover_image) return res.json({ message: 'No cover image to delete' });
+
+    // Delete from R2
+    try {
+      await cloudStorage.deleteFile(`images/${series.cover_image}`);
+    } catch (e) {
+      console.error('Error deleting cover from storage:', e);
+    }
+
+    db.run('UPDATE series SET cover_image = NULL WHERE id = ?', [id], function(err) {
+      if (err) return res.status(500).json({ error: 'Failed to remove cover image' });
+      res.json({ message: 'Cover image removed' });
     });
   });
 });
