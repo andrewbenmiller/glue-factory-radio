@@ -101,8 +101,11 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
             key={s.id}
             className="series-card"
             onClick={() => openSeriesDetail(s.id)}
-            style={s.cover_image_url ? { backgroundImage: `url(${s.cover_image_url})` } : undefined}
           >
+            <div
+              className="series-card-image"
+              style={s.cover_image_url ? { backgroundImage: `url(${s.cover_image_url})` } : undefined}
+            />
             <div className="series-card-overlay">
               <span className="series-card-title">{s.title}</span>
               <span className="series-card-meta">

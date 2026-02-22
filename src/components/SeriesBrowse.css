@@ -17,47 +17,51 @@
 /* ─── Browse view: grid of square cards ─── */
 .series-browse {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   width: 100%;
 }
 
 .series-card {
-  aspect-ratio: 1;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  background: rgba(255, 25, 0, 0.08);
-  background-size: cover;
-  background-position: center;
+  border: 1px solid #ff1900;
   font-family: Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
 .series-card:hover {
   opacity: 0.9;
 }
 
+.series-card-image {
+  aspect-ratio: 1;
+  background: rgba(255, 25, 0, 0.08);
+  background-size: cover;
+  background-position: center;
+}
+
 .series-card-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  height: 80px;
+  padding: 12px 16px;
+  background: white;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 4px;
 }
 
 .series-card-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: white;
+  color: #ff1900;
 }
 
 .series-card-meta {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 25, 0, 0.6);
 }
 
 /* ─── Detail view ─── */
@@ -177,15 +181,16 @@
   }
 
   .series-card-title {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .series-card-meta {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .series-card-overlay {
-    padding: 12px;
+    height: 64px;
+    padding: 10px 12px;
   }
 
   .series-back {
@@ -229,15 +234,16 @@
   }
 
   .series-card-title {
-    font-size: 15px;
+    font-size: 13px;
   }
 
   .series-card-meta {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .series-card-overlay {
-    padding: 10px;
+    height: 56px;
+    padding: 8px 10px;
   }
 
   .series-back {
