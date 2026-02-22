@@ -18,6 +18,7 @@ const corsOptions = {
       'http://localhost:3000',
       'https://glue-factory-radio-production.up.railway.app',
       'https://glue-factory-radio-production.up.railway.app/',
+      'https://glue-factory-radio-staging.up.railway.app',
       'https://glue-factory-radio.vercel.app',
       'https://radio.gluefactorymusic.com',
       'https://gluefactoryradio.com',
