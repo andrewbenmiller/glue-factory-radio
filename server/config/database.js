@@ -6,12 +6,13 @@ const isProduction = process.env.NODE_ENV === 'production';
 const usePostgreSQL = isProduction && process.env.DATABASE_URL;
 
 let db;
+let pool;
 
 if (usePostgreSQL) {
   // PostgreSQL for Railway production
   const { Pool } = require('pg');
-  
-  const pool = new Pool({
+
+  pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
