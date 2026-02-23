@@ -81,6 +81,7 @@
   letter-spacing: 0.5px;
   cursor: pointer;
   padding: 0;
+  margin-top: -35px;
   margin-bottom: 20px;
   display: block;
 }
@@ -110,9 +111,19 @@
 .series-detail-description {
   font-size: 16px;
   color: rgba(255, 25, 0, 0.7);
-  margin: 0 0 24px;
+  max-width: 730px;
+  margin: 0 auto 24px;
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+.series-episodes-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff1900;
+  letter-spacing: 1px;
+  margin: 0 0 12px;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 /* ─── Episode list (search-result style rows) ─── */

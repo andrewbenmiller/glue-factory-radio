@@ -64,6 +64,7 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
         {selectedSeries.description && (
           <p className="series-detail-description">{selectedSeries.description}</p>
         )}
+        <h3 className="series-episodes-heading">EPISODES</h3>
         <div className="series-episodes">
           {selectedSeries.episodes.length === 0 ? (
             <div className="series-empty">No episodes yet</div>
