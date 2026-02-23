@@ -31,7 +31,7 @@ function App() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [archiveExpanded, setArchiveExpanded] = useState(false);
   const [showSelectionVersion, setShowSelectionVersion] = useState(0);
-  const [activePage, setActivePage] = useState<'series' | 'about' | 'events' | 'contact' | null>(null);
+  const [activePage, setActivePage] = useState<'shows' | 'about' | 'events' | 'contact' | null>(null);
   const [pageCache, setPageCache] = useState<Record<string, PageContent>>({});
   const [contactCopied, setContactCopied] = useState(false);
   const [contactHovered, setContactHovered] = useState(false);
@@ -448,7 +448,7 @@ function App() {
             />
             {/* Bottom nav footer - fixed within expanded archive */}
             <div className="archive-nav-footer">
-              <span className="archive-nav-item" onClick={() => setActivePage('series')}>SERIES</span>
+              <span className="archive-nav-item" onClick={() => setActivePage('shows')}>SHOWS</span>
               <span className="archive-nav-item" onClick={() => setActivePage('about')}>ABOUT</span>
               <span className="archive-nav-item" onClick={() => setActivePage('events')}>EVENTS</span>
               <span className="archive-nav-item" onClick={() => setActivePage('contact')}>CONTACT</span>
@@ -459,11 +459,11 @@ function App() {
 
       {/* Page overlay for nav items */}
       {activePage && (
-        <div className={`page-overlay${activePage === 'series' ? ' page-overlay-list' : ''}`}>
+        <div className={`page-overlay${activePage === 'shows' ? ' page-overlay-list' : ''}`}>
           <button className="page-overlay-close" onClick={() => setActivePage(null)} aria-label="Close">
           </button>
           <div className="page-overlay-content">
-            {activePage === 'series' ? (
+            {activePage === 'shows' ? (
               <SeriesBrowse onEpisodeSelect={(episode) => {
                 const idx = shows.findIndex(s => s.id === episode.id);
                 if (idx !== -1) {

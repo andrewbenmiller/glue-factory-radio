@@ -105,7 +105,7 @@ function setupUploadForm() {
         const audioFiles = audioInput.files;
 
         if (!title.trim()) {
-            showStatus('Please enter a show title', 'error');
+            showStatus('Please enter an episode title', 'error');
             return;
         }
 
@@ -237,10 +237,10 @@ function setupUploadForm() {
                     progressBar.style.width = '100%';
                     progressPercent.textContent = '100%';
                     progressStatus.textContent = '✅ Upload complete!';
-                    currentFile.textContent = `Created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`;
+                    currentFile.textContent = `Created episode "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`;
                     uploadSpeed.textContent = '';
                     
-                    showStatus(`✅ Successfully created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
+                    showStatus(`✅ Successfully created episode "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
                     
                     // Reset form after a brief delay
                     setTimeout(() => {
@@ -248,7 +248,7 @@ function setupUploadForm() {
                         filePreview.style.display = 'none';
                         progressContainer.style.display = 'none';
                         uploadBtn.disabled = false;
-                        uploadBtn.textContent = 'Create Show';
+                        uploadBtn.textContent = 'Create Episode';
                         clearTags('createShow');
                         document.getElementById('seriesSelect').value = '';
                         document.getElementById('episodeNumberGroup').style.display = 'none';
@@ -260,14 +260,14 @@ function setupUploadForm() {
                     
                 } catch (error) {
                     console.error('Error parsing response:', error);
-                    showStatus(`❌ Show creation failed: Invalid response`, 'error');
+                    showStatus(`❌ Episode creation failed: Invalid response`, 'error');
                     progressContainer.style.display = 'none';
                     uploadBtn.disabled = false;
-                    uploadBtn.textContent = 'Create Show';
+                    uploadBtn.textContent = 'Create Episode';
                 }
             } else {
                 // Handle error response
-                let errorMessage = `Show creation failed: ${xhr.status}`;
+                let errorMessage = `Episode creation failed: ${xhr.status}`;
                 try {
                     const errorData = JSON.parse(xhr.responseText);
                     errorMessage = errorData.error || errorMessage;
@@ -279,7 +279,7 @@ function setupUploadForm() {
                 showStatus(`❌ ${errorMessage}`, 'error');
                 progressContainer.style.display = 'none';
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = 'Create Show';
+                uploadBtn.textContent = 'Create Episode';
             }
         });
 
@@ -288,7 +288,7 @@ function setupUploadForm() {
             showStatus('❌ Upload failed: Network error', 'error');
             progressContainer.style.display = 'none';
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Create Show';
+            uploadBtn.textContent = 'Create Episode';
         });
 
         // Handle abort
@@ -296,7 +296,7 @@ function setupUploadForm() {
             showStatus('❌ Upload cancelled', 'error');
             progressContainer.style.display = 'none';
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Create Show';
+            uploadBtn.textContent = 'Create Episode';
         });
 
         // Start upload
@@ -577,7 +577,7 @@ async function loadShows() {
         container.innerHTML = `
             <div class="loading">
                 <div class="spinner"></div>
-                <p>Loading shows...</p>
+                <p>Loading episodes...</p>
             </div>
         `;
 
@@ -595,7 +595,7 @@ async function loadShows() {
         console.error('Error loading shows:', error);
         container.innerHTML = `
             <div class="error-state">
-                <p>Error loading shows: ${error.message}</p>
+                <p>Error loading episodes: ${error.message}</p>
                 <button onclick="loadShows()">Retry</button>
             </div>
         `;
@@ -609,8 +609,8 @@ function renderShowsTable() {
     if (shows.length === 0) {
         container.innerHTML = `
             <div class="no-shows">
-                <h3>No Shows Yet</h3>
-                <p>Create your first show to get started!</p>
+                <h3>No Episodes Yet</h3>
+                <p>Create your first episode to get started!</p>
             </div>
         `;
         return;
@@ -620,7 +620,7 @@ function renderShowsTable() {
             <table class="shows-table">
                 <thead>
                     <tr>
-                        <th>Show Title</th>
+                        <th>Episode Title</th>
                         <th>Description</th>
                         <th>Tracks</th>
                         <th>Total Duration</th>
@@ -636,7 +636,7 @@ function renderShowsTable() {
                             <td>
                                 <span class="expand-icon">▶</span>
                                 <strong>${escapeHtml(show.title)}</strong>
-                                ${show.series_title ? `<br><small style="color:#666;">Series: ${escapeHtml(show.series_title)} &bull; Ep. ${show.episode_number || '?'}</small>` : ''}
+                                ${show.series_title ? `<br><small style="color:#666;">Show: ${escapeHtml(show.series_title)} &bull; Ep. ${show.episode_number || '?'}</small>` : ''}
                             </td>
                             <td>
                                 ${renderDescriptionWithLinks(show.description)}
@@ -687,7 +687,7 @@ function renderTracksSection(showId) {
                 <td colspan="7">
                     <div class="tracks-section">
                         <div class="tracks-header">
-                            <h4>🎵 Tracks in this Show</h4>
+                            <h4>🎵 Tracks in this Episode</h4>
                             <button class="btn-add-track" data-action="add-track" data-show-id="${showId}">
                                 ➕ Add Track
                             </button>
@@ -1003,7 +1003,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             throw new Error(`Update failed: ${response.status}`);
         }
 
-        showStatus('✅ Show updated successfully', 'success');
+        showStatus('✅ Episode updated successfully', 'success');
         closeEditModal();
         loadShows();
         
@@ -1024,7 +1024,7 @@ async function toggleShowStatus(showId, currentStatus) {
             throw new Error(`Toggle failed: ${response.status}`);
         }
 
-        showStatus(`✅ Show ${currentStatus ? 'paused' : 'activated'} successfully`, 'success');
+        showStatus(`✅ Episode ${currentStatus ? 'paused' : 'activated'} successfully`, 'success');
         
         // Clear expanded shows to prevent spinning wheel issues
         expandedShows.clear();
@@ -1062,7 +1062,7 @@ async function confirmDelete() {
             throw new Error(`Delete failed: ${response.status}`);
         }
 
-        showStatus('✅ Show and all tracks permanently deleted from database and storage', 'success');
+        showStatus('✅ Episode and all tracks permanently deleted from database and storage', 'success');
         closeDeleteModal();
         expandedShows.clear(); // Clear all expanded shows
         await loadShows();
@@ -1085,7 +1085,7 @@ async function restoreShow(showId) {
             throw new Error(`Restore failed: ${response.status}`);
         }
 
-        showStatus('✅ Show restored successfully', 'success');
+        showStatus('✅ Episode restored successfully', 'success');
         expandedShows.clear(); // Clear all expanded shows
         await loadShows();
         await loadStats();
@@ -1322,11 +1322,11 @@ async function loadStats() {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                 <div style="background: #e3f2fd; padding: 20px; border-radius: 10px; text-align: center;">
                     <h3 style="color: #1976d2; font-size: 2rem;">${totalShows}</h3>
-                    <p>Total Shows</p>
+                    <p>Total Episodes</p>
                 </div>
                 <div style="background: #e8f5e8; padding: 20px; border-radius: 10px; text-align: center;">
                     <h3 style="color: #388e3c; font-size: 2rem;">${activeShows}</h3>
-                    <p>Active Shows</p>
+                    <p>Active Episodes</p>
                 </div>
                 <div style="background: #fff3e0; padding: 20px; border-radius: 10px; text-align: center;">
                     <h3 style="color: #f57c00; font-size: 2rem;">${totalTracks}</h3>
@@ -1707,7 +1707,7 @@ function populateSeriesDropdowns() {
     selects.forEach(select => {
         if (!select) return;
         const currentValue = select.value;
-        select.innerHTML = '<option value="">-- Standalone Show --</option>';
+        select.innerHTML = '<option value="">-- Standalone Episode --</option>';
         allSeries.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
@@ -1764,7 +1764,7 @@ function setupCreateSeriesForm() {
         const description = document.getElementById('seriesDescription').value.trim();
 
         if (!title) {
-            showStatus('Series title is required', 'error');
+            showStatus('Show title is required', 'error');
             return;
         }
 
@@ -1781,7 +1781,7 @@ function setupCreateSeriesForm() {
 
             if (!response.ok) {
                 const err = await response.json();
-                throw new Error(err.error || 'Failed to create series');
+                throw new Error(err.error || 'Failed to create show');
             }
 
             const result = await response.json();
@@ -1797,12 +1797,12 @@ function setupCreateSeriesForm() {
                     body: formData
                 });
                 if (!coverResp.ok) {
-                    showStatus(`Series created but cover upload failed`, 'error');
+                    showStatus(`Show created but cover upload failed`, 'error');
                 } else {
-                    showStatus(`Created series "${result.title}" with cover`, 'success');
+                    showStatus(`Created show "${result.title}" with cover`, 'success');
                 }
             } else {
-                showStatus(`Created series "${result.title}"`, 'success');
+                showStatus(`Created show "${result.title}"`, 'success');
             }
 
             form.reset();
@@ -1810,11 +1810,11 @@ function setupCreateSeriesForm() {
             loadSeriesManagement();
 
         } catch (error) {
-            console.error('Series creation error:', error);
-            showStatus(`Failed to create series: ${error.message}`, 'error');
+            console.error('Show creation error:', error);
+            showStatus(`Failed to create show: ${error.message}`, 'error');
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Create Series';
+            btn.textContent = 'Create Show';
         }
     });
 }
@@ -1827,12 +1827,12 @@ async function loadSeriesManagement() {
     try {
         const series = await loadSeriesList();
         if (series.length === 0) {
-            container.innerHTML = '<p>No series created yet.</p>';
+            container.innerHTML = '<p>No shows created yet.</p>';
             return;
         }
 
         container.innerHTML = `
-            <h3>Existing Series</h3>
+            <h3>Existing Shows</h3>
             <table class="shows-table">
                 <thead><tr>
                     <th>Cover</th><th>Title</th><th>Description</th><th>Episodes</th><th>Actions</th>
@@ -1863,7 +1863,7 @@ async function loadSeriesManagement() {
             </table>
         `;
     } catch (error) {
-        container.innerHTML = `<p>Error loading series: ${error.message}</p>`;
+        container.innerHTML = `<p>Error loading shows: ${error.message}</p>`;
     }
 }
 
@@ -1872,9 +1872,9 @@ function editSeries(seriesId) {
     const series = allSeries.find(s => s.id === seriesId);
     if (!series) return;
 
-    const newTitle = prompt('Series title:', series.title);
+    const newTitle = prompt('Show title:', series.title);
     if (newTitle === null) return;
-    const newDescription = prompt('Series description:', series.description || '');
+    const newDescription = prompt('Show description:', series.description || '');
     if (newDescription === null) return;
 
     fetch(`${API_BASE_URL}/api/series/${seriesId}`, {
@@ -1883,33 +1883,33 @@ function editSeries(seriesId) {
         body: JSON.stringify({ title: newTitle, description: newDescription })
     })
     .then(resp => {
-        if (!resp.ok) throw new Error('Failed to update series');
+        if (!resp.ok) throw new Error('Failed to update show');
         return resp.json();
     })
     .then(() => {
-        showStatus('Series updated', 'success');
+        showStatus('Show updated', 'success');
         loadSeriesList();
         loadSeriesManagement();
     })
-    .catch(err => showStatus(`Failed to update series: ${err.message}`, 'error'));
+    .catch(err => showStatus(`Failed to update show: ${err.message}`, 'error'));
 }
 
 // Delete series
 function deleteSeries(seriesId, seriesTitle) {
-    if (!confirm(`Delete series "${seriesTitle}"? Episodes will become standalone shows.`)) return;
+    if (!confirm(`Delete show "${seriesTitle}"? Episodes will become standalone.`)) return;
 
     fetch(`${API_BASE_URL}/api/series/${seriesId}`, { method: 'DELETE' })
     .then(resp => {
-        if (!resp.ok) throw new Error('Failed to delete series');
+        if (!resp.ok) throw new Error('Failed to delete show');
         return resp.json();
     })
     .then(() => {
-        showStatus('Series deleted, episodes are now standalone shows', 'success');
+        showStatus('Show deleted, episodes are now standalone', 'success');
         loadSeriesList();
         loadSeriesManagement();
         loadShows();
     })
-    .catch(err => showStatus(`Failed to delete series: ${err.message}`, 'error'));
+    .catch(err => showStatus(`Failed to delete show: ${err.message}`, 'error'));
 }
 
 // Upload cover image for an existing series

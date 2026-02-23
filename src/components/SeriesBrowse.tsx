@@ -53,7 +53,7 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
     return (
       <div className="series-detail">
         <button className="series-back" onClick={() => setSelectedSeries(null)}>
-          ← ALL SERIES
+          ← ALL SHOWS
         </button>
         {selectedSeries.cover_image_url && (
           <div className="series-detail-cover">
@@ -105,7 +105,7 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
   return (
     <div className="series-browse">
       {seriesList.length === 0 ? (
-        <div className="series-empty">No series yet</div>
+        <div className="series-empty">No shows yet</div>
       ) : (
         seriesList.map(s => (
           <div

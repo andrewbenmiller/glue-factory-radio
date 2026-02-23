@@ -432,42 +432,42 @@
     <div class="admin-container">
         <div class="admin-header">
             <h1>🎵 Glue Factory Radio Admin</h1>
-            <p>Manage your shows and their individual tracks</p>
+            <p>Manage your episodes and their individual tracks</p>
         </div>
 
         <div class="admin-nav">
             <ul class="nav-tabs">
-                <li class="nav-tab active" data-tab="upload">📤 Create New Show</li>
-                <li class="nav-tab" data-tab="manage">📋 Manage Shows</li>
+                <li class="nav-tab active" data-tab="upload">📤 Create New Episode</li>
+                <li class="nav-tab" data-tab="manage">📋 Manage Episodes</li>
                 <li class="nav-tab" data-tab="backgrounds">🖼️ Background Images</li>
                 <li class="nav-tab" data-tab="pages">📄 Pages</li>
                 <li class="nav-tab" data-tab="stats">📊 Statistics</li>
-                <li class="nav-tab" data-tab="series">📚 Series</li>
+                <li class="nav-tab" data-tab="series">📚 Shows</li>
             </ul>
         </div>
 
         <!-- Upload Tab -->
         <div id="upload" class="tab-content active">
             <div class="upload-section">
-                <h2>Create New Show</h2>
+                <h2>Create New Episode</h2>
                 <form id="uploadForm">
                     <div class="form-group">
-                        <label for="title">Show Title *</label>
-                        <input type="text" id="title" name="title" required placeholder="Enter show title">
+                        <label for="title">Episode Title *</label>
+                        <input type="text" id="title" name="title" required placeholder="Enter episode title">
                     </div>
                     
                     <div class="form-group">
-                        <label for="description">Show Description</label>
-                        <textarea id="description" name="description" placeholder="Enter show description"></textarea>
+                        <label for="description">Episode Description</label>
+                        <textarea id="description" name="description" placeholder="Enter episode description"></textarea>
                         <small style="color: #666;">To add a link: highlight text, then paste a URL</small>
                     </div>
                     
                     <div class="form-group">
-                        <label for="seriesSelect">Series (optional)</label>
+                        <label for="seriesSelect">Show (optional)</label>
                         <select id="seriesSelect" name="series_id">
-                            <option value="">-- Standalone Show --</option>
+                            <option value="">-- Standalone Episode --</option>
                         </select>
-                        <small>Assign this show to a series. Episode number auto-assigned.</small>
+                        <small>Assign this episode to a show. Episode number auto-assigned.</small>
                     </div>
                     <div class="form-group" id="episodeNumberGroup" style="display: none;">
                         <label for="episodeNumber">Episode Number</label>
@@ -514,7 +514,7 @@
                     </div>
                     
                     <button type="submit" class="upload-button" id="uploadBtn">
-                        Create Show
+                        Create Episode
                     </button>
                 </form>
             </div>
@@ -522,12 +522,12 @@
 
         <!-- Manage Tab -->
         <div id="manage" class="tab-content">
-            <h2>Manage Shows & Tracks</h2>
+            <h2>Manage Episodes & Tracks</h2>
             
             <div id="showsTableContainer">
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Loading shows...</p>
+                    <p>Loading episodes...</p>
                 </div>
             </div>
         </div>
@@ -587,18 +587,18 @@
 
         <!-- Series Tab -->
         <div id="series" class="tab-content">
-            <h2>Series Management</h2>
+            <h2>Show Management</h2>
 
             <div class="upload-section">
-                <h3>Create New Series</h3>
+                <h3>Create New Show</h3>
                 <form id="createSeriesForm">
                     <div class="form-group">
-                        <label for="seriesTitle">Series Title *</label>
-                        <input type="text" id="seriesTitle" name="title" required placeholder="Enter series title (e.g. Monday Mix)">
+                        <label for="seriesTitle">Show Title *</label>
+                        <input type="text" id="seriesTitle" name="title" required placeholder="Enter show title (e.g. Monday Mix)">
                     </div>
                     <div class="form-group">
-                        <label for="seriesDescription">Series Description</label>
-                        <textarea id="seriesDescription" name="description" placeholder="Enter series description"></textarea>
+                        <label for="seriesDescription">Show Description</label>
+                        <textarea id="seriesDescription" name="description" placeholder="Enter show description"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="seriesCoverImage">Cover Image (optional)</label>
@@ -606,7 +606,7 @@
                         <small>JPG, PNG, or WebP. Maximum 10MB.</small>
                     </div>
                     <button type="submit" class="upload-button" id="createSeriesBtn">
-                        Create Series
+                        Create Show
                     </button>
                 </form>
             </div>
@@ -614,7 +614,7 @@
             <div id="seriesListContainer">
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Loading series...</p>
+                    <p>Loading shows...</p>
                 </div>
             </div>
         </div>
@@ -623,31 +623,31 @@
     <!-- Status Messages -->
     <div id="statusMessage" class="status-message"></div>
 
-    <!-- Edit Show Modal -->
+    <!-- Edit Episode Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3>Edit Show</h3>
+            <h3>Edit Episode</h3>
             <form id="editForm">
                 <input type="hidden" id="editShowId">
                 <div class="form-group">
-                    <label for="editTitle">Show Title</label>
+                    <label for="editTitle">Episode Title</label>
                     <input type="text" id="editTitle" required>
                 </div>
                 <div class="form-group">
-                    <label for="editDescription">Show Description</label>
+                    <label for="editDescription">Episode Description</label>
                     <textarea id="editDescription"></textarea>
                     <small style="color: #666;">To add a link: highlight text, then paste a URL</small>
                 </div>
                 <div class="form-group">
                     <label for="editCreatedDate">Created Date</label>
                     <input type="datetime-local" id="editCreatedDate">
-                    <small>Change this to reorder the show in the archive.</small>
+                    <small>Change this to reorder the episode in the archive.</small>
                 </div>
                 <div class="form-group">
-                    <label for="editSeriesSelect">Series</label>
+                    <label for="editSeriesSelect">Show</label>
                     <select id="editSeriesSelect">
-                        <option value="">-- Standalone Show --</option>
+                        <option value="">-- Standalone Episode --</option>
                     </select>
                 </div>
                 <div class="form-group" id="editEpisodeNumberGroup" style="display: none;">
@@ -678,7 +678,7 @@
     <div id="addTrackModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3>Add Track(s) to Show</h3>
+            <h3>Add Track(s) to Episode</h3>
             <form id="addTrackForm">
                 <input type="hidden" id="addTrackShowId" name="showId">
                 <div class="form-group">
