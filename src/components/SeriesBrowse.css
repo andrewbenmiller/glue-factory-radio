@@ -68,6 +68,7 @@
 .series-detail {
   font-family: Helvetica, Arial, sans-serif;
   width: 100%;
+  text-align: center;
 }
 
 .series-back {
@@ -81,6 +82,7 @@
   cursor: pointer;
   padding: 0;
   margin-bottom: 20px;
+  display: block;
 }
 
 .series-back:hover {
@@ -95,7 +97,7 @@
   width: 100%;
   max-width: 400px;
   height: auto;
-  display: block;
+  display: inline-block;
 }
 
 .series-detail-title {
@@ -117,6 +119,7 @@
 .series-episodes {
   display: flex;
   flex-direction: column;
+  text-align: left;
 }
 
 .series-episode-item {
