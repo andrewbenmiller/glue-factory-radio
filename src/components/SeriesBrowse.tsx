@@ -83,6 +83,13 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
                 </span>
                 <span className="episode-meta">
                   <span className="episode-tracks">{ep.total_tracks} track{ep.total_tracks !== 1 ? 's' : ''}</span>
+                  {ep.tags && ep.tags.length > 0 && (
+                    <span className="episode-tags">
+                      {ep.tags.map(tag => (
+                        <span key={tag} className="episode-tag">{tag}</span>
+                      ))}
+                    </span>
+                  )}
                   <span className="episode-duration">{formatDuration(ep.total_duration)}</span>
                 </span>
               </div>

@@ -176,6 +176,21 @@
   color: rgba(255, 25, 0, 0.6);
 }
 
+.episode-tags {
+  display: flex;
+  gap: 6px;
+}
+
+.episode-tag {
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 25, 0, 0.3);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: rgba(255, 25, 0, 0.6);
+}
+
 /* ─── Tablet (768px) ─── */
 @media (max-width: 768px) {
   .series-browse {
