@@ -115,7 +115,7 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
           >
             <div
               className="series-card-image"
-              style={s.cover_image_url ? { backgroundImage: `url(${s.cover_image_url})` } : undefined}
+              style={s.cover_image_url ? { backgroundImage: `url(${s.cover_image_url})`, backgroundPosition: s.cover_position || '50% 50%' } : undefined}
             />
             <div className="series-card-overlay">
               <span className="series-card-title">{s.title}</span>

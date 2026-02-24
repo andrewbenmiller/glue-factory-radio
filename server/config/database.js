@@ -289,6 +289,13 @@ function initializeSQLiteDatabase() {
     }
   });
 
+  // Add cover_position column to series (for existing databases)
+  db.run(`ALTER TABLE series ADD COLUMN cover_position TEXT DEFAULT '50% 50%'`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding cover_position column:', err.message);
+    }
+  });
+
   // Add series_id and episode_number columns to shows (for existing databases)
   db.run(`ALTER TABLE shows ADD COLUMN series_id INTEGER REFERENCES series(id) ON DELETE SET NULL`, (err) => {
     if (err && !err.message.includes('duplicate column name')) {
@@ -494,6 +501,7 @@ async function initializePostgreSQLDatabase() {
     await safeQuery(client, 'Add url column', `ALTER TABLE background_images ADD COLUMN IF NOT EXISTS url TEXT`);
     await safeQuery(client, 'Add series_id column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS series_id INTEGER REFERENCES series(id) ON DELETE SET NULL`);
     await safeQuery(client, 'Add cover_image column to series', `ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_image TEXT`);
+    await safeQuery(client, 'Add cover_position column to series', `ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_position TEXT DEFAULT '50% 50%'`);
     await safeQuery(client, 'Add episode_number column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS episode_number INTEGER`);
 
     // Insert default pages

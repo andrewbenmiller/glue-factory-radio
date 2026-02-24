@@ -273,6 +273,27 @@ router.delete('/:id', (req, res) => {
   });
 });
 
+// PUT update cover position for a series
+router.put('/:id/cover-position', express.json(), (req, res) => {
+  const { id } = req.params;
+  const { position } = req.body;
+
+  if (!position || !/^\d{1,3}%\s+\d{1,3}%$/.test(position)) {
+    return res.status(400).json({ error: 'Invalid position format. Expected "X% Y%" (e.g. "50% 30%")' });
+  }
+
+  db.run('UPDATE series SET cover_position = ? WHERE id = ?', [position, id], function(err) {
+    if (err) {
+      console.error('Error updating cover position:', err);
+      return res.status(500).json({ error: 'Failed to update cover position' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Series not found' });
+    }
+    res.json({ message: 'Cover position updated', cover_position: position });
+  });
+});
+
 // POST upload cover image for a series
 router.post('/:id/cover', imageUpload.single('image'), async (req, res) => {
   try {

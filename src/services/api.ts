@@ -37,6 +37,7 @@ export interface Series {
   description?: string;
   cover_image?: string;
   cover_image_url?: string;
+  cover_position?: string;
   created_at: string;
   episode_count: number;
   total_duration: number;

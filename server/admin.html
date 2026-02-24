@@ -623,6 +623,22 @@
     <!-- Status Messages -->
     <div id="statusMessage" class="status-message"></div>
 
+    <!-- Cover Reposition Modal -->
+    <div id="repositionModal" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <span class="close" onclick="closeRepositionModal()">&times;</span>
+            <h3>Adjust Thumbnail</h3>
+            <p style="color: #666; font-size: 13px; margin-bottom: 12px;">Drag the image to choose which part shows in the square thumbnail.</p>
+            <div id="repositionViewport" style="width: 300px; height: 300px; overflow: hidden; border: 2px solid #007bff; margin: 0 auto 16px; position: relative; cursor: grab; background: #f0f0f0;">
+                <img id="repositionImage" src="" alt="" style="position: absolute; user-select: none; -webkit-user-drag: none;" draggable="false">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn-cancel" onclick="closeRepositionModal()">Cancel</button>
+                <button type="button" class="btn-confirm" onclick="saveRepositionPosition()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit Episode Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">

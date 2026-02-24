@@ -1842,7 +1842,7 @@ async function loadSeriesManagement() {
                         <tr>
                             <td style="width: 80px;">
                                 ${s.cover_image_url
-                                    ? `<img src="${s.cover_image_url}" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid #ddd;">`
+                                    ? `<img src="${s.cover_image_url}" style="width: 60px; height: 60px; object-fit: cover; object-position: ${s.cover_position || '50% 50%'}; border: 1px solid #ddd;">`
                                     : `<span style="display: inline-block; width: 60px; height: 60px; background: #f0f0f0; border: 1px solid #ddd; text-align: center; line-height: 60px; font-size: 11px; color: #999;">No cover</span>`
                                 }
                             </td>
@@ -1853,6 +1853,7 @@ async function loadSeriesManagement() {
                                 <div class="action-buttons">
                                     <button class="btn-edit" onclick="editSeries(${s.id})">Edit</button>
                                     <label class="btn-edit" style="cursor: pointer;">Cover <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="uploadSeriesCover(${s.id}, this)"></label>
+                                    ${s.cover_image ? `<button class="btn-edit" onclick="openRepositionModal(${s.id})">Adjust</button>` : ''}
                                     ${s.cover_image ? `<button class="btn-delete" onclick="removeSeriesCover(${s.id})">Remove Cover</button>` : ''}
                                     <button class="btn-delete" onclick="deleteSeries(${s.id}, '${escapeHtml(s.title).replace(/'/g, "\\'")}')">Delete</button>
                                 </div>
@@ -1940,5 +1941,140 @@ async function removeSeriesCover(seriesId) {
         loadSeriesManagement();
     } catch (err) {
         showStatus(`Failed to remove cover: ${err.message}`, 'error');
+    }
+}
+
+// ─── Cover Reposition Modal ───
+let repositionSeriesId = null;
+let repositionDragging = false;
+let repositionStartX = 0;
+let repositionStartY = 0;
+let repositionOffsetX = 0;
+let repositionOffsetY = 0;
+let repositionImgWidth = 0;
+let repositionImgHeight = 0;
+const VIEWPORT_SIZE = 300;
+
+function openRepositionModal(seriesId) {
+    const series = allSeries.find(s => s.id === seriesId);
+    if (!series || !series.cover_image_url) return;
+
+    repositionSeriesId = seriesId;
+    const modal = document.getElementById('repositionModal');
+    const img = document.getElementById('repositionImage');
+    const viewport = document.getElementById('repositionViewport');
+
+    img.onload = function() {
+        // Size image to fill the viewport (same as background-size: cover)
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const vpRatio = 1; // square viewport
+        if (imgRatio > vpRatio) {
+            // Image is wider — height fills viewport, width overflows
+            repositionImgHeight = VIEWPORT_SIZE;
+            repositionImgWidth = VIEWPORT_SIZE * imgRatio;
+        } else {
+            // Image is taller — width fills viewport, height overflows
+            repositionImgWidth = VIEWPORT_SIZE;
+            repositionImgHeight = VIEWPORT_SIZE / imgRatio;
+        }
+        img.style.width = repositionImgWidth + 'px';
+        img.style.height = repositionImgHeight + 'px';
+
+        // Parse saved position and convert to pixel offset
+        const pos = (series.cover_position || '50% 50%').split(/\s+/);
+        const pctX = parseFloat(pos[0]) / 100;
+        const pctY = parseFloat(pos[1]) / 100;
+        // background-position % formula: offset = pct * (container - image)
+        // Since image >= container, (container - image) is <= 0
+        repositionOffsetX = pctX * (VIEWPORT_SIZE - repositionImgWidth);
+        repositionOffsetY = pctY * (VIEWPORT_SIZE - repositionImgHeight);
+        img.style.left = repositionOffsetX + 'px';
+        img.style.top = repositionOffsetY + 'px';
+    };
+    img.src = series.cover_image_url;
+    modal.style.display = 'flex';
+
+    // Mouse events
+    viewport.onmousedown = function(e) {
+        e.preventDefault();
+        repositionDragging = true;
+        repositionStartX = e.clientX - repositionOffsetX;
+        repositionStartY = e.clientY - repositionOffsetY;
+        viewport.style.cursor = 'grabbing';
+    };
+    document.onmousemove = function(e) {
+        if (!repositionDragging) return;
+        let newX = e.clientX - repositionStartX;
+        let newY = e.clientY - repositionStartY;
+        // Clamp so image always fills viewport
+        newX = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgWidth, newX));
+        newY = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgHeight, newY));
+        repositionOffsetX = newX;
+        repositionOffsetY = newY;
+        img.style.left = newX + 'px';
+        img.style.top = newY + 'px';
+    };
+    document.onmouseup = function() {
+        repositionDragging = false;
+        viewport.style.cursor = 'grab';
+    };
+
+    // Touch events
+    viewport.ontouchstart = function(e) {
+        e.preventDefault();
+        repositionDragging = true;
+        const touch = e.touches[0];
+        repositionStartX = touch.clientX - repositionOffsetX;
+        repositionStartY = touch.clientY - repositionOffsetY;
+    };
+    document.ontouchmove = function(e) {
+        if (!repositionDragging) return;
+        const touch = e.touches[0];
+        let newX = touch.clientX - repositionStartX;
+        let newY = touch.clientY - repositionStartY;
+        newX = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgWidth, newX));
+        newY = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgHeight, newY));
+        repositionOffsetX = newX;
+        repositionOffsetY = newY;
+        img.style.left = newX + 'px';
+        img.style.top = newY + 'px';
+    };
+    document.ontouchend = function() {
+        repositionDragging = false;
+    };
+}
+
+function closeRepositionModal() {
+    document.getElementById('repositionModal').style.display = 'none';
+    repositionSeriesId = null;
+    repositionDragging = false;
+    document.onmousemove = null;
+    document.onmouseup = null;
+    document.ontouchmove = null;
+    document.ontouchend = null;
+}
+
+async function saveRepositionPosition() {
+    if (!repositionSeriesId) return;
+
+    // Convert pixel offset back to background-position percentages
+    const rangeX = VIEWPORT_SIZE - repositionImgWidth;
+    const rangeY = VIEWPORT_SIZE - repositionImgHeight;
+    const pctX = rangeX === 0 ? 50 : Math.round((repositionOffsetX / rangeX) * 100);
+    const pctY = rangeY === 0 ? 50 : Math.round((repositionOffsetY / rangeY) * 100);
+    const position = `${pctX}% ${pctY}%`;
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/series/${repositionSeriesId}/cover-position`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ position })
+        });
+        if (!resp.ok) throw new Error('Failed to save position');
+        showStatus('Thumbnail position saved', 'success');
+        closeRepositionModal();
+        loadSeriesManagement();
+    } catch (err) {
+        showStatus(`Failed to save position: ${err.message}`, 'error');
     }
 }
