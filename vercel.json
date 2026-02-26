@@ -2,13 +2,13 @@
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "radio.gluefactorymusic.com" }],
+      "has": [{ "type": "header", "key": "host", "value": "radio.gluefactorymusic.com" }],
       "destination": "https://gluefactoryradio.com/:path*",
       "permanent": true
     },
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.radio.gluefactorymusic.com" }],
+      "has": [{ "type": "header", "key": "host", "value": "www.radio.gluefactorymusic.com" }],
       "destination": "https://gluefactoryradio.com/:path*",
       "permanent": true
     }
