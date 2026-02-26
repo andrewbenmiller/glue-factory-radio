@@ -225,6 +225,7 @@
 .page-overlay-list .page-overlay-content {
   width: 100%;
   text-align: left;
+  padding-top: 80px;
 }
 
 .page-text {
