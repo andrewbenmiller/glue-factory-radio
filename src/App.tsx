@@ -588,7 +588,7 @@ function App() {
                   >
                     <span className="search-result-title">
                       {result.show.series_title && result.show.episode_number
-                        ? `${result.show.series_title} - Ep. ${result.show.episode_number}: ${result.show.title}`
+                        ? `${result.show.series_title}:${result.show.title ? ` ${result.show.title}` : ''} Ep. ${result.show.episode_number}`
                         : result.show.title}
                     </span>
                     <span className="search-result-meta">

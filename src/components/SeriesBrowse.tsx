@@ -45,7 +45,7 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
   };
 
   if (loading) {
-    return <div className="series-loading">Loading...</div>;
+    return <div className="series-loading"></div>;
   }
 
   // Detail view
@@ -78,7 +78,7 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
                 <span className="episode-info">
                   <span className="episode-title">
                     {selectedSeries.title && ep.episode_number
-                      ? `${selectedSeries.title} - Ep. ${ep.episode_number}: ${ep.title}`
+                      ? `${selectedSeries.title}:${ep.title ? ` ${ep.title}` : ''} Ep. ${ep.episode_number}`
                       : ep.title}
                   </span>
                 </span>

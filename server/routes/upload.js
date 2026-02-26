@@ -311,9 +311,8 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
     const { title, description, trackTitle, tags: tagsRaw, series_id, episode_number } = req.body;
     const audioFiles = req.files || [];
 
-    if (!title) {
-      return res.status(400).json({ error: 'Show title is required' });
-    }
+    // Title is optional for series episodes (will display as "Show Name: Ep. X")
+
 
     // Support both single file (with trackTitle) and multiple files (names from filenames)
     if (audioFiles.length === 0) {
@@ -327,7 +326,7 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
     db.run(`
       INSERT INTO shows (title, description, series_id, episode_number)
       VALUES (?, ?, ?, ?)
-    `, [title, description || '', seriesIdParsed, episodeNumberParsed], async function(err) {
+    `, [title || '', description || '', seriesIdParsed, episodeNumberParsed], async function(err) {
       if (err) {
         console.error('Error creating show:', err);
         return res.status(500).json({ error: 'Failed to create show' });

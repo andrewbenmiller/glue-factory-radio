@@ -127,7 +127,7 @@ const ShowList: React.FC<ShowListProps> = ({
                 <span className="show-item-number">#{showNumber}</span>
                 <span className="show-item-title">
                   {show.series_title && show.episode_number
-                    ? `${show.series_title} - Ep. ${show.episode_number}: ${show.title}`
+                    ? `${show.series_title}:${show.title ? ` ${show.title}` : ''} Ep. ${show.episode_number}`
                     : show.title}
                   {' '}<svg className="show-item-chevron" viewBox="0 0 7 11" width="7" height="11"><path d="M1.5 1.5 L5.5 5.5 L1.5 9.5" stroke="currentColor" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </span>

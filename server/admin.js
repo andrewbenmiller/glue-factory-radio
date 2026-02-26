@@ -104,11 +104,6 @@ function setupUploadForm() {
         const trackTitle = formData.get('trackTitle');
         const audioFiles = audioInput.files;
 
-        if (!title.trim()) {
-            showStatus('Please enter an episode title', 'error');
-            return;
-        }
-
         if (!audioFiles || audioFiles.length === 0) {
             showStatus('Please select at least one audio file', 'error');
             return;

@@ -1,9 +1,4 @@
 .series-loading {
-  text-align: center;
-  color: rgba(255, 25, 0, 0.5);
-  font-size: 18px;
-  padding: 40px 0;
-  font-family: Helvetica, Arial, sans-serif;
 }
 
 .series-empty {
@@ -100,7 +95,7 @@
 
 .series-detail-cover img {
   width: 100%;
-  max-width: 400px;
+  max-width: 600px;
   height: auto;
   display: inline-block;
   border: 1px solid #ff1900;
