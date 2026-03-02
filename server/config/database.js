@@ -426,7 +426,7 @@ async function initializePostgreSQLDatabase() {
         id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT,
         created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_active BOOLEAN DEFAULT TRUE, total_duration REAL DEFAULT 0,
-        total_tracks INTEGER DEFAULT 0
+        total_tracks INTEGER DEFAULT 0, hide_episode_numbers BOOLEAN DEFAULT FALSE
       )
     `);
 
@@ -511,6 +511,7 @@ async function initializePostgreSQLDatabase() {
     await safeQuery(client, 'Add cover_image column to series', `ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_image TEXT`);
     await safeQuery(client, 'Add cover_position column to series', `ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_position TEXT DEFAULT '50% 50%'`);
     await safeQuery(client, 'Add episode_number column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS episode_number INTEGER`);
+    await safeQuery(client, 'Add hide_episode_numbers column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS hide_episode_numbers BOOLEAN DEFAULT FALSE`);
 
     // Insert default pages
     const defaultPages = ['about', 'events', 'contact', 'live_label'];
