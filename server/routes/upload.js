@@ -326,7 +326,7 @@ router.post('/show', upload.array('audio', 50), async (req, res) => {
     db.run(`
       INSERT INTO shows (title, description, series_id, episode_number, hide_episode_numbers)
       VALUES (?, ?, ?, ?, ?)
-    `, [title || '', description || '', seriesIdParsed, episodeNumberParsed, hide_episode_numbers ? 1 : 0], async function(err) {
+    `, [title || '', description || '', seriesIdParsed, episodeNumberParsed, !!hide_episode_numbers], async function(err) {
       if (err) {
         console.error('Error creating show:', err);
         return res.status(500).json({ error: 'Failed to create show' });

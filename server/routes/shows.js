@@ -273,7 +273,7 @@ router.put('/:id', async (req, res) => {
     if (created_date) { fields.push('created_date = ?'); params.push(created_date); }
     if (series_id !== undefined) { fields.push('series_id = ?'); params.push(series_id || null); }
     if (episode_number !== undefined) { fields.push('episode_number = ?'); params.push(episode_number || null); }
-    if (hide_episode_numbers !== undefined) { fields.push('hide_episode_numbers = ?'); params.push(hide_episode_numbers ? 1 : 0); }
+    if (hide_episode_numbers !== undefined) { fields.push('hide_episode_numbers = ?'); params.push(!!hide_episode_numbers); }
 
     params.push(id);
     const sql = `UPDATE shows SET ${fields.join(', ')} WHERE id = ?`;
