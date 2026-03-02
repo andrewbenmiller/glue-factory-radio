@@ -429,7 +429,6 @@ function App() {
             tracks={currentTracks}
             initialIndex={currentTrackIndex}
             showName={shows[validShowIndex]?.title || "CD Mode"}
-            hideTrackNumbers={shows[validShowIndex]?.hide_episode_numbers}
             archiveExpanded={archiveExpanded}
             onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
             onSearchOpen={openSearch}
@@ -588,8 +587,10 @@ function App() {
                     onClick={() => handleSearchSelect(result.index)}
                   >
                     <span className="search-result-title">
-                      {result.show.series_title && result.show.episode_number
+                      {result.show.series_title && result.show.episode_number && !result.show.hide_episode_numbers
                         ? `${result.show.series_title}:${result.show.title ? ` ${result.show.title}` : ''} Ep. ${result.show.episode_number}`
+                        : result.show.series_title && result.show.episode_number && result.show.hide_episode_numbers
+                        ? `${result.show.series_title}${result.show.title ? `: ${result.show.title}` : ''}`
                         : result.show.title}
                     </span>
                     <span className="search-result-meta">

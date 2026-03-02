@@ -77,8 +77,10 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
               >
                 <span className="episode-info">
                   <span className="episode-title">
-                    {selectedSeries.title && ep.episode_number
+                    {selectedSeries.title && ep.episode_number && !ep.hide_episode_numbers
                       ? `${selectedSeries.title}:${ep.title ? ` ${ep.title}` : ''} Ep. ${ep.episode_number}`
+                      : selectedSeries.title && ep.episode_number && ep.hide_episode_numbers
+                      ? `${selectedSeries.title}${ep.title ? `: ${ep.title}` : ''}`
                       : ep.title}
                   </span>
                 </span>
