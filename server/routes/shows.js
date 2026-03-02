@@ -349,7 +349,7 @@ router.put('/:id', async (req, res) => {
     if (error.message === 'Show not found') {
       return res.status(404).json({ error: 'Show not found' });
     }
-    res.status(500).json({ error: 'Failed to update show' });
+    res.status(500).json({ error: 'Failed to update show', detail: error.message });
   }
 });
 
