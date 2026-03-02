@@ -29,6 +29,7 @@ export interface Show {
   series_id?: number | null;
   series_title?: string | null;
   episode_number?: number | null;
+  hide_episode_numbers?: boolean;
 }
 
 export interface Series {

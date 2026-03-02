@@ -429,6 +429,7 @@ function App() {
             tracks={currentTracks}
             initialIndex={currentTrackIndex}
             showName={shows[validShowIndex]?.title || "CD Mode"}
+            hideTrackNumbers={shows[validShowIndex]?.hide_episode_numbers}
             archiveExpanded={archiveExpanded}
             onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
             onSearchOpen={openSearch}

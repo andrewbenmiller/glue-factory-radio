@@ -37,6 +37,7 @@ router.get('/admin', (req, res) => {
           series_id: row.series_id || null,
           series_title: row.series_title || null,
           episode_number: row.episode_number || null,
+          hide_episode_numbers: row.hide_episode_numbers,
           tags: [],
           tracks: []
         });
@@ -132,6 +133,7 @@ router.get('/', (req, res) => {
           series_id: row.series_id || null,
           series_title: row.series_title || null,
           episode_number: row.episode_number || null,
+          hide_episode_numbers: row.hide_episode_numbers,
           tags: [],
           tracks: []
         });
@@ -261,7 +263,7 @@ router.get('/:id', (req, res) => {
 // PUT update show
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { title, description, tags, created_date, series_id, episode_number } = req.body;
+  const { title, description, tags, created_date, series_id, episode_number, hide_episode_numbers } = req.body;
 
   try {
     // Update show fields
@@ -271,6 +273,7 @@ router.put('/:id', async (req, res) => {
     if (created_date) { fields.push('created_date = ?'); params.push(created_date); }
     if (series_id !== undefined) { fields.push('series_id = ?'); params.push(series_id || null); }
     if (episode_number !== undefined) { fields.push('episode_number = ?'); params.push(episode_number || null); }
+    if (hide_episode_numbers !== undefined) { fields.push('hide_episode_numbers = ?'); params.push(hide_episode_numbers ? 1 : 0); }
 
     params.push(id);
     const sql = `UPDATE shows SET ${fields.join(', ')} WHERE id = ?`;

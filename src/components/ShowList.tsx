@@ -159,7 +159,9 @@ const ShowList: React.FC<ShowListProps> = ({
                       className="track-item"
                       onClick={(e) => handleTrackClick(index, trackIndex, e)}
                     >
-                      <span className="track-number">{trackIndex + 1}</span>
+                      {!show.hide_episode_numbers && (
+                        <span className="track-number">{trackIndex + 1}</span>
+                      )}
                       <span className="track-title">{track.title}</span>
                       <span className="track-duration">
                         {formatDuration(track.duration)}

@@ -30,6 +30,7 @@ type Props = {
   initialIndex?: number;
   className?: string;
   showName?: string;
+  hideTrackNumbers?: boolean;
   archiveExpanded?: boolean;
   onArchiveToggle?: () => void;
   onSearchOpen?: () => void;
@@ -38,7 +39,7 @@ type Props = {
 };
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
-  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay, onShowNavigate },
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode", hideTrackNumbers = false, archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay, onShowNavigate },
   ref
 ) {
   const audio = useAudio();
@@ -351,7 +352,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                 <span className="archive-info-label">Currently loaded:</span> <span className="archive-info-show-name">{showName}</span>
               </span>
               <span className="archive-info-track">
-                Track {index + 1}/{tracks.length}: {title}
+                {hideTrackNumbers ? title : `Track ${index + 1}/${tracks.length}: ${title}`}
               </span>
             </div>
           </>

@@ -122,6 +122,12 @@ function setupUploadForm() {
             formData.set('tags', JSON.stringify(createShowTags));
         }
 
+        // Add hide episode numbers flag
+        const hideEpisodeNumbers = document.getElementById('createHideEpisodeNumbers').checked;
+        if (hideEpisodeNumbers) {
+            formData.set('hide_episode_numbers', '1');
+        }
+
         // Add series info to FormData
         const seriesId = document.getElementById('seriesSelect').value;
         if (seriesId) {
@@ -959,6 +965,9 @@ function editShow(showId) {
     document.getElementById('editEpisodeNumber').value = show.episode_number || '';
     document.getElementById('editEpisodeNumberGroup').style.display = show.series_id ? 'block' : 'none';
 
+    // Populate hide episode numbers checkbox
+    document.getElementById('editHideEpisodeNumbers').checked = !!show.hide_episode_numbers;
+
     // Populate tags
     clearTags('edit');
     if (show.tags && Array.isArray(show.tags)) {
@@ -984,6 +993,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     const created_date = createdDateInput ? new Date(createdDateInput).toISOString() : undefined;
     const series_id = document.getElementById('editSeriesSelect').value || null;
     const episode_number = document.getElementById('editEpisodeNumber').value || null;
+    const hide_episode_numbers = document.getElementById('editHideEpisodeNumbers').checked;
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/shows/${showId}`, {
@@ -991,7 +1001,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ title, description, created_date, tags: getTagsForContext('edit'), series_id, episode_number })
+            body: JSON.stringify({ title, description, created_date, tags: getTagsForContext('edit'), series_id, episode_number, hide_episode_numbers })
         });
 
         if (!response.ok) {

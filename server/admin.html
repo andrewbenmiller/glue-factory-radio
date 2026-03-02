@@ -474,6 +474,13 @@
                         <input type="number" id="episodeNumber" name="episode_number" min="1" placeholder="Auto-assigned">
                         <small>Override the auto-assigned episode number.</small>
                     </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="createHideEpisodeNumbers" name="hide_episode_numbers" style="width: auto;">
+                            Do not display episode number
+                        </label>
+                        <small>Episode number will still be stored but won't be shown to listeners.</small>
+                    </div>
 
                     <div class="form-group">
                         <label for="audio">Audio File(s) *</label>
@@ -669,6 +676,13 @@
                 <div class="form-group" id="editEpisodeNumberGroup" style="display: none;">
                     <label for="editEpisodeNumber">Episode Number</label>
                     <input type="number" id="editEpisodeNumber" min="1" placeholder="Auto-assigned">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="editHideEpisodeNumbers" style="width: auto;">
+                        Do not display episode number
+                    </label>
+                    <small>Episode number will still be stored but won't be shown to listeners.</small>
                 </div>
                 <div class="form-group">
                     <label>Tags</label>

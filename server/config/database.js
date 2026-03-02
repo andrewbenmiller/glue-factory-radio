@@ -126,7 +126,8 @@ function initializeSQLiteDatabase() {
       created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
       is_active BOOLEAN DEFAULT 1,
       total_duration REAL DEFAULT 0,
-      total_tracks INTEGER DEFAULT 0
+      total_tracks INTEGER DEFAULT 0,
+      hide_episode_numbers BOOLEAN DEFAULT 0
     )
   `, (err) => {
     if (err) {
@@ -240,6 +241,13 @@ function initializeSQLiteDatabase() {
   db.run(`ALTER TABLE background_images ADD COLUMN url TEXT`, (err) => {
     if (err && !err.message.includes('duplicate column name')) {
       console.error('Error adding url column:', err.message);
+    }
+  });
+
+  // Add hide_episode_numbers column if it doesn't exist (for existing databases)
+  db.run(`ALTER TABLE shows ADD COLUMN hide_episode_numbers BOOLEAN DEFAULT 0`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding hide_episode_numbers column:', err.message);
     }
   });
 
