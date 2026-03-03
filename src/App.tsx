@@ -428,7 +428,15 @@ function App() {
             ref={playerRef}
             tracks={currentTracks}
             initialIndex={currentTrackIndex}
-            showName={shows[validShowIndex]?.title || "CD Mode"}
+            showName={(() => {
+              const show = shows[validShowIndex];
+              if (!show) return "CD Mode";
+              const parts: string[] = [];
+              if (show.series_title) parts.push(show.series_title);
+              if (show.title) parts.push(show.title);
+              if (show.episode_number && !show.hide_episode_numbers) parts.push(`Ep. ${show.episode_number}`);
+              return parts.join(': ') || "CD Mode";
+            })()}
             archiveExpanded={archiveExpanded}
             onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
             onSearchOpen={openSearch}
