@@ -177,7 +177,7 @@ function App() {
     window.history.replaceState(null, '', `/show/${slug}`);
   }, []);
 
-  // Handle show selection
+  // Handle show selection with pin/scroll (search results, series page, deep links)
   const handleShowChange = useCallback((newShowIndex: number) => {
     console.log('App: Changing show to:', newShowIndex);
 
@@ -197,6 +197,26 @@ function App() {
     }
 
     // Always trigger playback (handles first load where show is already selected)
+    requestAnimationFrame(() => {
+      playerRef.current?.playFromUI(0);
+    });
+  }, [shows, updateShowUrl]);
+
+  // Handle show selection from archive play button (load + play, no pin/scroll)
+  const handleShowLoad = useCallback((newShowIndex: number) => {
+    console.log('App: Loading show:', newShowIndex);
+
+    setCurrentShowIndex(prev => {
+      if (prev !== newShowIndex) {
+        setCurrentTrackIndex(0);
+      }
+      return newShowIndex;
+    });
+
+    if (shows[newShowIndex]) {
+      updateShowUrl(shows[newShowIndex]);
+    }
+
     requestAnimationFrame(() => {
       playerRef.current?.playFromUI(0);
     });
@@ -451,7 +471,7 @@ function App() {
               shows={shows}
               currentShowIndex={validShowIndex}
               showSelectionVersion={showSelectionVersion}
-              onShowSelect={handleShowChange}
+              onShowSelect={handleShowLoad}
               onTrackSelect={handleTrackSelect}
             />
             {/* Bottom nav footer - fixed within expanded archive */}

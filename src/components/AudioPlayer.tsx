@@ -73,8 +73,14 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   }
 
   const startTrack = useCallback(
-    (targetIndex: number) => {
-      if (!howlsRef.current.length) return;
+    (targetIndex: number, retries = 3) => {
+      if (!howlsRef.current.length) {
+        // Howls may not be built yet (race between rAF and useEffect on remount)
+        if (retries > 0) {
+          setTimeout(() => startTrack(targetIndex, retries - 1), 50);
+        }
+        return;
+      }
       if (targetIndex < 0 || targetIndex >= howlsRef.current.length) return;
 
       // Prevent old "end" handlers from firing
