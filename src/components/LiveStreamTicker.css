@@ -40,7 +40,7 @@
 }
 
 .liveStreamTicker-empty .tickerTrack {
-  animation-play-state: paused;
+  animation-play-state: running;
 }
 
 /* One copy of the chunks */
