@@ -18,6 +18,7 @@ const corsOptions = {
       'http://localhost:3000',
       'https://glue-factory-radio-production.up.railway.app',
       'https://glue-factory-radio-production.up.railway.app/',
+      'https://glue-factory-radio-staging.up.railway.app',
       'https://glue-factory-radio.vercel.app',
       'https://radio.gluefactorymusic.com',
       'https://gluefactoryradio.com',
@@ -77,6 +78,7 @@ app.get("/javascript-test", (req, res) => {
 app.use("/api/shows", require("./routes/shows"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/pages", require("./routes/pages"));
+app.use("/api/series", require("./routes/series"));
 
 // Handle OPTIONS preflight for audio files
 app.options("/api/audio/:filename", (req, res) => {
@@ -221,6 +223,56 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     message: "Glue Factory Radio Server is running!",
     timestamp: new Date().toISOString()
+  });
+});
+
+// Database diagnostic endpoint - also runs missing migrations
+app.get("/api/db-status", (req, res) => {
+  const db = require('./config/database');
+  const results = {};
+
+  db.all("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name", [], (err, rows) => {
+    if (err) {
+      db.all("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name", [], (err2, rows2) => {
+        if (err2) return res.json({ error: err2.message, pgError: err.message });
+        res.json({ engine: 'sqlite', tables: (rows2 || []).map(r => r.name) });
+      });
+      return;
+    }
+
+    results.engine = 'postgresql';
+    results.tables = (rows || []).map(r => r.table_name);
+
+    // Ensure series table exists
+    db.run("CREATE TABLE IF NOT EXISTS series (id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT, cover_image TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", (e1) => {
+      results.seriesTable = e1 ? e1.message : 'ok';
+
+      // Ensure cover_image column on series
+      db.run("ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_image TEXT", (e1b) => {
+        results.addCoverImage = e1b ? e1b.message : 'ok';
+
+      // Ensure series_id column on shows
+      db.run("ALTER TABLE shows ADD COLUMN IF NOT EXISTS series_id INTEGER REFERENCES series(id) ON DELETE SET NULL", (e2) => {
+        results.addSeriesId = e2 ? e2.message : 'ok';
+
+        // Ensure episode_number column on shows
+        db.run("ALTER TABLE shows ADD COLUMN IF NOT EXISTS episode_number INTEGER", (e3) => {
+          results.addEpisodeNumber = e3 ? e3.message : 'ok';
+
+          // Ensure index
+          db.run("CREATE INDEX IF NOT EXISTS idx_shows_series_id ON shows(series_id)", (e4) => {
+            results.addIndex = e4 ? e4.message : 'ok';
+
+            // Report final columns
+            db.all("SELECT column_name FROM information_schema.columns WHERE table_name = 'shows' ORDER BY ordinal_position", [], (colErr, colRows) => {
+              results.showsColumns = colErr ? colErr.message : (colRows || []).map(r => r.column_name);
+              res.json(results);
+            });
+          });
+        });
+      });
+      });
+    });
   });
 });
 

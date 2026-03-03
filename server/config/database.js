@@ -6,12 +6,13 @@ const isProduction = process.env.NODE_ENV === 'production';
 const usePostgreSQL = isProduction && process.env.DATABASE_URL;
 
 let db;
+let pool;
 
 if (usePostgreSQL) {
   // PostgreSQL for Railway production
   const { Pool } = require('pg');
-  
-  const pool = new Pool({
+
+  pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
@@ -125,7 +126,8 @@ function initializeSQLiteDatabase() {
       created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
       is_active BOOLEAN DEFAULT 1,
       total_duration REAL DEFAULT 0,
-      total_tracks INTEGER DEFAULT 0
+      total_tracks INTEGER DEFAULT 0,
+      hide_episode_numbers BOOLEAN DEFAULT 0
     )
   `, (err) => {
     if (err) {
@@ -242,6 +244,13 @@ function initializeSQLiteDatabase() {
     }
   });
 
+  // Add hide_episode_numbers column if it doesn't exist (for existing databases)
+  db.run(`ALTER TABLE shows ADD COLUMN hide_episode_numbers BOOLEAN DEFAULT 0`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding hide_episode_numbers column:', err.message);
+    }
+  });
+
   // Page content table for nav pages (About, Events, Contact)
   db.run(`
     CREATE TABLE IF NOT EXISTS page_content (
@@ -261,6 +270,50 @@ function initializeSQLiteDatabase() {
         const defaultContent = pageName === 'live_label' ? 'LIVE NOW' : '';
         db.run(`INSERT OR IGNORE INTO page_content (page_name, content) VALUES (?, ?)`, [pageName, defaultContent]);
       });
+    }
+  });
+
+  // Series table - Groups of related shows
+  db.run(`
+    CREATE TABLE IF NOT EXISTS series (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      cover_image TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating series table:', err.message);
+    } else {
+      console.log('✅ Series table ready');
+    }
+  });
+
+  // Add cover_image column to series (for existing databases)
+  db.run(`ALTER TABLE series ADD COLUMN cover_image TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding cover_image column:', err.message);
+    }
+  });
+
+  // Add cover_position column to series (for existing databases)
+  db.run(`ALTER TABLE series ADD COLUMN cover_position TEXT DEFAULT '50% 50%'`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding cover_position column:', err.message);
+    }
+  });
+
+  // Add series_id and episode_number columns to shows (for existing databases)
+  db.run(`ALTER TABLE shows ADD COLUMN series_id INTEGER REFERENCES series(id) ON DELETE SET NULL`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding series_id column:', err.message);
+    }
+  });
+
+  db.run(`ALTER TABLE shows ADD COLUMN episode_number INTEGER`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding episode_number column:', err.message);
     }
   });
 
@@ -330,6 +383,12 @@ function initializeSQLiteDatabase() {
     }
   });
 
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shows_series_id ON shows(series_id)`, (err) => {
+    if (err) {
+      console.error('Error creating index:', err.message);
+    }
+  });
+
   // Log current schema
   db.all("PRAGMA table_info(shows)", [], (err, rows) => {
     if (err) {
@@ -367,7 +426,7 @@ async function initializePostgreSQLDatabase() {
         id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT,
         created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_active BOOLEAN DEFAULT TRUE, total_duration REAL DEFAULT 0,
-        total_tracks INTEGER DEFAULT 0
+        total_tracks INTEGER DEFAULT 0, hide_episode_numbers BOOLEAN DEFAULT FALSE
       )
     `);
 
@@ -398,6 +457,13 @@ async function initializePostgreSQLDatabase() {
       CREATE TABLE IF NOT EXISTS page_content (
         id SERIAL PRIMARY KEY, page_name TEXT UNIQUE NOT NULL, content TEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await safeQuery(client, 'Series table', `
+      CREATE TABLE IF NOT EXISTS series (
+        id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT,
+        cover_image TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -441,6 +507,11 @@ async function initializePostgreSQLDatabase() {
 
     // Migrations for existing databases
     await safeQuery(client, 'Add url column', `ALTER TABLE background_images ADD COLUMN IF NOT EXISTS url TEXT`);
+    await safeQuery(client, 'Add series_id column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS series_id INTEGER REFERENCES series(id) ON DELETE SET NULL`);
+    await safeQuery(client, 'Add cover_image column to series', `ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_image TEXT`);
+    await safeQuery(client, 'Add cover_position column to series', `ALTER TABLE series ADD COLUMN IF NOT EXISTS cover_position TEXT DEFAULT '50% 50%'`);
+    await safeQuery(client, 'Add episode_number column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS episode_number INTEGER`);
+    await safeQuery(client, 'Add hide_episode_numbers column', `ALTER TABLE shows ADD COLUMN IF NOT EXISTS hide_episode_numbers BOOLEAN DEFAULT FALSE`);
 
     // Insert default pages
     const defaultPages = ['about', 'events', 'contact', 'live_label'];
@@ -458,6 +529,7 @@ async function initializePostgreSQLDatabase() {
     await safeQuery(client, 'Index: shows.is_active', `CREATE INDEX IF NOT EXISTS idx_shows_active ON shows(is_active)`);
     await safeQuery(client, 'Index: show_tags.show_id', `CREATE INDEX IF NOT EXISTS idx_show_tags_show_id ON show_tags(show_id)`);
     await safeQuery(client, 'Index: show_tags.tag_id', `CREATE INDEX IF NOT EXISTS idx_show_tags_tag_id ON show_tags(tag_id)`);
+    await safeQuery(client, 'Index: shows.series_id', `CREATE INDEX IF NOT EXISTS idx_shows_series_id ON shows(series_id)`);
 
     console.log('✅ Database schema is up to date');
   } finally {

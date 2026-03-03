@@ -9,6 +9,7 @@ import LiveStreamButton from './components/LiveStreamButton';
 import { useLiveStatus } from './hooks/useLiveStatus';
 import { useMediaSession } from './hooks/useMediaSession';
 import { useAudio } from './audio/AudioProvider';
+import SeriesBrowse from './components/SeriesBrowse';
 import { apiService, API_BASE_URL, Show, PageContent } from './services/api';
 import logo from './logo.png';
 const lockScreenArt = window.location.origin + '/web-app-manifest-512x512.png';
@@ -30,7 +31,7 @@ function App() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [archiveExpanded, setArchiveExpanded] = useState(false);
   const [showSelectionVersion, setShowSelectionVersion] = useState(0);
-  const [activePage, setActivePage] = useState<'about' | 'events' | 'contact' | null>(null);
+  const [activePage, setActivePage] = useState<'shows' | 'about' | 'events' | 'contact' | null>(null);
   const [pageCache, setPageCache] = useState<Record<string, PageContent>>({});
   const [contactCopied, setContactCopied] = useState(false);
   const [contactHovered, setContactHovered] = useState(false);
@@ -283,7 +284,9 @@ function App() {
         if (hasQuery) {
           const titleMatch = show.title.toLowerCase().includes(query);
           const descMatch = show.description?.toLowerCase().includes(query);
+          const seriesMatch = show.series_title?.toLowerCase().includes(query);
           if (titleMatch) score = 2;
+          else if (seriesMatch) score = 2;
           else if (descMatch) score = 1;
           else return null; // No text match
         } else {
@@ -425,7 +428,15 @@ function App() {
             ref={playerRef}
             tracks={currentTracks}
             initialIndex={currentTrackIndex}
-            showName={shows[validShowIndex]?.title || "CD Mode"}
+            showName={(() => {
+              const show = shows[validShowIndex];
+              if (!show) return "CD Mode";
+              const parts: string[] = [];
+              if (show.series_title) parts.push(show.series_title);
+              if (show.title) parts.push(show.title);
+              if (show.episode_number && !show.hide_episode_numbers) parts.push(`Ep. ${show.episode_number}`);
+              return parts.join(': ') || "CD Mode";
+            })()}
             archiveExpanded={archiveExpanded}
             onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
             onSearchOpen={openSearch}
@@ -445,6 +456,7 @@ function App() {
             />
             {/* Bottom nav footer - fixed within expanded archive */}
             <div className="archive-nav-footer">
+              <span className="archive-nav-item" onClick={() => setActivePage('shows')}>SHOWS</span>
               <span className="archive-nav-item" onClick={() => setActivePage('about')}>ABOUT</span>
               <span className="archive-nav-item" onClick={() => setActivePage('events')}>EVENTS</span>
               <span className="archive-nav-item" onClick={() => setActivePage('contact')}>CONTACT</span>
@@ -455,11 +467,19 @@ function App() {
 
       {/* Page overlay for nav items */}
       {activePage && (
-        <div className="page-overlay">
+        <div className={`page-overlay${activePage === 'shows' ? ' page-overlay-list' : ''}`}>
           <button className="page-overlay-close" onClick={() => setActivePage(null)} aria-label="Close">
           </button>
           <div className="page-overlay-content">
-            {activePage && pageCache[activePage]?.content ? (
+            {activePage === 'shows' ? (
+              <SeriesBrowse onEpisodeSelect={(episode) => {
+                const idx = shows.findIndex(s => s.id === episode.id);
+                if (idx !== -1) {
+                  handleShowChange(idx);
+                  setActivePage(null);
+                }
+              }} />
+            ) : activePage && pageCache[activePage]?.content ? (
               activePage === 'contact' ? (
                 <div
                   className={`page-text contact-copyable ${contactCopied ? 'copied' : ''}`}
@@ -574,7 +594,13 @@ function App() {
                     className="search-result-item"
                     onClick={() => handleSearchSelect(result.index)}
                   >
-                    <span className="search-result-title">{result.show.title}</span>
+                    <span className="search-result-title">
+                      {result.show.series_title && result.show.episode_number && !result.show.hide_episode_numbers
+                        ? `${result.show.series_title}:${result.show.title ? ` ${result.show.title}` : ''} Ep. ${result.show.episode_number}`
+                        : result.show.series_title && result.show.episode_number && result.show.hide_episode_numbers
+                        ? `${result.show.series_title}${result.show.title ? `: ${result.show.title}` : ''}`
+                        : result.show.title}
+                    </span>
                     <span className="search-result-meta">
                       {result.show.total_tracks} track{result.show.total_tracks !== 1 ? 's' : ''}
                       {result.show.tags && result.show.tags.length > 0 && (

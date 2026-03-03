@@ -3,6 +3,7 @@ const API_BASE_URL = window.location.origin; // Use the same domain as the admin
 
 // Global variables
 let shows = [];
+let allSeries = [];
 let currentDeleteId = null;
 let expandedShows = new Set();
 
@@ -17,6 +18,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setupPasteToLink('editDescription');
     loadShows();
     loadStats();
+    loadSeriesList();
+    setupSeriesSelect();
+    setupCreateSeriesForm();
+    document.getElementById('editSeriesForm').addEventListener('submit', submitEditSeries);
 });
 
 
@@ -51,6 +56,8 @@ function setupTabNavigation() {
                 loadPages();
             } else if (targetTab === 'stats') {
                 loadStats();
+            } else if (targetTab === 'series') {
+                loadSeriesManagement();
             }
         });
     });
@@ -98,11 +105,6 @@ function setupUploadForm() {
         const trackTitle = formData.get('trackTitle');
         const audioFiles = audioInput.files;
 
-        if (!title.trim()) {
-            showStatus('Please enter a show title', 'error');
-            return;
-        }
-
         if (!audioFiles || audioFiles.length === 0) {
             showStatus('Please select at least one audio file', 'error');
             return;
@@ -119,6 +121,22 @@ function setupUploadForm() {
         const createShowTags = getTagsForContext('createShow');
         if (createShowTags.length > 0) {
             formData.set('tags', JSON.stringify(createShowTags));
+        }
+
+        // Add hide episode numbers flag
+        const hideEpisodeNumbers = document.getElementById('createHideEpisodeNumbers').checked;
+        if (hideEpisodeNumbers) {
+            formData.set('hide_episode_numbers', '1');
+        }
+
+        // Add series info to FormData
+        const seriesId = document.getElementById('seriesSelect').value;
+        if (seriesId) {
+            formData.set('series_id', seriesId);
+            const epNum = document.getElementById('episodeNumber').value;
+            if (epNum) {
+                formData.set('episode_number', epNum);
+            }
         }
 
         // Disable upload button and show progress
@@ -221,10 +239,10 @@ function setupUploadForm() {
                     progressBar.style.width = '100%';
                     progressPercent.textContent = '100%';
                     progressStatus.textContent = '✅ Upload complete!';
-                    currentFile.textContent = `Created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`;
+                    currentFile.textContent = `Created episode "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`;
                     uploadSpeed.textContent = '';
                     
-                    showStatus(`✅ Successfully created show "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
+                    showStatus(`✅ Successfully created episode "${result.show.title}" with ${tracksCount} track${tracksCount > 1 ? 's' : ''}`, 'success');
                     
                     // Reset form after a brief delay
                     setTimeout(() => {
@@ -232,8 +250,10 @@ function setupUploadForm() {
                         filePreview.style.display = 'none';
                         progressContainer.style.display = 'none';
                         uploadBtn.disabled = false;
-                        uploadBtn.textContent = 'Create Show';
+                        uploadBtn.textContent = 'Create Episode';
                         clearTags('createShow');
+                        document.getElementById('seriesSelect').value = '';
+                        document.getElementById('episodeNumberGroup').style.display = 'none';
 
                         // Refresh shows list
                         loadShows();
@@ -242,14 +262,14 @@ function setupUploadForm() {
                     
                 } catch (error) {
                     console.error('Error parsing response:', error);
-                    showStatus(`❌ Show creation failed: Invalid response`, 'error');
+                    showStatus(`❌ Episode creation failed: Invalid response`, 'error');
                     progressContainer.style.display = 'none';
                     uploadBtn.disabled = false;
-                    uploadBtn.textContent = 'Create Show';
+                    uploadBtn.textContent = 'Create Episode';
                 }
             } else {
                 // Handle error response
-                let errorMessage = `Show creation failed: ${xhr.status}`;
+                let errorMessage = `Episode creation failed: ${xhr.status}`;
                 try {
                     const errorData = JSON.parse(xhr.responseText);
                     errorMessage = errorData.error || errorMessage;
@@ -261,7 +281,7 @@ function setupUploadForm() {
                 showStatus(`❌ ${errorMessage}`, 'error');
                 progressContainer.style.display = 'none';
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = 'Create Show';
+                uploadBtn.textContent = 'Create Episode';
             }
         });
 
@@ -270,7 +290,7 @@ function setupUploadForm() {
             showStatus('❌ Upload failed: Network error', 'error');
             progressContainer.style.display = 'none';
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Create Show';
+            uploadBtn.textContent = 'Create Episode';
         });
 
         // Handle abort
@@ -278,7 +298,7 @@ function setupUploadForm() {
             showStatus('❌ Upload cancelled', 'error');
             progressContainer.style.display = 'none';
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Create Show';
+            uploadBtn.textContent = 'Create Episode';
         });
 
         // Start upload
@@ -559,7 +579,7 @@ async function loadShows() {
         container.innerHTML = `
             <div class="loading">
                 <div class="spinner"></div>
-                <p>Loading shows...</p>
+                <p>Loading episodes...</p>
             </div>
         `;
 
@@ -577,7 +597,7 @@ async function loadShows() {
         console.error('Error loading shows:', error);
         container.innerHTML = `
             <div class="error-state">
-                <p>Error loading shows: ${error.message}</p>
+                <p>Error loading episodes: ${error.message}</p>
                 <button onclick="loadShows()">Retry</button>
             </div>
         `;
@@ -591,8 +611,8 @@ function renderShowsTable() {
     if (shows.length === 0) {
         container.innerHTML = `
             <div class="no-shows">
-                <h3>No Shows Yet</h3>
-                <p>Create your first show to get started!</p>
+                <h3>No Episodes Yet</h3>
+                <p>Create your first episode to get started!</p>
             </div>
         `;
         return;
@@ -602,7 +622,7 @@ function renderShowsTable() {
             <table class="shows-table">
                 <thead>
                     <tr>
-                        <th>Show Title</th>
+                        <th>Episode Title</th>
                         <th>Description</th>
                         <th>Tracks</th>
                         <th>Total Duration</th>
@@ -618,6 +638,7 @@ function renderShowsTable() {
                             <td>
                                 <span class="expand-icon">▶</span>
                                 <strong>${escapeHtml(show.title)}</strong>
+                                ${show.series_title ? `<br><small style="color:#666;">Show: ${escapeHtml(show.series_title)} &bull; Ep. ${show.episode_number || '?'}</small>` : ''}
                             </td>
                             <td>
                                 ${renderDescriptionWithLinks(show.description)}
@@ -668,7 +689,7 @@ function renderTracksSection(showId) {
                 <td colspan="7">
                     <div class="tracks-section">
                         <div class="tracks-header">
-                            <h4>🎵 Tracks in this Show</h4>
+                            <h4>🎵 Tracks in this Episode</h4>
                             <button class="btn-add-track" data-action="add-track" data-show-id="${showId}">
                                 ➕ Add Track
                             </button>
@@ -940,6 +961,14 @@ function editShow(showId) {
         document.getElementById('editCreatedDate').value = local;
     }
 
+    // Populate series fields
+    document.getElementById('editSeriesSelect').value = show.series_id || '';
+    document.getElementById('editEpisodeNumber').value = show.episode_number || '';
+    document.getElementById('editEpisodeNumberGroup').style.display = show.series_id ? 'block' : 'none';
+
+    // Populate hide episode numbers checkbox
+    document.getElementById('editHideEpisodeNumbers').checked = !!show.hide_episode_numbers;
+
     // Populate tags
     clearTags('edit');
     if (show.tags && Array.isArray(show.tags)) {
@@ -963,6 +992,9 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     const description = document.getElementById('editDescription').value;
     const createdDateInput = document.getElementById('editCreatedDate').value;
     const created_date = createdDateInput ? new Date(createdDateInput).toISOString() : undefined;
+    const series_id = document.getElementById('editSeriesSelect').value || null;
+    const episode_number = document.getElementById('editEpisodeNumber').value || null;
+    const hide_episode_numbers = document.getElementById('editHideEpisodeNumbers').checked;
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/shows/${showId}`, {
@@ -970,14 +1002,14 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ title, description, created_date, tags: getTagsForContext('edit') })
+            body: JSON.stringify({ title, description, created_date, tags: getTagsForContext('edit'), series_id, episode_number, hide_episode_numbers })
         });
 
         if (!response.ok) {
             throw new Error(`Update failed: ${response.status}`);
         }
 
-        showStatus('✅ Show updated successfully', 'success');
+        showStatus('✅ Episode updated successfully', 'success');
         closeEditModal();
         loadShows();
         
@@ -998,7 +1030,7 @@ async function toggleShowStatus(showId, currentStatus) {
             throw new Error(`Toggle failed: ${response.status}`);
         }
 
-        showStatus(`✅ Show ${currentStatus ? 'paused' : 'activated'} successfully`, 'success');
+        showStatus(`✅ Episode ${currentStatus ? 'paused' : 'activated'} successfully`, 'success');
         
         // Clear expanded shows to prevent spinning wheel issues
         expandedShows.clear();
@@ -1036,7 +1068,7 @@ async function confirmDelete() {
             throw new Error(`Delete failed: ${response.status}`);
         }
 
-        showStatus('✅ Show and all tracks permanently deleted from database and storage', 'success');
+        showStatus('✅ Episode and all tracks permanently deleted from database and storage', 'success');
         closeDeleteModal();
         expandedShows.clear(); // Clear all expanded shows
         await loadShows();
@@ -1059,7 +1091,7 @@ async function restoreShow(showId) {
             throw new Error(`Restore failed: ${response.status}`);
         }
 
-        showStatus('✅ Show restored successfully', 'success');
+        showStatus('✅ Episode restored successfully', 'success');
         expandedShows.clear(); // Clear all expanded shows
         await loadShows();
         await loadStats();
@@ -1296,11 +1328,11 @@ async function loadStats() {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                 <div style="background: #e3f2fd; padding: 20px; border-radius: 10px; text-align: center;">
                     <h3 style="color: #1976d2; font-size: 2rem;">${totalShows}</h3>
-                    <p>Total Shows</p>
+                    <p>Total Episodes</p>
                 </div>
                 <div style="background: #e8f5e8; padding: 20px; border-radius: 10px; text-align: center;">
                     <h3 style="color: #388e3c; font-size: 2rem;">${activeShows}</h3>
-                    <p>Active Shows</p>
+                    <p>Active Episodes</p>
                 </div>
                 <div style="background: #fff3e0; padding: 20px; border-radius: 10px; text-align: center;">
                     <h3 style="color: #f57c00; font-size: 2rem;">${totalTracks}</h3>
@@ -1502,6 +1534,10 @@ window.onclick = function(event) {
     if (event.target === addTrackModal) {
         closeAddTrackModal();
     }
+    const editSeriesModal = document.getElementById('editSeriesModal');
+    if (event.target === editSeriesModal) {
+        closeEditSeriesModal();
+    }
 }
 
 // Close modals with close button
@@ -1510,6 +1546,7 @@ document.querySelectorAll('.close').forEach(closeBtn => {
         closeEditModal();
         closeDeleteModal();
         closeAddTrackModal();
+        closeEditSeriesModal();
     }
 });
 
@@ -1654,3 +1691,413 @@ function setupTagInput(context) {
 // Initialize tag inputs
 setupTagInput('createShow');
 setupTagInput('edit');
+
+// ========== Series Management ==========
+
+// Load series list for dropdowns
+async function loadSeriesList() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/series/admin`);
+        if (!response.ok) throw new Error(`Failed to fetch series: ${response.status}`);
+        allSeries = await response.json();
+        populateSeriesDropdowns();
+        return allSeries;
+    } catch (error) {
+        console.error('Error loading series:', error);
+        return [];
+    }
+}
+
+// Populate series dropdowns on create and edit forms
+function populateSeriesDropdowns() {
+    const selects = [
+        document.getElementById('seriesSelect'),
+        document.getElementById('editSeriesSelect')
+    ];
+
+    selects.forEach(select => {
+        if (!select) return;
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">-- Standalone Episode --</option>';
+        allSeries.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.title;
+            select.appendChild(opt);
+        });
+        select.value = currentValue;
+    });
+}
+
+// Setup series select change handlers (show/hide episode number)
+function setupSeriesSelect() {
+    const seriesSelect = document.getElementById('seriesSelect');
+    const epGroup = document.getElementById('episodeNumberGroup');
+    const epInput = document.getElementById('episodeNumber');
+
+    if (seriesSelect) {
+        seriesSelect.addEventListener('change', async () => {
+            if (seriesSelect.value) {
+                epGroup.style.display = 'block';
+                try {
+                    const resp = await fetch(`${API_BASE_URL}/api/series/${seriesSelect.value}/next-episode`);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        epInput.placeholder = `Auto: ${data.next_episode}`;
+                        epInput.value = '';
+                    }
+                } catch (e) { /* ignore */ }
+            } else {
+                epGroup.style.display = 'none';
+                epInput.value = '';
+            }
+        });
+    }
+
+    const editSeriesSelect = document.getElementById('editSeriesSelect');
+    const editEpGroup = document.getElementById('editEpisodeNumberGroup');
+    if (editSeriesSelect) {
+        editSeriesSelect.addEventListener('change', () => {
+            editEpGroup.style.display = editSeriesSelect.value ? 'block' : 'none';
+        });
+    }
+}
+
+// Setup create series form
+function setupCreateSeriesForm() {
+    const form = document.getElementById('createSeriesForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('seriesTitle').value.trim();
+        const description = document.getElementById('seriesDescription').value.trim();
+
+        if (!title) {
+            showStatus('Show title is required', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('createSeriesBtn');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/series`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to create show');
+            }
+
+            const result = await response.json();
+
+            // Upload cover image if selected
+            const coverInput = document.getElementById('seriesCoverImage');
+            if (coverInput.files.length > 0) {
+                btn.textContent = 'Uploading cover...';
+                const formData = new FormData();
+                formData.append('image', coverInput.files[0]);
+                const coverResp = await fetch(`${API_BASE_URL}/api/series/${result.id}/cover`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!coverResp.ok) {
+                    showStatus(`Show created but cover upload failed`, 'error');
+                } else {
+                    showStatus(`Created show "${result.title}" with cover`, 'success');
+                }
+            } else {
+                showStatus(`Created show "${result.title}"`, 'success');
+            }
+
+            form.reset();
+            await loadSeriesList();
+            loadSeriesManagement();
+
+        } catch (error) {
+            console.error('Show creation error:', error);
+            showStatus(`Failed to create show: ${error.message}`, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Create Show';
+        }
+    });
+}
+
+// Render series management list in the Series tab
+async function loadSeriesManagement() {
+    const container = document.getElementById('seriesListContainer');
+    if (!container) return;
+
+    try {
+        const series = await loadSeriesList();
+        if (series.length === 0) {
+            container.innerHTML = '<p>No shows created yet.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <h3>Existing Shows</h3>
+            <table class="shows-table">
+                <thead><tr>
+                    <th>Cover</th><th>Title</th><th>Description</th><th>Episodes</th><th>Actions</th>
+                </tr></thead>
+                <tbody>
+                    ${series.map(s => `
+                        <tr>
+                            <td style="width: 80px;">
+                                ${s.cover_image_url
+                                    ? `<img src="${s.cover_image_url}" style="width: 60px; height: 60px; object-fit: cover; object-position: ${s.cover_position || '50% 50%'}; border: 1px solid #ddd;">`
+                                    : `<span style="display: inline-block; width: 60px; height: 60px; background: #f0f0f0; border: 1px solid #ddd; text-align: center; line-height: 60px; font-size: 11px; color: #999;">No cover</span>`
+                                }
+                            </td>
+                            <td><strong>${escapeHtml(s.title)}</strong></td>
+                            <td>${escapeHtml(s.description || '')}</td>
+                            <td>${s.episode_count || 0}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-edit" onclick="editSeries(${s.id})">Edit</button>
+                                    <label class="btn-edit" style="cursor: pointer;">Cover <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="uploadSeriesCover(${s.id}, this)"></label>
+                                    ${s.cover_image ? `<button class="btn-edit" onclick="openRepositionModal(${s.id})">Adjust</button>` : ''}
+                                    ${s.cover_image ? `<button class="btn-delete" onclick="removeSeriesCover(${s.id})">Remove Cover</button>` : ''}
+                                    <button class="btn-delete" onclick="deleteSeries(${s.id}, '${escapeHtml(s.title).replace(/'/g, "\\'")}')">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (error) {
+        container.innerHTML = `<p>Error loading shows: ${error.message}</p>`;
+    }
+}
+
+// Edit series
+function editSeries(seriesId) {
+    const series = allSeries.find(s => s.id === seriesId);
+    if (!series) return;
+
+    document.getElementById('editSeriesId').value = seriesId;
+    document.getElementById('editSeriesTitle').value = series.title;
+    document.getElementById('editSeriesDescription').value = series.description || '';
+    document.getElementById('editSeriesModal').style.display = 'flex';
+}
+
+function closeEditSeriesModal() {
+    document.getElementById('editSeriesModal').style.display = 'none';
+}
+
+function submitEditSeries(e) {
+    e.preventDefault();
+    const seriesId = document.getElementById('editSeriesId').value;
+    const title = document.getElementById('editSeriesTitle').value;
+    const description = document.getElementById('editSeriesDescription').value;
+
+    fetch(`${API_BASE_URL}/api/series/${seriesId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description })
+    })
+    .then(resp => {
+        if (!resp.ok) throw new Error('Failed to update show');
+        return resp.json();
+    })
+    .then(() => {
+        closeEditSeriesModal();
+        showStatus('Show updated', 'success');
+        loadSeriesList();
+        loadSeriesManagement();
+    })
+    .catch(err => showStatus(`Failed to update show: ${err.message}`, 'error'));
+}
+
+// Delete series
+function deleteSeries(seriesId, seriesTitle) {
+    if (!confirm(`Delete show "${seriesTitle}"? Episodes will become standalone.`)) return;
+
+    fetch(`${API_BASE_URL}/api/series/${seriesId}`, { method: 'DELETE' })
+    .then(resp => {
+        if (!resp.ok) throw new Error('Failed to delete show');
+        return resp.json();
+    })
+    .then(() => {
+        showStatus('Show deleted, episodes are now standalone', 'success');
+        loadSeriesList();
+        loadSeriesManagement();
+        loadShows();
+    })
+    .catch(err => showStatus(`Failed to delete show: ${err.message}`, 'error'));
+}
+
+// Upload cover image for an existing series
+async function uploadSeriesCover(seriesId, input) {
+    if (!input.files.length) return;
+    const formData = new FormData();
+    formData.append('image', input.files[0]);
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/series/${seriesId}/cover`, {
+            method: 'POST',
+            body: formData
+        });
+        if (!resp.ok) throw new Error('Upload failed');
+        showStatus('Cover image uploaded', 'success');
+        loadSeriesManagement();
+    } catch (err) {
+        showStatus(`Failed to upload cover: ${err.message}`, 'error');
+    }
+}
+
+// Remove cover image from a series
+async function removeSeriesCover(seriesId) {
+    if (!confirm('Remove cover image?')) return;
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/series/${seriesId}/cover`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Delete failed');
+        showStatus('Cover image removed', 'success');
+        loadSeriesManagement();
+    } catch (err) {
+        showStatus(`Failed to remove cover: ${err.message}`, 'error');
+    }
+}
+
+// ─── Cover Reposition Modal ───
+let repositionSeriesId = null;
+let repositionDragging = false;
+let repositionStartX = 0;
+let repositionStartY = 0;
+let repositionOffsetX = 0;
+let repositionOffsetY = 0;
+let repositionImgWidth = 0;
+let repositionImgHeight = 0;
+const VIEWPORT_SIZE = 300;
+
+function openRepositionModal(seriesId) {
+    const series = allSeries.find(s => s.id === seriesId);
+    if (!series || !series.cover_image_url) return;
+
+    repositionSeriesId = seriesId;
+    const modal = document.getElementById('repositionModal');
+    const img = document.getElementById('repositionImage');
+    const viewport = document.getElementById('repositionViewport');
+
+    img.onload = function() {
+        // Size image to fill the viewport (same as background-size: cover)
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const vpRatio = 1; // square viewport
+        if (imgRatio > vpRatio) {
+            // Image is wider — height fills viewport, width overflows
+            repositionImgHeight = VIEWPORT_SIZE;
+            repositionImgWidth = VIEWPORT_SIZE * imgRatio;
+        } else {
+            // Image is taller — width fills viewport, height overflows
+            repositionImgWidth = VIEWPORT_SIZE;
+            repositionImgHeight = VIEWPORT_SIZE / imgRatio;
+        }
+        img.style.width = repositionImgWidth + 'px';
+        img.style.height = repositionImgHeight + 'px';
+
+        // Parse saved position and convert to pixel offset
+        const pos = (series.cover_position || '50% 50%').split(/\s+/);
+        const pctX = parseFloat(pos[0]) / 100;
+        const pctY = parseFloat(pos[1]) / 100;
+        // background-position % formula: offset = pct * (container - image)
+        // Since image >= container, (container - image) is <= 0
+        repositionOffsetX = pctX * (VIEWPORT_SIZE - repositionImgWidth);
+        repositionOffsetY = pctY * (VIEWPORT_SIZE - repositionImgHeight);
+        img.style.left = repositionOffsetX + 'px';
+        img.style.top = repositionOffsetY + 'px';
+    };
+    img.src = series.cover_image_url;
+    modal.style.display = 'flex';
+
+    // Mouse events
+    viewport.onmousedown = function(e) {
+        e.preventDefault();
+        repositionDragging = true;
+        repositionStartX = e.clientX - repositionOffsetX;
+        repositionStartY = e.clientY - repositionOffsetY;
+        viewport.style.cursor = 'grabbing';
+    };
+    document.onmousemove = function(e) {
+        if (!repositionDragging) return;
+        let newX = e.clientX - repositionStartX;
+        let newY = e.clientY - repositionStartY;
+        // Clamp so image always fills viewport
+        newX = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgWidth, newX));
+        newY = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgHeight, newY));
+        repositionOffsetX = newX;
+        repositionOffsetY = newY;
+        img.style.left = newX + 'px';
+        img.style.top = newY + 'px';
+    };
+    document.onmouseup = function() {
+        repositionDragging = false;
+        viewport.style.cursor = 'grab';
+    };
+
+    // Touch events
+    viewport.ontouchstart = function(e) {
+        e.preventDefault();
+        repositionDragging = true;
+        const touch = e.touches[0];
+        repositionStartX = touch.clientX - repositionOffsetX;
+        repositionStartY = touch.clientY - repositionOffsetY;
+    };
+    document.ontouchmove = function(e) {
+        if (!repositionDragging) return;
+        const touch = e.touches[0];
+        let newX = touch.clientX - repositionStartX;
+        let newY = touch.clientY - repositionStartY;
+        newX = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgWidth, newX));
+        newY = Math.min(0, Math.max(VIEWPORT_SIZE - repositionImgHeight, newY));
+        repositionOffsetX = newX;
+        repositionOffsetY = newY;
+        img.style.left = newX + 'px';
+        img.style.top = newY + 'px';
+    };
+    document.ontouchend = function() {
+        repositionDragging = false;
+    };
+}
+
+function closeRepositionModal() {
+    document.getElementById('repositionModal').style.display = 'none';
+    repositionSeriesId = null;
+    repositionDragging = false;
+    document.onmousemove = null;
+    document.onmouseup = null;
+    document.ontouchmove = null;
+    document.ontouchend = null;
+}
+
+async function saveRepositionPosition() {
+    if (!repositionSeriesId) return;
+
+    // Convert pixel offset back to background-position percentages
+    const rangeX = VIEWPORT_SIZE - repositionImgWidth;
+    const rangeY = VIEWPORT_SIZE - repositionImgHeight;
+    const pctX = rangeX === 0 ? 50 : Math.round((repositionOffsetX / rangeX) * 100);
+    const pctY = rangeY === 0 ? 50 : Math.round((repositionOffsetY / rangeY) * 100);
+    const position = `${pctX}% ${pctY}%`;
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/series/${repositionSeriesId}/cover-position`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ position })
+        });
+        if (!resp.ok) throw new Error('Failed to save position');
+        showStatus('Thumbnail position saved', 'success');
+        closeRepositionModal();
+        loadSeriesManagement();
+    } catch (err) {
+        showStatus(`Failed to save position: ${err.message}`, 'error');
+    }
+}
