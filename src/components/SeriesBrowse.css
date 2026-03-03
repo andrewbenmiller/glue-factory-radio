@@ -114,6 +114,7 @@
   color: rgba(255, 25, 0, 0.7);
   max-width: 730px;
   margin: 0 auto 24px;
+  padding: 0 5px;
   line-height: 1.6;
   white-space: pre-wrap;
 }

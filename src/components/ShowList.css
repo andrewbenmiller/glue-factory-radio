@@ -147,7 +147,7 @@
   margin: 0;
   cursor: pointer;
   /* Align under title: skip number column (60px) + match title padding */
-  padding: 0 20px 20px 80px;
+  padding: 0 160px 20px 80px;
   box-sizing: border-box;
 }
 
@@ -313,7 +313,7 @@
   .show-item-description {
     font-size: 16px;
     /* Align under title: skip number column (50px) + match title padding */
-    padding: 0 15px 15px 65px;
+    padding: 0 120px 15px 65px;
   }
 
   .track-item {
@@ -391,7 +391,7 @@
   .show-item-description {
     font-size: 14px;
     /* Align under title: skip number column (40px) + match title padding */
-    padding: 0 10px 10px 50px;
+    padding: 0 40px 10px 40px;
   }
 
   .track-item {
