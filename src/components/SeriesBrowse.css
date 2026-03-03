@@ -67,6 +67,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
 }
 
 .series-back {
@@ -134,6 +135,7 @@
   text-align: left;
   width: 100%;
   align-self: stretch;
+  overflow: hidden;
 }
 
 .series-episode-item {
@@ -176,8 +178,9 @@
 .episode-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
+  gap: 8px 12px;
+  flex-shrink: 1;
+  flex-wrap: wrap;
 }
 
 .episode-tracks {
@@ -193,6 +196,7 @@
 .episode-tags {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .episode-tag {
@@ -242,14 +246,23 @@
     align-items: flex-start;
     padding: 12px 16px;
     gap: 4px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .episode-info {
+    max-width: 100%;
   }
 
   .episode-title {
     font-size: 16px;
+    word-break: break-word;
+    white-space: normal;
   }
 
   .episode-meta {
     font-size: 12px;
+    max-width: 100%;
   }
 
   .episode-tracks,
@@ -298,15 +311,28 @@
   .series-episode-item {
     padding: 10px 12px;
     min-height: 48px;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .episode-title {
     font-size: 14px;
+    word-break: break-word;
+    white-space: normal;
   }
 
   .episode-number {
     font-size: 12px;
     min-width: 36px;
+  }
+
+  .episode-tags {
+    gap: 4px;
+  }
+
+  .episode-tag {
+    font-size: 10px;
+    padding: 2px 6px;
   }
 
   .episode-tracks,
