@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSeriesList();
     setupSeriesSelect();
     setupCreateSeriesForm();
+    document.getElementById('editSeriesForm').addEventListener('submit', submitEditSeries);
 });
 
 
@@ -1533,6 +1534,10 @@ window.onclick = function(event) {
     if (event.target === addTrackModal) {
         closeAddTrackModal();
     }
+    const editSeriesModal = document.getElementById('editSeriesModal');
+    if (event.target === editSeriesModal) {
+        closeEditSeriesModal();
+    }
 }
 
 // Close modals with close button
@@ -1541,6 +1546,7 @@ document.querySelectorAll('.close').forEach(closeBtn => {
         closeEditModal();
         closeDeleteModal();
         closeAddTrackModal();
+        closeEditSeriesModal();
     }
 });
 
@@ -1878,21 +1884,33 @@ function editSeries(seriesId) {
     const series = allSeries.find(s => s.id === seriesId);
     if (!series) return;
 
-    const newTitle = prompt('Show title:', series.title);
-    if (newTitle === null) return;
-    const newDescription = prompt('Show description:', series.description || '');
-    if (newDescription === null) return;
+    document.getElementById('editSeriesId').value = seriesId;
+    document.getElementById('editSeriesTitle').value = series.title;
+    document.getElementById('editSeriesDescription').value = series.description || '';
+    document.getElementById('editSeriesModal').style.display = 'flex';
+}
+
+function closeEditSeriesModal() {
+    document.getElementById('editSeriesModal').style.display = 'none';
+}
+
+function submitEditSeries(e) {
+    e.preventDefault();
+    const seriesId = document.getElementById('editSeriesId').value;
+    const title = document.getElementById('editSeriesTitle').value;
+    const description = document.getElementById('editSeriesDescription').value;
 
     fetch(`${API_BASE_URL}/api/series/${seriesId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTitle, description: newDescription })
+        body: JSON.stringify({ title, description })
     })
     .then(resp => {
         if (!resp.ok) throw new Error('Failed to update show');
         return resp.json();
     })
     .then(() => {
+        closeEditSeriesModal();
         showStatus('Show updated', 'success');
         loadSeriesList();
         loadSeriesManagement();

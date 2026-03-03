@@ -704,6 +704,29 @@
         </div>
     </div>
 
+    <!-- Edit Series/Show Modal -->
+    <div id="editSeriesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditSeriesModal()">&times;</span>
+            <h3>Edit Show</h3>
+            <form id="editSeriesForm">
+                <input type="hidden" id="editSeriesId">
+                <div class="form-group">
+                    <label for="editSeriesTitle">Show Title *</label>
+                    <input type="text" id="editSeriesTitle" required placeholder="Enter show title">
+                </div>
+                <div class="form-group">
+                    <label for="editSeriesDescription">Show Description</label>
+                    <textarea id="editSeriesDescription" rows="6" placeholder="Enter show description"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="closeEditSeriesModal()">Cancel</button>
+                    <button type="submit" class="btn-confirm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Add Track Modal -->
     <div id="addTrackModal" class="modal">
         <div class="modal-content">
