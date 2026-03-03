@@ -231,6 +231,9 @@
 
   .series-back {
     font-size: 13px;
+    position: static;
+    align-self: flex-start;
+    margin-bottom: 12px;
   }
 
   .series-detail-title {
