@@ -129,6 +129,7 @@ router.get('/:id', (req, res) => {
             total_tracks: 0,
             series_id: row.series_id,
             episode_number: row.episode_number,
+            hide_episode_numbers: row.hide_episode_numbers,
             tags: [],
             tracks: []
           });
