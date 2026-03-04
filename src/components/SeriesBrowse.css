@@ -119,6 +119,15 @@
   white-space: pre-wrap;
 }
 
+.series-detail-description a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.series-detail-description a:hover {
+  opacity: 0.7;
+}
+
 .series-episodes-heading {
   font-size: 20px;
   font-weight: 600;
@@ -272,11 +281,24 @@
   .episode-meta {
     font-size: 12px;
     max-width: 100%;
+    width: 100%;
+    justify-content: flex-start;
   }
 
-  .episode-tracks,
-  .episode-duration {
+  .episode-tracks {
+    order: 0;
     font-size: 12px;
+  }
+
+  .episode-duration {
+    order: 1;
+    margin-left: auto;
+    font-size: 12px;
+  }
+
+  .episode-tags {
+    order: 2;
+    width: 100%;
   }
 }
 

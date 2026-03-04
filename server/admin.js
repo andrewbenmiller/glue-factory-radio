@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventDelegation();
     setupPasteToLink('description');
     setupPasteToLink('editDescription');
+    setupPasteToLink('seriesDescription');
+    setupPasteToLink('editSeriesDescription');
     loadShows();
     loadStats();
     loadSeriesList();

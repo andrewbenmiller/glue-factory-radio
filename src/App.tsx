@@ -23,6 +23,12 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, '');
 }
 
+function formatDuration(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 function App() {
   const location = useLocation();
   const playerRef = useRef<AudioPlayerHandle | null>(null);
@@ -611,25 +617,28 @@ function App() {
                 searchResults.map(result => (
                   <div
                     key={result.show.id}
-                    className="search-result-item"
+                    className="series-episode-item"
                     onClick={() => handleSearchSelect(result.index)}
                   >
-                    <span className="search-result-title">
-                      {result.show.series_title && result.show.episode_number && !result.show.hide_episode_numbers
-                        ? `${result.show.series_title}:${result.show.title ? ` ${result.show.title}` : ''} Ep. ${result.show.episode_number}`
-                        : result.show.series_title && result.show.episode_number && result.show.hide_episode_numbers
-                        ? `${result.show.series_title}${result.show.title ? `: ${result.show.title}` : ''}`
-                        : result.show.title}
+                    <span className="episode-info">
+                      <span className="episode-title">
+                        {result.show.series_title && result.show.episode_number && !result.show.hide_episode_numbers
+                          ? `${result.show.series_title}:${result.show.title ? ` ${result.show.title}` : ''} Ep. ${result.show.episode_number}`
+                          : result.show.series_title && result.show.episode_number && result.show.hide_episode_numbers
+                          ? `${result.show.series_title}${result.show.title ? `: ${result.show.title}` : ''}`
+                          : result.show.title}
+                      </span>
                     </span>
-                    <span className="search-result-meta">
-                      {result.show.total_tracks} track{result.show.total_tracks !== 1 ? 's' : ''}
+                    <span className="episode-meta">
+                      <span className="episode-tracks">{result.show.total_tracks} track{result.show.total_tracks !== 1 ? 's' : ''}</span>
                       {result.show.tags && result.show.tags.length > 0 && (
-                        <span className="search-result-tags">
+                        <span className="episode-tags">
                           {result.show.tags.map(tag => (
-                            <span key={tag} className="search-result-tag">{tag}</span>
+                            <span key={tag} className="episode-tag">{tag}</span>
                           ))}
                         </span>
                       )}
+                      <span className="episode-duration">{formatDuration(result.show.total_duration)}</span>
                     </span>
                   </div>
                 ))

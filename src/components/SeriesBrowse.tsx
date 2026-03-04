@@ -2,6 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { apiService, Series, Show } from '../services/api';
 import './SeriesBrowse.css';
 
+// Parse [text](url) markdown links into React elements
+function renderDescription(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(
+      <a
+        key={match.index}
+        href={match[2]}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {match[1]}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+}
+
 interface SeriesBrowseProps {
   onEpisodeSelect: (episode: Show) => void;
 }
@@ -62,7 +94,7 @@ const SeriesBrowse: React.FC<SeriesBrowseProps> = ({ onEpisodeSelect }) => {
         )}
         <h2 className="series-detail-title">{selectedSeries.title}</h2>
         {selectedSeries.description && (
-          <p className="series-detail-description">{selectedSeries.description}</p>
+          <p className="series-detail-description">{renderDescription(selectedSeries.description)}</p>
         )}
         <h3 className="series-episodes-heading">EPISODES</h3>
         <div className="series-episodes">
