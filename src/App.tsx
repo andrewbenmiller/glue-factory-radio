@@ -119,11 +119,41 @@ function App() {
         });
         setShows(fetchedShows);
 
-        // Resolve deep link: /show/:slug
-        const match = location.pathname.match(/^\/show\/(.+)$/);
-        if (match && fetchedShows.length > 0) {
-          const slug = match[1];
-          const idx = fetchedShows.findIndex(s => generateSlug(s.title) === slug);
+        // Resolve deep link: /show/...
+        // Formats: /show/{series}/{title}/Ep-{num}, /show/{series}/Ep-{num}, /show/{slug}
+        if (location.pathname.startsWith('/show/') && fetchedShows.length > 0) {
+          const path = location.pathname.slice('/show/'.length);
+          let idx = -1;
+
+          // Try series episode with title: {series}/{title}/Ep-{num}
+          const withTitle = path.match(/^(.+?)\/(.+?)\/Ep-(\d+)$/);
+          if (withTitle) {
+            const [, seriesSlug, , epNum] = withTitle;
+            idx = fetchedShows.findIndex(s =>
+              s.series_title && s.episode_number &&
+              generateSlug(s.series_title) === seriesSlug &&
+              s.episode_number === parseInt(epNum, 10)
+            );
+          }
+
+          // Try series episode without title: {series}/Ep-{num}
+          if (idx === -1) {
+            const noTitle = path.match(/^(.+?)\/Ep-(\d+)$/);
+            if (noTitle) {
+              const [, seriesSlug, epNum] = noTitle;
+              idx = fetchedShows.findIndex(s =>
+                s.series_title && s.episode_number &&
+                generateSlug(s.series_title) === seriesSlug &&
+                s.episode_number === parseInt(epNum, 10)
+              );
+            }
+          }
+
+          // Fall back to standalone: {slug}
+          if (idx === -1) {
+            idx = fetchedShows.findIndex(s => generateSlug(s.title) === path);
+          }
+
           if (idx !== -1) {
             setCurrentShowIndex(idx);
             setArchiveExpanded(true);
@@ -179,8 +209,19 @@ function App() {
   
   // Update URL to reflect the currently loaded show
   const updateShowUrl = useCallback((show: Show) => {
-    const slug = generateSlug(show.title);
-    window.history.replaceState(null, '', `/show/${slug}`);
+    let path: string;
+    if (show.series_title && show.episode_number) {
+      const seriesSlug = generateSlug(show.series_title);
+      if (show.title) {
+        const titleSlug = generateSlug(show.title);
+        path = `/show/${seriesSlug}/${titleSlug}/Ep-${show.episode_number}`;
+      } else {
+        path = `/show/${seriesSlug}/Ep-${show.episode_number}`;
+      }
+    } else {
+      path = `/show/${generateSlug(show.title)}`;
+    }
+    window.history.replaceState(null, '', path);
   }, []);
 
   // Handle show selection with pin/scroll (search results, series page, deep links)
