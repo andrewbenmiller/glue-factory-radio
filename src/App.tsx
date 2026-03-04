@@ -433,7 +433,7 @@ function App() {
   // Convert show tracks to EpisodePlayer format
   const convertShowToTracks = (show: Show): Track[] => {
     return show.tracks.map(track => ({
-      src: `${API_BASE_URL}/api${track.url}`,
+      src: `${API_BASE_URL}/api${track.url.split('/').map(s => encodeURIComponent(s)).join('/')}`,
       title: track.title
     }));
   };
