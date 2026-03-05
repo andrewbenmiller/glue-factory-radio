@@ -403,7 +403,8 @@ function setupAddTrackForm() {
         console.log('🎵 Add Track form submitted');
 
         const showId = document.getElementById('addTrackShowId').value;
-        const trackTitle = document.getElementById('addTrackFirstTitle').value;
+        const trackTitleEl = document.getElementById('addTrackFirstTitle');
+        const trackTitle = trackTitleEl ? trackTitleEl.value : '';
         const audioFiles = audioInput.files;
 
         console.log('📊 Form data:', { showId, trackTitle, fileCount: audioFiles ? audioFiles.length : 0 });
