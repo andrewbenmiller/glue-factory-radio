@@ -776,7 +776,7 @@ async function loadShowTracks(showId) {
                     ${tracks.map(track => `
                         <tr>
                             <td>${track.track_order}</td>
-                            <td><strong>${escapeHtml(track.title)}</strong></td>
+                            <td><strong class="track-title-editable" data-show-id="${showId}" data-track-id="${track.id}" title="Click to edit">${escapeHtml(track.title)}</strong></td>
                             <td>${formatDuration(track.duration)}</td>
                             <td>${formatFileSize(track.file_size)}</td>
                             <td>${formatDate(track.upload_date)}</td>
@@ -815,6 +815,80 @@ function setupEventDelegation() {
             const showId = parseInt(showRow.dataset.showId);
             toggleShowExpansion(showId);
         }
+    });
+
+    // Handle inline track title editing
+    document.addEventListener('click', function(e) {
+        const titleEl = e.target.closest('.track-title-editable');
+        if (!titleEl || titleEl.dataset.editing === 'true') return;
+
+        const showId = titleEl.dataset.showId;
+        const trackId = titleEl.dataset.trackId;
+        const currentTitle = titleEl.textContent;
+        const td = titleEl.parentElement;
+
+        titleEl.dataset.editing = 'true';
+        td.innerHTML = `
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="text" class="track-title-input" value="${escapeHtml(currentTitle)}" style="flex: 1; padding: 4px 8px; border: 1px solid black; font-size: 14px; font-family: Helvetica, Arial, sans-serif;">
+                <button class="btn-confirm track-title-save" data-show-id="${showId}" data-track-id="${trackId}" style="padding: 4px 10px; font-size: 12px;">Save</button>
+                <button class="btn-cancel track-title-cancel" data-show-id="${showId}" style="padding: 4px 10px; font-size: 12px;">Cancel</button>
+            </div>
+        `;
+        const input = td.querySelector('.track-title-input');
+        input.focus();
+        input.select();
+
+        // Save on Enter, cancel on Escape
+        input.addEventListener('keydown', function(ke) {
+            if (ke.key === 'Enter') {
+                ke.preventDefault();
+                td.querySelector('.track-title-save').click();
+            } else if (ke.key === 'Escape') {
+                ke.preventDefault();
+                td.querySelector('.track-title-cancel').click();
+            }
+        });
+    });
+
+    // Handle track title save
+    document.addEventListener('click', async function(e) {
+        const saveBtn = e.target.closest('.track-title-save');
+        if (!saveBtn) return;
+
+        const showId = saveBtn.dataset.showId;
+        const trackId = saveBtn.dataset.trackId;
+        const input = saveBtn.closest('td').querySelector('.track-title-input');
+        const newTitle = input.value.trim();
+
+        if (!newTitle) {
+            showStatus('Track title cannot be empty', 'error');
+            return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = '...';
+
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/shows/${showId}/tracks/${trackId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: newTitle })
+            });
+            if (!resp.ok) throw new Error('Failed to update track');
+            showStatus('Track renamed', 'success');
+            await loadShowTracks(Number(showId));
+        } catch (err) {
+            showStatus(`Failed to rename track: ${err.message}`, 'error');
+            await loadShowTracks(Number(showId));
+        }
+    });
+
+    // Handle track title cancel
+    document.addEventListener('click', async function(e) {
+        const cancelBtn = e.target.closest('.track-title-cancel');
+        if (!cancelBtn) return;
+        await loadShowTracks(Number(cancelBtn.dataset.showId));
     });
 
     // Handle action button clicks

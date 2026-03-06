@@ -485,6 +485,34 @@ router.options('/audio/:filename', (req, res) => {
 // GET audio file proxy (serves audio files with proper CORS) - MOVED TO server.js
 // This route is now handled at /api/audio/:filename in the main server
 
+// UPDATE track title
+router.put('/:showId/tracks/:trackId', async (req, res) => {
+  const { showId, trackId } = req.params;
+  const { title } = req.body;
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      db.run('UPDATE show_tracks SET title = ? WHERE id = ? AND show_id = ?', [title.trim(), trackId, showId], function(err) {
+        if (err) reject(err);
+        else resolve(this.changes);
+      });
+    });
+
+    if (result === 0) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    res.json({ message: 'Track updated', title: title.trim() });
+  } catch (err) {
+    console.error('Error updating track:', err);
+    res.status(500).json({ error: 'Failed to update track' });
+  }
+});
+
 // DELETE track (hard delete - removes track from database and R2)
 router.delete('/:showId/tracks/:trackId', async (req, res) => {
   const { showId, trackId } = req.params;
