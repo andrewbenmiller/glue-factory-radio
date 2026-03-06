@@ -687,6 +687,27 @@ router.put('/background/:id/toggle', async (req, res) => {
   }
 });
 
+// PUT update background image position
+router.put('/background/:id/position', express.json(), (req, res) => {
+  const { id } = req.params;
+  const { position } = req.body;
+
+  if (!position || !/^\d{1,3}%\s+\d{1,3}%$/.test(position)) {
+    return res.status(400).json({ error: 'Invalid position format. Expected "X% Y%" (e.g. "50% 30%")' });
+  }
+
+  db.run('UPDATE background_images SET position = ? WHERE id = ?', [position, id], function(err) {
+    if (err) {
+      console.error('Error updating background position:', err);
+      return res.status(500).json({ error: 'Failed to update position' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Background image not found' });
+    }
+    res.json({ message: 'Background position updated', position });
+  });
+});
+
 // DELETE background image (hard delete - removes from database and cloud storage)
 router.delete('/background/:id', async (req, res) => {
   try {

@@ -10,6 +10,7 @@ interface BackgroundImage {
   upload_date: string;
   is_active: boolean;
   url: string;
+  position?: string;
 }
 
 interface BackgroundManagerProps {
@@ -63,7 +64,7 @@ const BackgroundManager: React.FC<BackgroundManagerProps> = ({ className = '' })
         height: '100vh',
         backgroundImage: `url(${currentImage.url})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: currentImage.position || 'center',
         backgroundRepeat: 'no-repeat',
         zIndex: -1
       }}

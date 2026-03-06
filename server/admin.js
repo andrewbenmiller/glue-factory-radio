@@ -6,6 +6,7 @@ let shows = [];
 let allSeries = [];
 let currentDeleteId = null;
 let expandedShows = new Set();
+let allBackgroundImages = [];
 
 // Initialize admin portal
 document.addEventListener('DOMContentLoaded', function() {
@@ -1197,7 +1198,8 @@ async function loadBackgroundImages() {
         }
 
         const images = await response.json();
-        
+        allBackgroundImages = images;
+
         if (images.length === 0) {
             container.innerHTML = `
                 <h3>Current Background Images</h3>
@@ -1219,9 +1221,12 @@ async function loadBackgroundImages() {
                         Uploaded: ${new Date(image.upload_date).toLocaleDateString()}
                     </div>
                     <div class="background-image-actions">
-                        <button class="btn-toggle ${image.is_active ? 'btn-toggle-active' : 'btn-toggle-inactive'}" 
+                        <button class="btn-toggle ${image.is_active ? 'btn-toggle-active' : 'btn-toggle-inactive'}"
                                 onclick="toggleBackgroundImage(${image.id}, ${image.is_active})">
                             ${image.is_active ? 'De-activate' : 'Make active'}
+                        </button>
+                        <button class="btn-confirm" onclick="openBgRepositionModal(${image.id})" style="padding: 6px 12px;">
+                            Reposition
                         </button>
                         <button class="btn-delete" onclick="deleteBackgroundImage(${image.id}, '${image.original_name}')">
                             Delete
@@ -2041,6 +2046,132 @@ async function removeSeriesCover(seriesId) {
         loadSeriesManagement();
     } catch (err) {
         showStatus(`Failed to remove cover: ${err.message}`, 'error');
+    }
+}
+
+// ─── Background Image Reposition Modal ───
+let bgRepositionImageId = null;
+let bgRepositionDragging = false;
+let bgRepositionStartX = 0;
+let bgRepositionStartY = 0;
+let bgRepositionOffsetX = 0;
+let bgRepositionOffsetY = 0;
+let bgRepositionImgWidth = 0;
+let bgRepositionImgHeight = 0;
+const BG_VIEWPORT_W = 400;
+const BG_VIEWPORT_H = 225;
+
+function openBgRepositionModal(imageId) {
+    const image = allBackgroundImages.find(img => img.id === imageId);
+    if (!image) return;
+
+    bgRepositionImageId = imageId;
+    const modal = document.getElementById('bgRepositionModal');
+    const img = document.getElementById('bgRepositionImage');
+    const viewport = document.getElementById('bgRepositionViewport');
+
+    img.onload = function() {
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const vpRatio = BG_VIEWPORT_W / BG_VIEWPORT_H;
+        if (imgRatio > vpRatio) {
+            bgRepositionImgHeight = BG_VIEWPORT_H;
+            bgRepositionImgWidth = BG_VIEWPORT_H * imgRatio;
+        } else {
+            bgRepositionImgWidth = BG_VIEWPORT_W;
+            bgRepositionImgHeight = BG_VIEWPORT_W / imgRatio;
+        }
+        img.style.width = bgRepositionImgWidth + 'px';
+        img.style.height = bgRepositionImgHeight + 'px';
+
+        const pos = (image.position || '50% 50%').split(/\s+/);
+        const pctX = parseFloat(pos[0]) / 100;
+        const pctY = parseFloat(pos[1]) / 100;
+        bgRepositionOffsetX = pctX * (BG_VIEWPORT_W - bgRepositionImgWidth);
+        bgRepositionOffsetY = pctY * (BG_VIEWPORT_H - bgRepositionImgHeight);
+        img.style.left = bgRepositionOffsetX + 'px';
+        img.style.top = bgRepositionOffsetY + 'px';
+    };
+    img.src = image.url;
+    modal.style.display = 'flex';
+
+    viewport.onmousedown = function(e) {
+        e.preventDefault();
+        bgRepositionDragging = true;
+        bgRepositionStartX = e.clientX - bgRepositionOffsetX;
+        bgRepositionStartY = e.clientY - bgRepositionOffsetY;
+        viewport.style.cursor = 'grabbing';
+    };
+    document.onmousemove = function(e) {
+        if (!bgRepositionDragging) return;
+        let newX = e.clientX - bgRepositionStartX;
+        let newY = e.clientY - bgRepositionStartY;
+        newX = Math.min(0, Math.max(BG_VIEWPORT_W - bgRepositionImgWidth, newX));
+        newY = Math.min(0, Math.max(BG_VIEWPORT_H - bgRepositionImgHeight, newY));
+        bgRepositionOffsetX = newX;
+        bgRepositionOffsetY = newY;
+        img.style.left = newX + 'px';
+        img.style.top = newY + 'px';
+    };
+    document.onmouseup = function() {
+        bgRepositionDragging = false;
+        viewport.style.cursor = 'grab';
+    };
+
+    viewport.ontouchstart = function(e) {
+        e.preventDefault();
+        bgRepositionDragging = true;
+        const touch = e.touches[0];
+        bgRepositionStartX = touch.clientX - bgRepositionOffsetX;
+        bgRepositionStartY = touch.clientY - bgRepositionOffsetY;
+    };
+    document.ontouchmove = function(e) {
+        if (!bgRepositionDragging) return;
+        const touch = e.touches[0];
+        let newX = touch.clientX - bgRepositionStartX;
+        let newY = touch.clientY - bgRepositionStartY;
+        newX = Math.min(0, Math.max(BG_VIEWPORT_W - bgRepositionImgWidth, newX));
+        newY = Math.min(0, Math.max(BG_VIEWPORT_H - bgRepositionImgHeight, newY));
+        bgRepositionOffsetX = newX;
+        bgRepositionOffsetY = newY;
+        img.style.left = newX + 'px';
+        img.style.top = newY + 'px';
+    };
+    document.ontouchend = function() {
+        bgRepositionDragging = false;
+    };
+}
+
+function closeBgRepositionModal() {
+    document.getElementById('bgRepositionModal').style.display = 'none';
+    bgRepositionImageId = null;
+    bgRepositionDragging = false;
+    document.onmousemove = null;
+    document.onmouseup = null;
+    document.ontouchmove = null;
+    document.ontouchend = null;
+}
+
+async function saveBgRepositionPosition() {
+    if (!bgRepositionImageId) return;
+
+    const rangeX = BG_VIEWPORT_W - bgRepositionImgWidth;
+    const rangeY = BG_VIEWPORT_H - bgRepositionImgHeight;
+    const pctX = rangeX === 0 ? 50 : Math.round((bgRepositionOffsetX / rangeX) * 100);
+    const pctY = rangeY === 0 ? 50 : Math.round((bgRepositionOffsetY / rangeY) * 100);
+    const position = `${pctX}% ${pctY}%`;
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/upload/background/${bgRepositionImageId}/position`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ position })
+        });
+        if (!resp.ok) throw new Error('Failed to save position');
+        showStatus('Background position saved', 'success');
+        closeBgRepositionModal();
+        loadBackgroundImages();
+    } catch (err) {
+        showStatus(`Failed to save position: ${err.message}`, 'error');
     }
 }
 
