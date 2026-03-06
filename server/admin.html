@@ -923,7 +923,7 @@
         /* Background Images Styles */
         .background-images-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -965,7 +965,13 @@
 
         .background-image-actions {
             display: flex;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .background-image-actions button {
+            font-size: 12px;
+            padding: 5px 10px;
         }
 
         .btn-toggle-active {

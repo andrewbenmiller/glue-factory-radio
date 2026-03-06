@@ -1213,7 +1213,7 @@ async function loadBackgroundImages() {
 
         const imagesHtml = images.map(image => `
             <div class="background-image-card ${image.is_active ? 'background-image-active' : ''}">
-                <img src="${image.url}" alt="${image.original_name}" class="background-image-preview">
+                <img src="${image.url}" alt="${image.original_name}" class="background-image-preview" style="object-position: ${image.position || '50% 50%'}">
                 <div class="background-image-info">
                     <div class="background-image-name">${image.original_name}</div>
                     <div class="background-image-meta">
@@ -1225,7 +1225,7 @@ async function loadBackgroundImages() {
                                 onclick="toggleBackgroundImage(${image.id}, ${image.is_active})">
                             ${image.is_active ? 'De-activate' : 'Make active'}
                         </button>
-                        <button class="btn-confirm" onclick="openBgRepositionModal(${image.id})" style="padding: 6px 12px;">
+                        <button class="btn-confirm" onclick="openBgRepositionModal(${image.id})">
                             Reposition
                         </button>
                         <button class="btn-delete" onclick="deleteBackgroundImage(${image.id}, '${image.original_name}')">
