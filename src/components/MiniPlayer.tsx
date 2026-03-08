@@ -5,6 +5,11 @@ import { useLiveStatus } from '../hooks/useLiveStatus';
 import { useMediaSession } from '../hooks/useMediaSession';
 import { apiService, API_BASE_URL, Show } from '../services/api';
 import logo from '../logo.png';
+import prevIcon from '../assets/icons/prev-icon.svg';
+import playIcon from '../assets/icons/play-icon.svg';
+import pauseIcon from '../assets/icons/pause-icon.svg';
+import nextIcon from '../assets/icons/next-icon.svg';
+import './AudioPlayer.css';
 import './MiniPlayer.css';
 
 const lockScreenArt = window.location.origin + '/web-app-manifest-512x512.png';
@@ -107,6 +112,20 @@ export default function MiniPlayer() {
       bc.close();
       window.removeEventListener('beforeunload', handleUnload);
     };
+  }, []);
+
+  // ─── Enforce minimum window size ───
+  useEffect(() => {
+    const MIN_SIZE = 200;
+    const enforceMinSize = () => {
+      const w = window.outerWidth;
+      const h = window.outerHeight;
+      if (w < MIN_SIZE || h < MIN_SIZE) {
+        window.resizeTo(Math.max(w, MIN_SIZE), Math.max(h, MIN_SIZE));
+      }
+    };
+    window.addEventListener('resize', enforceMinSize);
+    return () => window.removeEventListener('resize', enforceMinSize);
   }, []);
 
   // ─── Build Howls when tracks change ───
@@ -293,21 +312,17 @@ export default function MiniPlayer() {
     }
   }, [isLiveMode, audio, streamUrl]);
 
-  // ─── Play/Pause toggle ───
-  const togglePlayPause = useCallback(() => {
-    if (isLiveMode) {
-      if (audio.source === 'live') {
+  // ─── Archive play/pause (always controls archive, stops live if needed) ───
+  const toggleArchivePlayPause = useCallback(() => {
+    if (isPlaying) {
+      pauseTrack();
+    } else {
+      // Stop live stream if active, then play archive
+      if (isLiveMode) {
         audio.stopLive();
         setIsLiveMode(false);
-      } else {
-        audio.playLive(streamUrl);
       }
-    } else {
-      if (isPlaying) {
-        pauseTrack();
-      } else {
-        resumeOrStart();
-      }
+      resumeOrStart();
     }
   }, [isLiveMode, isPlaying, audio, streamUrl, pauseTrack, resumeOrStart]);
 
@@ -351,7 +366,7 @@ export default function MiniPlayer() {
     liveNowPlaying: nowPlaying,
     liveShowTitle: showTitle,
     artworkUrl: lockScreenArt,
-    onPlay: togglePlayPause,
+    onPlay: toggleArchivePlayPause,
     onPause: isLiveMode ? () => { audio.stopLive(); setIsLiveMode(false); } : pauseTrack,
     onNext: isLiveMode ? null : nextTrack,
     onPrev: isLiveMode ? null : prevTrack,
@@ -373,16 +388,20 @@ export default function MiniPlayer() {
   return (
     <div className="mini-player">
       {/* Header */}
-      <div className="mini-header">
-        <img src={logo} alt="Glue Factory Radio" className="mini-logo" />
+      <div className={`mini-header ${audio.source === 'live' ? 'mini-header-streaming' : ''}`}>
+        <div className="mini-live-banner">
+          {audio.source === 'live' ? (
+            <div className="mini-live-banner-scroll">
+              <span className="mini-live-banner-text">Streaming live now: {nowPlaying || showTitle || 'Live Stream'}</span>
+              <span className="mini-live-banner-text">Streaming live now: {nowPlaying || showTitle || 'Live Stream'}</span>
+            </div>
+          ) : (
+            <span className="mini-live-banner-text">
+              {isLive ? `Streaming live now: ${nowPlaying || showTitle || 'Live Stream'}` : 'Glue Factory Radio'}
+            </span>
+          )}
+        </div>
         <div className="mini-header-actions">
-          <button
-            className={`mini-live-btn ${isLiveMode && audio.source === 'live' ? 'active' : ''}`}
-            onClick={toggleLive}
-            title={isLive ? 'Live stream available' : 'Live stream offline'}
-          >
-            LIVE{isLive ? '' : ' (OFF)'}
-          </button>
           <button className="mini-expand-btn" onClick={expandToFull} title="Open full site">
             <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.5">
               <polyline points="4,1 11,1 11,8" />
@@ -393,78 +412,85 @@ export default function MiniPlayer() {
         </div>
       </div>
 
-      {/* Body */}
+      {/* Body - live stream play/stop */}
       <div className="mini-body">
-        {/* Controls + Title */}
-        <div className="mini-controls-row">
-          {!isLiveMode && (
-            <div className="mini-transport">
-              <button className="mini-transport-btn" onClick={prevTrack} disabled={!tracks.length} title="Previous">
-                <svg viewBox="0 0 14 14"><polygon points="3,2 3,12 1,12 1,2" /><polygon points="13,2 3,7 13,12" /></svg>
-              </button>
-              <button className="mini-transport-btn" onClick={togglePlayPause} disabled={!tracks.length} title={isActive ? 'Pause' : 'Play'}>
-                {isActive ? (
-                  <svg viewBox="0 0 14 14"><rect x="2" y="2" width="3.5" height="10" /><rect x="8.5" y="2" width="3.5" height="10" /></svg>
-                ) : (
-                  <svg viewBox="0 0 14 14"><polygon points="3,1 13,7 3,13" /></svg>
-                )}
-              </button>
-              <button className="mini-transport-btn" onClick={nextTrack} disabled={!tracks.length} title="Next">
-                <svg viewBox="0 0 14 14"><polygon points="1,2 11,7 1,12" /><polygon points="11,2 13,2 13,12 11,12" /></svg>
-              </button>
-            </div>
-          )}
-
-          {isLiveMode ? (
-            <div className="mini-live-info">
-              <div className="mini-live-label">
-                {audio.source === 'live' ? 'LIVE NOW' : 'LIVE (PAUSED)'}
-              </div>
-              <div className="mini-live-now-playing">
-                {nowPlaying || showTitle || 'Connecting...'}
-              </div>
-            </div>
-          ) : (
-            <div className="mini-title">
-              <span className="mini-title-text">
-                {tracks[trackIndex]?.title ?? 'No track loaded'}
-              </span>
-            </div>
-          )}
-
-          {/* Volume */}
-          <div className="mini-volume">
-            <svg
-              className="mini-volume-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              onClick={() => setMuted(m => !m)}
-            >
-              <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" />
-              {!muted && volume > 0 && (
-                <>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                  {volume > 0.5 && <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />}
-                </>
-              )}
-              {muted && <line x1="1" y1="1" x2="23" y2="23" />}
-            </svg>
-            <input
-              type="range"
-              className="mini-volume-slider"
-              min="0"
-              max="1"
-              step="0.05"
-              value={muted ? 0 : volume}
-              onChange={e => { setVolume(parseFloat(e.target.value)); setMuted(false); }}
-            />
-          </div>
+        <div className="mini-body-center">
+          <button
+            className={`mini-play-btn ${audio.source === 'live' ? 'mini-play-btn-playing' : ''}`}
+            onClick={toggleLive}
+            title={audio.source === 'live' ? 'Stop live stream' : 'Play live stream'}
+          >
+            <span className="mini-play-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="4,2 4,22 22,12" />
+              </svg>
+            </span>
+            <span className="mini-stop-icon" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="18" height="18" />
+              </svg>
+            </span>
+          </button>
         </div>
+      </div>
 
-        {/* Info row */}
-        {!isLiveMode && (
+      {/* Transport section */}
+      <div className="mini-transport-section">
+          <div className="mini-controls-row">
+            <div className="mini-transport">
+              <button className="info-control-btn" onClick={prevTrack} disabled={!tracks.length} title="Previous">
+                <img src={prevIcon} alt="Previous" />
+              </button>
+              <button className="info-control-btn" onClick={toggleArchivePlayPause} disabled={!tracks.length} title={isPlaying ? 'Pause' : 'Play'}>
+                <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? 'Pause' : 'Play'} />
+              </button>
+              <button className="info-control-btn" onClick={nextTrack} disabled={!tracks.length} title="Next">
+                <img src={nextIcon} alt="Next" />
+              </button>
+            </div>
+
+            {/* Volume */}
+            <div className="mini-volume">
+              <svg
+                className="mini-volume-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                onClick={() => setMuted(m => !m)}
+              >
+                <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" />
+                {!muted && volume > 0 && (
+                  <>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    {volume > 0.5 && <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />}
+                  </>
+                )}
+                {muted && <line x1="1" y1="1" x2="23" y2="23" />}
+              </svg>
+              <input
+                type="range"
+                className="mini-volume-slider"
+                min="0"
+                max="1"
+                step="0.05"
+                value={muted ? 0 : volume}
+                onChange={e => { setVolume(parseFloat(e.target.value)); setMuted(false); }}
+              />
+            </div>
+          </div>
+
+          <div className="mini-title">
+            {isPlaying ? (
+              <div className="mini-title-scroll">
+                <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
+                <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
+              </div>
+            ) : (
+              <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
+            )}
+          </div>
+
           <div className="mini-info-row">
             <select className="mini-show-select" value={showIndex} onChange={handleShowChange}>
               {shows.map((show, i) => (
@@ -478,28 +504,10 @@ export default function MiniPlayer() {
               {duration > 0 ? `${formatTime(progress)} / ${formatTime(duration)}` : ''}
             </span>
           </div>
-        )}
+        </div>
 
-        {/* Progress bar */}
-        {!isLiveMode && (
-          <div className="mini-progress-container" onClick={handleProgressClick}>
-            <div className="mini-progress-bar" style={{ width: duration > 0 ? `${(progress / duration) * 100}%` : '0%' }} />
-          </div>
-        )}
-
-        {/* Live mode play/pause button */}
-        {isLiveMode && (
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
-            <button className="mini-transport-btn" onClick={togglePlayPause} title={audio.source === 'live' ? 'Stop' : 'Play'}>
-              {audio.source === 'live' ? (
-                <svg viewBox="0 0 14 14"><rect x="3" y="3" width="8" height="8" /></svg>
-              ) : (
-                <svg viewBox="0 0 14 14"><polygon points="3,1 13,7 3,13" /></svg>
-              )}
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Footer */}
+      <div className="mini-footer" />
     </div>
   );
 }
