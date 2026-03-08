@@ -4,7 +4,6 @@ import { useAudio } from '../audio/AudioProvider';
 import { useLiveStatus } from '../hooks/useLiveStatus';
 import { useMediaSession } from '../hooks/useMediaSession';
 import { apiService, API_BASE_URL, Show } from '../services/api';
-import logo from '../logo.png';
 import prevIcon from '../assets/icons/prev-icon.svg';
 import playIcon from '../assets/icons/play-icon.svg';
 import pauseIcon from '../assets/icons/pause-icon.svg';
@@ -324,7 +323,7 @@ export default function MiniPlayer() {
       }
       resumeOrStart();
     }
-  }, [isLiveMode, isPlaying, audio, streamUrl, pauseTrack, resumeOrStart]);
+  }, [isLiveMode, isPlaying, audio, pauseTrack, resumeOrStart]);
 
   // ─── Show selector ───
   const handleShowChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -339,19 +338,6 @@ export default function MiniPlayer() {
     audio.notifyTrackDidStop();
     setIsLiveMode(false);
   }, [audio]);
-
-  // ─── Progress seek ───
-  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (isLiveMode || !duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    const seekTo = pct * duration;
-    const h = howlsRef.current[trackIndex];
-    if (h && h.state() === 'loaded') {
-      h.seek(seekTo);
-      setProgress(seekTo);
-    }
-  }, [isLiveMode, duration, trackIndex]);
 
   // ─── Expand to full site ───
   const expandToFull = () => {
@@ -382,8 +368,6 @@ export default function MiniPlayer() {
       document.title = 'Glue Factory Radio';
     }
   }, [isLiveMode, isPlaying, trackIndex, tracks, nowPlaying, audio.source]);
-
-  const isActive = isLiveMode ? audio.source === 'live' : isPlaying;
 
   return (
     <div className="mini-player">
