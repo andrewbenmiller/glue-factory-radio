@@ -4,6 +4,7 @@ import { useAudio } from '../audio/AudioProvider';
 import { useLiveStatus } from '../hooks/useLiveStatus';
 import { useMediaSession } from '../hooks/useMediaSession';
 import { apiService, API_BASE_URL, Show } from '../services/api';
+import logo from '../logo.png';
 import './MiniPlayer.css';
 
 const lockScreenArt = window.location.origin + '/web-app-manifest-512x512.png';
@@ -373,7 +374,7 @@ export default function MiniPlayer() {
     <div className="mini-player">
       {/* Header */}
       <div className="mini-header">
-        <span className="mini-brand">GLUE FACTORY RADIO</span>
+        <img src={logo} alt="Glue Factory Radio" className="mini-logo" />
         <div className="mini-header-actions">
           <button
             className={`mini-live-btn ${isLiveMode && audio.source === 'live' ? 'active' : ''}`}
