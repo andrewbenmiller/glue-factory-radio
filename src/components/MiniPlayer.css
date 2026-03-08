@@ -1,10 +1,11 @@
 /* Mini Player - Pop-out Compact Window */
 
 .mini-player {
+  position: relative;
   width: 100vw;
   height: 100vh;
   min-width: 200px;
-  min-height: 200px;
+  min-height: 0;
   background: #ffffff;
   font-family: Helvetica, Arial, sans-serif;
   display: flex;
@@ -54,12 +55,6 @@
   pointer-events: none;
 }
 
-.mini-header-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  -webkit-app-region: no-drag;
-}
 
 .mini-live-btn {
   font-family: 'Roboto Mono', monospace;
@@ -88,6 +83,13 @@
   background: #d4450f;
 }
 
+.mini-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  -webkit-app-region: no-drag;
+}
+
 .mini-expand-btn {
   width: 20px;
   height: 20px;
@@ -110,8 +112,9 @@
 
 /* Body */
 .mini-body {
+  width: 221px;
   flex: 1;
-  min-height: 0;
+  min-height: 125px;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -227,8 +230,8 @@
 }
 
 .mini-title-text {
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
   font-weight: 400;
   color: #ff1900;
   white-space: nowrap;
@@ -296,6 +299,12 @@
   cursor: pointer;
 }
 
+/* Bottom group: transport + footer, pinned to bottom */
+.mini-bottom {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
 /* Transport Section */
 .mini-transport-section {
   padding: 10px 12px;
@@ -303,7 +312,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex-shrink: 0;
   background: #ffffff;
   position: relative;
   z-index: 1;
@@ -312,9 +320,8 @@
 
 /* Footer */
 .mini-footer {
-  height: 30px;
+  height: 12px;
   background: #ff1900;
-  flex-shrink: 0;
 }
 
 /* Info Row */
@@ -325,6 +332,13 @@
   gap: 8px;
 }
 
+.mini-show-select-wrapper {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  -webkit-app-region: no-drag;
+}
+
 .mini-show-select {
   font-family: 'Roboto Mono', monospace;
   font-size: 9px;
@@ -332,16 +346,76 @@
   border: 1px solid rgba(255, 25, 0, 0.25);
   background: transparent;
   padding: 2px 4px;
-  min-width: 0;
-  flex: 1;
+  width: 100%;
   cursor: pointer;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-align: left;
 }
 
-.mini-show-select:focus {
-  outline: 1px solid #ff1900;
+.mini-show-select:hover {
+  background: #fff5f3;
+}
+
+.mini-show-select-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-show-select-arrow {
+  flex-shrink: 0;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.mini-show-dropdown {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 136px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid rgba(255, 25, 0, 0.25);
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: #ff1900 rgba(255, 25, 0, 0.1);
+}
+
+.mini-show-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mini-show-dropdown::-webkit-scrollbar-track {
+  background: rgba(255, 25, 0, 0.1);
+}
+
+.mini-show-dropdown::-webkit-scrollbar-thumb {
+  background: #ff1900;
+}
+
+.mini-show-dropdown-item {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  color: #ff1900;
+  padding: 4px 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-show-dropdown-item:hover {
+  background: #fff5f3;
+}
+
+.mini-show-dropdown-item.active {
+  background: #ff1900;
+  color: #ffffff;
 }
 
 .mini-time {

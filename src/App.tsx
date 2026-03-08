@@ -12,6 +12,7 @@ import { useAudio } from './audio/AudioProvider';
 import SeriesBrowse from './components/SeriesBrowse';
 import { apiService, API_BASE_URL, Show, PageContent } from './services/api';
 import logo from './logo.png';
+import popoutStar from './assets/popout-star.png';
 const lockScreenArt = window.location.origin + '/web-app-manifest-512x512.png';
 
 function generateSlug(title: string): string {
@@ -57,6 +58,7 @@ function App() {
 
   // Media Session API — lock screen controls, AirPlay Now Playing, hardware keys
   const handleMediaPlay = useCallback(() => {
+    bcRef.current?.postMessage({ type: 'playing' });
     if (source === "live") playLive(streamUrl);
     else if (source === "track") playerRef.current?.resumeOrStart();
   }, [source, playLive, streamUrl]);
@@ -87,16 +89,19 @@ function App() {
     onPrev: handleMediaPrev,
   });
   
-  // Pause audio when mini player opens in another window
+  // Coordinate audio with mini player via BroadcastChannel
+  const bcRef = useRef<BroadcastChannel | null>(null);
+
   useEffect(() => {
     const bc = new BroadcastChannel('gfr-miniplayer');
+    bcRef.current = bc;
     bc.onmessage = (e) => {
-      if (e.data?.type === 'opened') {
+      if (e.data?.type === 'opened' || e.data?.type === 'playing') {
         stopLive();
         playerRef.current?.pause();
       }
     };
-    return () => bc.close();
+    return () => { bc.close(); bcRef.current = null; };
   }, [stopLive]);
 
   // Custom live stream label from admin (defaults to "LIVE NOW")
@@ -257,6 +262,7 @@ function App() {
 
     // Always trigger playback (handles first load where show is already selected)
     requestAnimationFrame(() => {
+      bcRef.current?.postMessage({ type: 'playing' });
       playerRef.current?.playFromUI(0);
     });
   }, [shows, updateShowUrl]);
@@ -277,6 +283,7 @@ function App() {
     }
 
     requestAnimationFrame(() => {
+      bcRef.current?.postMessage({ type: 'playing' });
       playerRef.current?.playFromUI(0);
     });
   }, [shows, updateShowUrl]);
@@ -303,6 +310,7 @@ function App() {
     //    This satisfies autoplay policies reliably.
     //    We also pass the target index explicitly.
     requestAnimationFrame(() => {
+      bcRef.current?.postMessage({ type: 'playing' });
       playerRef.current?.playFromUI(trackIndex);
     });
 
@@ -472,18 +480,25 @@ function App() {
         onClick={() => {
           const currentShow = shows[validShowIndex];
           const params = currentShow ? `?show=${currentShow.id}&track=${currentTrackIndex}` : '';
-          window.open(`/mini${params}`, 'gfr-mini', 'width=220,height=385,resizable=yes');
+          window.open(`/mini${params}`, 'gfr-mini', 'width=221,height=300,resizable=yes');
         }}
         title="Pop out mini player"
       >
-        <svg viewBox="0 0 50 50" width="50" height="50">
-          <circle cx="25" cy="25" r="24" fill="none" stroke="#ff1900" strokeWidth="1" />
-          <text x="25" y="20" textAnchor="middle" fontFamily="'Roboto Mono', monospace" fontSize="7" fontWeight="700" fill="#ff1900" style={{ textTransform: 'uppercase' } as React.CSSProperties}>
-            POP OUT
-          </text>
-          <text x="25" y="32" textAnchor="middle" fontFamily="'Roboto Mono', monospace" fontSize="7" fontWeight="700" fill="#ff1900" style={{ textTransform: 'uppercase' } as React.CSSProperties}>
-            PLAYER
-          </text>
+        <img className="popout-star" src={popoutStar} alt="" width="55" height="55" />
+        <svg className="popout-hover-svg" viewBox="0 0 50 50" width="55" height="55">
+          <defs>
+            <path id="topArc" d="M 11,25 A 14,14 0 0,1 39,25" fill="none" />
+            <path id="bottomArc" d="M 12,25 A 13,13 0 0,0 38,25" fill="none" />
+          </defs>
+          <circle cx="25" cy="25" r="24" fill="#ff1900" stroke="none" />
+          <g transform="rotate(-45, 25, 25)">
+            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ffffff">
+              <textPath href="#topArc" startOffset="50%" textAnchor="middle">POP-OUT</textPath>
+            </text>
+            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ffffff" dominantBaseline="hanging">
+              <textPath href="#bottomArc" startOffset="50%" textAnchor="middle">PLAYER</textPath>
+            </text>
+          </g>
         </svg>
       </button>
 
@@ -498,7 +513,7 @@ function App() {
         isPlaying={livePlaying}
         nowPlaying={nowPlaying ?? undefined}
         liveLabel={liveLabel}
-        onClick={() => (livePlaying ? stopLive() : playLive(streamUrl))}
+        onClick={() => { if (livePlaying) { stopLive(); } else { bcRef.current?.postMessage({ type: 'playing' }); playLive(streamUrl); } }}
       />
 
       {/* Tap-away overlay: covers area above archive to close it */}
@@ -540,7 +555,7 @@ function App() {
             archiveExpanded={archiveExpanded}
             onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
             onSearchOpen={openSearch}
-            onPlay={() => { if (shows[validShowIndex]) updateShowUrl(shows[validShowIndex]); }}
+            onPlay={() => { bcRef.current?.postMessage({ type: 'playing' }); if (shows[validShowIndex]) updateShowUrl(shows[validShowIndex]); }}
             onShowNavigate={() => { setShowSelectionVersion(v => v + 1); }}
           />
         </div>

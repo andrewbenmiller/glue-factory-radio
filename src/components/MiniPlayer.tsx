@@ -96,10 +96,25 @@ export default function MiniPlayer() {
     }).catch(err => console.error('MiniPlayer: failed to fetch shows', err));
   }, []);
 
-  // ─── BroadcastChannel: tell main window we're open ───
+  // ─── BroadcastChannel: coordinate with main window ───
+  const bcRef = useRef<BroadcastChannel | null>(null);
+
   useEffect(() => {
     const bc = new BroadcastChannel('gfr-miniplayer');
+    bcRef.current = bc;
     bc.postMessage({ type: 'opened' });
+
+    bc.onmessage = (e) => {
+      if (e.data?.type === 'playing') {
+        // Main site started playing — stop miniplayer audio
+        Howler.stop();
+        setIsPlaying(false);
+        if (isLiveMode) {
+          audio.stopLive();
+          setIsLiveMode(false);
+        }
+      }
+    };
 
     const handleUnload = () => {
       bc.postMessage({ type: 'closed' });
@@ -109,9 +124,10 @@ export default function MiniPlayer() {
     return () => {
       handleUnload();
       bc.close();
+      bcRef.current = null;
       window.removeEventListener('beforeunload', handleUnload);
     };
-  }, []);
+  }, [audio, isLiveMode]);
 
   // ─── Enforce minimum window size ───
   useEffect(() => {
@@ -204,6 +220,7 @@ export default function MiniPlayer() {
     audio.notifyTrackWillPlay();
     setTrackIndex(targetIndex);
     setIsLiveMode(false);
+    bcRef.current?.postMessage({ type: 'playing' });
 
     const t = tracks[targetIndex];
     audio.setTrackNowPlaying(t?.title ?? `Track ${targetIndex + 1}`);
@@ -308,6 +325,7 @@ export default function MiniPlayer() {
       setIsPlaying(false);
       audio.playLive(streamUrl);
       setIsLiveMode(true);
+      bcRef.current?.postMessage({ type: 'playing' });
     }
   }, [isLiveMode, audio, streamUrl]);
 
@@ -321,6 +339,7 @@ export default function MiniPlayer() {
         audio.stopLive();
         setIsLiveMode(false);
       }
+      bcRef.current?.postMessage({ type: 'playing' });
       resumeOrStart();
     }
   }, [isLiveMode, isPlaying, audio, pauseTrack, resumeOrStart]);
@@ -338,6 +357,21 @@ export default function MiniPlayer() {
     audio.notifyTrackDidStop();
     setIsLiveMode(false);
   }, [audio]);
+
+  // ─── Show dropdown ───
+  const [showDropdownOpen, setShowDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showDropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showDropdownOpen]);
 
   // ─── Expand to full site ───
   const expandToFull = () => {
@@ -418,80 +452,103 @@ export default function MiniPlayer() {
         </div>
       </div>
 
-      {/* Transport section */}
-      <div className="mini-transport-section">
-          <div className="mini-controls-row">
-            <div className="mini-transport">
-              <button className="info-control-btn" onClick={prevTrack} disabled={!tracks.length} title="Previous">
-                <img src={prevIcon} alt="Previous" />
-              </button>
-              <button className="info-control-btn" onClick={toggleArchivePlayPause} disabled={!tracks.length} title={isPlaying ? 'Pause' : 'Play'}>
-                <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? 'Pause' : 'Play'} />
-              </button>
-              <button className="info-control-btn" onClick={nextTrack} disabled={!tracks.length} title="Next">
-                <img src={nextIcon} alt="Next" />
-              </button>
-            </div>
-
-            {/* Volume */}
-            <div className="mini-volume">
-              <svg
-                className="mini-volume-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                onClick={() => setMuted(m => !m)}
-              >
-                <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" />
-                {!muted && volume > 0 && (
-                  <>
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                    {volume > 0.5 && <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />}
-                  </>
-                )}
-                {muted && <line x1="1" y1="1" x2="23" y2="23" />}
-              </svg>
-              <input
-                type="range"
-                className="mini-volume-slider"
-                min="0"
-                max="1"
-                step="0.05"
-                value={muted ? 0 : volume}
-                onChange={e => { setVolume(parseFloat(e.target.value)); setMuted(false); }}
-              />
-            </div>
-          </div>
-
-          <div className="mini-title">
-            {isPlaying ? (
-              <div className="mini-title-scroll">
-                <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
-                <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
+      {/* Bottom group: transport + footer, pinned to bottom */}
+      <div className="mini-bottom">
+        {/* Transport section */}
+        <div className="mini-transport-section">
+            <div className="mini-controls-row">
+              <div className="mini-transport">
+                <button className="info-control-btn" onClick={prevTrack} disabled={!tracks.length} title="Previous">
+                  <img src={prevIcon} alt="Previous" />
+                </button>
+                <button className="info-control-btn" onClick={toggleArchivePlayPause} disabled={!tracks.length} title={isPlaying ? 'Pause' : 'Play'}>
+                  <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? 'Pause' : 'Play'} />
+                </button>
+                <button className="info-control-btn" onClick={nextTrack} disabled={!tracks.length} title="Next">
+                  <img src={nextIcon} alt="Next" />
+                </button>
               </div>
-            ) : (
-              <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
-            )}
+
+              {/* Volume */}
+              <div className="mini-volume">
+                <svg
+                  className="mini-volume-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  onClick={() => setMuted(m => !m)}
+                >
+                  <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" />
+                  {!muted && volume > 0 && (
+                    <>
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      {volume > 0.5 && <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />}
+                    </>
+                  )}
+                  {muted && <line x1="1" y1="1" x2="23" y2="23" />}
+                </svg>
+                <input
+                  type="range"
+                  className="mini-volume-slider"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={muted ? 0 : volume}
+                  onChange={e => { setVolume(parseFloat(e.target.value)); setMuted(false); }}
+                />
+              </div>
+            </div>
+
+            <div className="mini-title">
+              {isPlaying ? (
+                <div className="mini-title-scroll">
+                  <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
+                  <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
+                </div>
+              ) : (
+                <span className="mini-title-text">{tracks[trackIndex]?.title ?? 'No track loaded'}</span>
+              )}
+            </div>
+
+            <div className="mini-info-row">
+              <div className="mini-show-select-wrapper" ref={dropdownRef}>
+                <button
+                  className="mini-show-select"
+                  onClick={() => setShowDropdownOpen(o => !o)}
+                >
+                  <span className="mini-show-select-text">
+                    {shows[showIndex] ? getShowDisplayName(shows[showIndex]) : 'No shows'}
+                  </span>
+                  <span className="mini-show-select-arrow">▾</span>
+                </button>
+                {showDropdownOpen && (
+                  <div className="mini-show-dropdown">
+                    {shows.map((show, i) => (
+                      <div
+                        key={show.id}
+                        className={`mini-show-dropdown-item ${i === showIndex ? 'active' : ''}`}
+                        onClick={() => {
+                          handleShowChange({ target: { value: String(i) } } as React.ChangeEvent<HTMLSelectElement>);
+                          setShowDropdownOpen(false);
+                        }}
+                      >
+                        {getShowDisplayName(show)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="mini-time">
+                {tracks.length > 0 ? `${trackIndex + 1}/${tracks.length}` : ''}{' '}
+                {duration > 0 ? `${formatTime(progress)} / ${formatTime(duration)}` : ''}
+              </span>
+            </div>
           </div>
 
-          <div className="mini-info-row">
-            <select className="mini-show-select" value={showIndex} onChange={handleShowChange}>
-              {shows.map((show, i) => (
-                <option key={show.id} value={i}>
-                  {getShowDisplayName(show)}
-                </option>
-              ))}
-            </select>
-            <span className="mini-time">
-              {tracks.length > 0 ? `${trackIndex + 1}/${tracks.length}` : ''}{' '}
-              {duration > 0 ? `${formatTime(progress)} / ${formatTime(duration)}` : ''}
-            </span>
-          </div>
-        </div>
-
-      {/* Footer */}
-      <div className="mini-footer" />
+        {/* Footer */}
+        <div className="mini-footer" />
+      </div>
     </div>
   );
 }
