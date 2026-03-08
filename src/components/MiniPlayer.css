@@ -332,13 +332,6 @@
   gap: 8px;
 }
 
-.mini-show-select-wrapper {
-  position: relative;
-  min-width: 0;
-  flex: 1;
-  -webkit-app-region: no-drag;
-}
-
 .mini-show-select {
   font-family: 'Roboto Mono', monospace;
   font-size: 9px;
@@ -346,76 +339,16 @@
   border: 1px solid rgba(255, 25, 0, 0.25);
   background: transparent;
   padding: 2px 4px;
-  width: 100%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  text-align: left;
-}
-
-.mini-show-select:hover {
-  background: #fff5f3;
-}
-
-.mini-show-select-text {
-  flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mini-show-select-arrow {
-  flex-shrink: 0;
-  font-size: 8px;
-  line-height: 1;
-}
-
-.mini-show-dropdown {
-  position: absolute;
-  bottom: calc(100% + 2px);
-  left: 0;
-  right: 0;
-  max-height: 136px;
-  overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid rgba(255, 25, 0, 0.25);
-  z-index: 100;
-  scrollbar-width: thin;
-  scrollbar-color: #ff1900 rgba(255, 25, 0, 0.1);
-}
-
-.mini-show-dropdown::-webkit-scrollbar {
-  width: 4px;
-}
-
-.mini-show-dropdown::-webkit-scrollbar-track {
-  background: rgba(255, 25, 0, 0.1);
-}
-
-.mini-show-dropdown::-webkit-scrollbar-thumb {
-  background: #ff1900;
-}
-
-.mini-show-dropdown-item {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 9px;
-  color: #ff1900;
-  padding: 4px 6px;
+  flex: 1;
   cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
+  overflow: hidden;
+  -webkit-app-region: no-drag;
 }
 
-.mini-show-dropdown-item:hover {
-  background: #fff5f3;
-}
-
-.mini-show-dropdown-item.active {
-  background: #ff1900;
-  color: #ffffff;
+.mini-show-select:focus {
+  outline: 1px solid #ff1900;
 }
 
 .mini-time {

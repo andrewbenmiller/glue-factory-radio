@@ -358,21 +358,6 @@ export default function MiniPlayer() {
     setIsLiveMode(false);
   }, [audio]);
 
-  // ─── Show dropdown ───
-  const [showDropdownOpen, setShowDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showDropdownOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [showDropdownOpen]);
-
   // ─── Expand to full site ───
   const expandToFull = () => {
     window.open(window.location.origin, '_blank');
@@ -512,33 +497,13 @@ export default function MiniPlayer() {
             </div>
 
             <div className="mini-info-row">
-              <div className="mini-show-select-wrapper" ref={dropdownRef}>
-                <button
-                  className="mini-show-select"
-                  onClick={() => setShowDropdownOpen(o => !o)}
-                >
-                  <span className="mini-show-select-text">
-                    {shows[showIndex] ? getShowDisplayName(shows[showIndex]) : 'No shows'}
-                  </span>
-                  <span className="mini-show-select-arrow">▾</span>
-                </button>
-                {showDropdownOpen && (
-                  <div className="mini-show-dropdown">
-                    {shows.map((show, i) => (
-                      <div
-                        key={show.id}
-                        className={`mini-show-dropdown-item ${i === showIndex ? 'active' : ''}`}
-                        onClick={() => {
-                          handleShowChange({ target: { value: String(i) } } as React.ChangeEvent<HTMLSelectElement>);
-                          setShowDropdownOpen(false);
-                        }}
-                      >
-                        {getShowDisplayName(show)}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <select className="mini-show-select" value={showIndex} onChange={handleShowChange}>
+                {shows.map((show, i) => (
+                  <option key={show.id} value={i}>
+                    {getShowDisplayName(show)}
+                  </option>
+                ))}
+              </select>
               <span className="mini-time">
                 {tracks.length > 0 ? `${trackIndex + 1}/${tracks.length}` : ''}{' '}
                 {duration > 0 ? `${formatTime(progress)} / ${formatTime(duration)}` : ''}
