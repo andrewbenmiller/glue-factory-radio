@@ -87,6 +87,18 @@ function App() {
     onPrev: handleMediaPrev,
   });
   
+  // Pause audio when mini player opens in another window
+  useEffect(() => {
+    const bc = new BroadcastChannel('gfr-miniplayer');
+    bc.onmessage = (e) => {
+      if (e.data?.type === 'opened') {
+        stopLive();
+        playerRef.current?.pause();
+      }
+    };
+    return () => bc.close();
+  }, [stopLive]);
+
   // Custom live stream label from admin (defaults to "LIVE NOW")
   const liveLabel = pageCache.live_label?.content || 'LIVE NOW';
 
@@ -453,6 +465,27 @@ function App() {
         displayText={tickerDisplayText}
         isEmpty={tickerIsEmpty}
       />
+
+      {/* Pop-out mini player button */}
+      <button
+        className="popout-btn"
+        onClick={() => {
+          const currentShow = shows[validShowIndex];
+          const params = currentShow ? `?show=${currentShow.id}&track=${currentTrackIndex}` : '';
+          window.open(`/mini${params}`, 'gfr-mini', 'width=400,height=160,resizable=yes');
+        }}
+        title="Pop out mini player"
+      >
+        <svg viewBox="0 0 50 50" width="50" height="50">
+          <circle cx="25" cy="25" r="24" fill="none" stroke="#ff1900" strokeWidth="1" />
+          <text x="25" y="20" textAnchor="middle" fontFamily="'Roboto Mono', monospace" fontSize="7" fontWeight="700" fill="#ff1900" style={{ textTransform: 'uppercase' } as React.CSSProperties}>
+            POP OUT
+          </text>
+          <text x="25" y="32" textAnchor="middle" fontFamily="'Roboto Mono', monospace" fontSize="7" fontWeight="700" fill="#ff1900" style={{ textTransform: 'uppercase' } as React.CSSProperties}>
+            PLAYER
+          </text>
+        </svg>
+      </button>
 
       {/* Logo at center top */}
       <div className="logo-container">

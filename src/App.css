@@ -8,6 +8,29 @@
 }
 
 
+/* Pop-out mini player button */
+.popout-btn {
+  position: fixed;
+  top: 50px;
+  right: 16px;
+  z-index: 99;
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popout-btn:hover {
+  background: #fff;
+}
+
 .logo-container {
   position: fixed;
   top: 70px; /* Below the ticker, with 10px extra padding */

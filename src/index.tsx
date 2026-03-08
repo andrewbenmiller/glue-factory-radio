@@ -1,8 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import App from './App';
+import MiniPlayer from './components/MiniPlayer';
 import { AudioProvider } from './audio/AudioProvider';
 import reportWebVitals from './reportWebVitals';
 
@@ -12,9 +13,10 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <AudioProvider>
-        <App />
-      </AudioProvider>
+      <Routes>
+        <Route path="/mini" element={<AudioProvider><MiniPlayer /></AudioProvider>} />
+        <Route path="/*" element={<AudioProvider><App /></AudioProvider>} />
+      </Routes>
     </BrowserRouter>
   </React.StrictMode>
 );

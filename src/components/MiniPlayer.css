@@ -1,0 +1,271 @@
+/* Mini Player - Pop-out Compact Window */
+
+.mini-player {
+  width: 100vw;
+  height: 100vh;
+  background: #ffffff;
+  font-family: Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+/* Header */
+.mini-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(255, 25, 0, 0.25);
+  min-height: 28px;
+  -webkit-app-region: drag;
+}
+
+.mini-brand {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #000;
+  white-space: nowrap;
+}
+
+.mini-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  -webkit-app-region: no-drag;
+}
+
+.mini-live-btn {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border: 1px solid #ff1900;
+  background: transparent;
+  color: #ff1900;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mini-live-btn:hover {
+  background: #fff5f3;
+}
+
+.mini-live-btn.active {
+  background: #ff1900;
+  color: #fff;
+}
+
+.mini-live-btn.active:hover {
+  background: #d4450f;
+}
+
+.mini-expand-btn {
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(255, 25, 0, 0.4);
+  background: transparent;
+  color: #ff1900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.mini-expand-btn:hover {
+  background: #fff5f3;
+}
+
+/* Body */
+.mini-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px;
+  gap: 4px;
+  min-height: 0;
+  -webkit-app-region: no-drag;
+}
+
+/* Controls Row */
+.mini-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-transport {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mini-transport-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #ff1900;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.mini-transport-btn:hover {
+  background: #d4450f;
+}
+
+.mini-transport-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mini-transport-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: #fff;
+}
+
+.mini-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mini-title-text {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.mini-volume {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.mini-volume-icon {
+  width: 14px;
+  height: 14px;
+  color: #ff1900;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.mini-volume-slider {
+  width: 50px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 25, 0, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+
+.mini-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  background: #ff1900;
+  cursor: pointer;
+}
+
+.mini-volume-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #ff1900;
+  border: none;
+  cursor: pointer;
+}
+
+/* Info Row */
+.mini-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mini-show-select {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  color: #666;
+  border: 1px solid rgba(255, 25, 0, 0.25);
+  background: transparent;
+  padding: 2px 4px;
+  max-width: 200px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+  -webkit-app-region: no-drag;
+}
+
+.mini-show-select:focus {
+  outline: 1px solid #ff1900;
+}
+
+.mini-time {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  color: #999;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Progress Bar */
+.mini-progress-container {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 25, 0, 0.15);
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.mini-progress-bar {
+  height: 100%;
+  background: #ff1900;
+  transition: width 0.3s linear;
+}
+
+/* Live Mode */
+.mini-live-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-live-now-playing {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-live-label {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 9px;
+  color: #ff1900;
+  text-transform: uppercase;
+  font-weight: 700;
+}
