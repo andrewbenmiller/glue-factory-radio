@@ -101,6 +101,13 @@
 }
 
 
+/* Hide pop-out button on mobile */
+@media (max-width: 768px) {
+  .popout-btn {
+    display: none;
+  }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .logo-container {
