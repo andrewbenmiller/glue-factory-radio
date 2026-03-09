@@ -31,6 +31,8 @@ function formatDuration(seconds: number) {
 }
 
 function App() {
+  // Set window name so mini player can target this tab
+  useEffect(() => { window.name = 'gfr-main'; }, []);
   const location = useLocation();
   const playerRef = useRef<AudioPlayerHandle | null>(null);
   const [shows, setShows] = useState<Show[]>([]);
@@ -99,10 +101,6 @@ function App() {
       if (e.data?.type === 'opened' || e.data?.type === 'playing') {
         stopLive();
         playerRef.current?.pause();
-      }
-      if (e.data?.type === 'focus') {
-        window.focus();
-        bc.postMessage({ type: 'focused' });
       }
     };
     return () => { bc.close(); bcRef.current = null; };
