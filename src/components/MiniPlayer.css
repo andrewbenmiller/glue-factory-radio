@@ -112,7 +112,7 @@
 
 /* Body */
 .mini-body {
-  width: 221px;
+  width: 100%;
   flex: 1;
   min-height: 125px;
   display: flex;
