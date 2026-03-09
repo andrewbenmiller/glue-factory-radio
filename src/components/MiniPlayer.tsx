@@ -360,7 +360,7 @@ export default function MiniPlayer() {
 
   // ─── Expand to full site ───
   const expandToFull = () => {
-    window.open(window.location.origin, '_blank');
+    window.open(window.location.origin, 'gfr-main');
   };
 
   // ─── Media Session ───
