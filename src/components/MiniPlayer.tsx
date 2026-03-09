@@ -360,8 +360,12 @@ export default function MiniPlayer() {
 
   // ─── Expand to full site ───
   const expandToFull = () => {
-    // Target the named main site window; opens new tab if not found
-    window.open(window.location.origin, 'gfr-main');
+    // Focus existing main site tab without reloading, or open new if not found
+    const w = window.open('', 'gfr-main');
+    if (!w || w.closed || !w.document.title) {
+      // No existing tab — open fresh
+      window.open(window.location.origin, 'gfr-main');
+    }
   };
 
   // ─── Media Session ───
