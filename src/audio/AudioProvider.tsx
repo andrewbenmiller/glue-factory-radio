@@ -25,6 +25,9 @@ type AudioContextValue = {
   // called by live button
   playLive: (url: string) => Promise<void>;
   stopLive: () => void;
+
+  // live stream volume (0–1)
+  setLiveVolume: (v: number) => void;
 };
 
 const Ctx = createContext<AudioContextValue | null>(null);
@@ -115,6 +118,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setSource((s) => (s === "track" ? "none" : s));
   }, []);
 
+  const setLiveVolume = useCallback((v: number) => {
+    const a = liveAudioRef.current;
+    if (a) a.volume = v;
+  }, []);
+
   const value = useMemo<AudioContextValue>(
     () => ({
       source,
@@ -125,8 +133,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       notifyTrackPaused,
       playLive,
       stopLive,
+      setLiveVolume,
     }),
-    [source, trackNowPlaying, notifyTrackWillPlay, notifyTrackDidStop, notifyTrackPaused, playLive, stopLive]
+    [source, trackNowPlaying, notifyTrackWillPlay, notifyTrackDidStop, notifyTrackPaused, playLive, stopLive, setLiveVolume]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

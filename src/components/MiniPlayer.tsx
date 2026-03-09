@@ -177,8 +177,10 @@ export default function MiniPlayer() {
 
   // ─── Volume sync ───
   useEffect(() => {
-    Howler.volume(muted ? 0 : volume);
-  }, [volume, muted]);
+    const v = muted ? 0 : volume;
+    Howler.volume(v);
+    audio.setLiveVolume(v);
+  }, [volume, muted, audio]);
 
   // ─── Progress polling ───
   useEffect(() => {
