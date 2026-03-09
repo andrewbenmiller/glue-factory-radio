@@ -100,6 +100,10 @@ function App() {
         stopLive();
         playerRef.current?.pause();
       }
+      if (e.data?.type === 'focus') {
+        window.focus();
+        bc.postMessage({ type: 'focused' });
+      }
     };
     return () => { bc.close(); bcRef.current = null; };
   }, [stopLive]);

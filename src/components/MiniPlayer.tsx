@@ -114,6 +114,13 @@ export default function MiniPlayer() {
           setIsLiveMode(false);
         }
       }
+      if (e.data?.type === 'focused') {
+        // Main site confirmed it focused — cancel fallback new tab
+        if (expandFallbackRef.current) {
+          clearTimeout(expandFallbackRef.current);
+          expandFallbackRef.current = null;
+        }
+      }
     };
 
     const handleUnload = () => {
@@ -359,8 +366,15 @@ export default function MiniPlayer() {
   }, [audio]);
 
   // ─── Expand to full site ───
+  const expandFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const expandToFull = () => {
-    window.open(window.location.origin, 'gfr-main');
+    // Ask the main site to focus itself via BroadcastChannel
+    bcRef.current?.postMessage({ type: 'focus' });
+    // Fallback: if no main site responds, open a new tab
+    expandFallbackRef.current = setTimeout(() => {
+      window.open(window.location.origin, '_blank');
+    }, 300);
   };
 
   // ─── Media Session ───
