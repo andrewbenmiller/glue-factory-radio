@@ -492,12 +492,12 @@ function App() {
             <path id="topArc" d="M 11,25 A 14,14 0 0,1 39,25" fill="none" />
             <path id="bottomArc" d="M 12,25 A 13,13 0 0,0 38,25" fill="none" />
           </defs>
-          <circle cx="25" cy="25" r="24" fill="#ff1900" stroke="none" />
+          <circle cx="25" cy="25" r="24" fill="none" stroke="none" />
           <g transform="rotate(-45, 25, 25)">
-            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ffffff">
+            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900">
               <textPath href="#topArc" startOffset="50%" textAnchor="middle">POP-OUT</textPath>
             </text>
-            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ffffff" dominantBaseline="hanging">
+            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900" dominantBaseline="hanging">
               <textPath href="#bottomArc" startOffset="50%" textAnchor="middle">PLAYER</textPath>
             </text>
           </g>
