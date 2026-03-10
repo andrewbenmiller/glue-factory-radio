@@ -299,6 +299,36 @@
   cursor: pointer;
 }
 
+/* Stream button (AirPlay / Cast) */
+.mini-stream-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #ff1900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.mini-stream-btn:hover {
+  opacity: 1;
+}
+
+.mini-stream-btn-active {
+  opacity: 1;
+}
+
+.mini-stream-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Bottom group: transport + footer, pinned to bottom */
 .mini-bottom {
   flex-shrink: 0;

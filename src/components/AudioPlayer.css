@@ -150,6 +150,21 @@
   background: #ffe5e0;
 }
 
+/* Stream button (AirPlay / Cast) in archive controls */
+.stream-btn {
+  color: #ff1900;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.stream-btn:hover {
+  opacity: 1;
+}
+
+.stream-btn-active {
+  opacity: 1;
+}
+
 .archive-info-show {
   font-size: 20px;
   font-weight: 600;
