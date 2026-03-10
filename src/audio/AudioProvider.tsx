@@ -6,139 +6,257 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { Howler } from "howler";
 
 type AudioSource = "none" | "track" | "live";
 
 type AudioContextValue = {
   source: AudioSource;
 
-  // Display-only now playing for track playback (Howler)
+  // Display-only now playing for track playback
   trackNowPlaying: string | null;
-  setTrackNowPlaying: (title: string | null) => void;
 
-  // called by track player
-  notifyTrackWillPlay: () => void;
-  notifyTrackDidStop: () => void;
-  notifyTrackPaused: () => void; // Track is paused but still loaded
-
-  // called by live button
+  // Live stream
   playLive: (url: string) => Promise<void>;
   stopLive: () => void;
 
-  // live stream volume (0–1)
-  setLiveVolume: (v: number) => void;
+  // Track playback (replaces Howler)
+  playTrack: (url: string, title: string) => void;
+  pauseTrack: () => void;
+  resumeTrack: () => void;
+  seekTrack: (time: number) => void;
+  stopAll: () => void;
+
+  // Playback state
+  isPlaying: boolean;
+  progress: number;
+  duration: number;
+
+  // Unified volume (0–1)
+  setVolume: (v: number) => void;
+
+  // Consumer callback for track ended (auto-advance)
+  onEndedRef: React.MutableRefObject<(() => void) | null>;
 };
 
 const Ctx = createContext<AudioContextValue | null>(null);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const liveAudioRef = useRef<HTMLAudioElement | null>(null);
-  const playPromiseRef = useRef<Promise<void> | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [source, setSource] = useState<AudioSource>("none");
-
   const [trackNowPlaying, setTrackNowPlaying] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   // Token that increments whenever we "switch modes"
   const genRef = useRef(0);
+  // Consumer callback for when a track ends (auto-advance)
+  const onEndedRef = useRef<(() => void) | null>(null);
+
+  const stopAll = useCallback(() => {
+    genRef.current += 1;
+    const a = audioRef.current;
+    if (a) {
+      try { a.pause(); } catch {}
+      a.removeAttribute("src");
+      a.load(); // reset the element
+    }
+    setSource("none");
+    setTrackNowPlaying(null);
+    setIsPlaying(false);
+    setProgress(0);
+    setDuration(0);
+  }, []);
 
   const stopLive = useCallback(() => {
-    const a = liveAudioRef.current;
+    const a = audioRef.current;
     if (!a) return;
 
-    genRef.current += 1; // invalidate any in-flight live start
-    playPromiseRef.current = null;
+    genRef.current += 1;
 
     try { a.pause(); } catch {}
-    a.src = "";
+    a.removeAttribute("src");
+    a.load();
 
     setSource((s) => (s === "live" ? "none" : s));
+    setIsPlaying(false);
   }, []);
 
   const playLive = useCallback(async (url: string) => {
-    // Live takes over: invalidate prior track actions
     genRef.current += 1;
     const myGen = genRef.current;
 
-    try { Howler.stop(); } catch {}
+    const a = audioRef.current;
+    if (!a) return;
+
+    // Stop whatever was playing
+    try { a.pause(); } catch {}
+
     setSource("live");
+    setTrackNowPlaying(null);
+    setProgress(0);
+    setDuration(0);
 
-    let a = liveAudioRef.current;
-    if (!a) {
-      a = new Audio();
-      a.preload = "none";
-      liveAudioRef.current = a;
-
-      a.addEventListener("ended", () => {
-        // only clear if still current
-        if (genRef.current === myGen) setSource("none");
-      });
-      a.addEventListener("error", () => {
-        if (genRef.current === myGen) setSource("none");
-      });
-    }
-
-    if (a.src !== url) a.src = url;
+    a.src = url;
 
     try {
-      const p = a.play();
-      playPromiseRef.current = p;
-      await p;
-      playPromiseRef.current = null;
+      await a.play();
+      if (genRef.current === myGen) {
+        setIsPlaying(true);
+      }
     } catch (error: any) {
-      playPromiseRef.current = null;
       if (error?.name === "AbortError" || String(error?.message || "").includes("interrupted")) {
         return;
       }
-      // only throw if still current action
-      if (genRef.current === myGen) throw error;
+      if (genRef.current === myGen) {
+        setSource("none");
+        setIsPlaying(false);
+        throw error;
+      }
     }
   }, []);
 
-  const notifyTrackWillPlay = useCallback(() => {
-    // Track takes over: invalidate any in-flight live events
+  const playTrack = useCallback((url: string, title: string) => {
     genRef.current += 1;
+    const myGen = genRef.current;
 
-    const a = liveAudioRef.current;
-    if (a) {
-      playPromiseRef.current = null;
-      try { a.pause(); } catch {}
-      a.src = "";
-    }
+    const a = audioRef.current;
+    if (!a) return;
+
+    // Stop whatever was playing
+    try { a.pause(); } catch {}
 
     setSource("track");
+    setTrackNowPlaying(title);
+    setProgress(0);
+    setDuration(0);
+
+    a.src = url;
+    a.currentTime = 0;
+
+    a.play().then(() => {
+      if (genRef.current === myGen) {
+        setIsPlaying(true);
+      }
+    }).catch((error: any) => {
+      if (error?.name === "AbortError" || String(error?.message || "").includes("interrupted")) {
+        return;
+      }
+      if (genRef.current === myGen) {
+        console.error("playTrack error:", error);
+        setIsPlaying(false);
+      }
+    });
   }, []);
 
-  // IMPORTANT: avoid stale closure by using functional setState
-  const notifyTrackDidStop = useCallback(() => {
+  const pauseTrack = useCallback(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    try { a.pause(); } catch {}
+    setIsPlaying(false);
     setSource((s) => (s === "track" ? "none" : s));
   }, []);
 
-  const notifyTrackPaused = useCallback(() => {
-    setSource((s) => (s === "track" ? "none" : s));
+  const resumeTrack = useCallback(() => {
+    const myGen = genRef.current;
+    const a = audioRef.current;
+    if (!a) return;
+
+    setSource("track");
+
+    a.play().then(() => {
+      if (genRef.current === myGen) {
+        setIsPlaying(true);
+      }
+    }).catch((error: any) => {
+      if (error?.name === "AbortError" || String(error?.message || "").includes("interrupted")) {
+        return;
+      }
+      console.error("resumeTrack error:", error);
+    });
   }, []);
 
-  const setLiveVolume = useCallback((v: number) => {
-    const a = liveAudioRef.current;
+  const seekTrack = useCallback((time: number) => {
+    const a = audioRef.current;
+    if (a) a.currentTime = time;
+  }, []);
+
+  const setVolume = useCallback((v: number) => {
+    const a = audioRef.current;
     if (a) a.volume = v;
+  }, []);
+
+  // --- Audio element event handlers ---
+
+  const handleTimeUpdate = useCallback(() => {
+    const a = audioRef.current;
+    if (a) setProgress(a.currentTime);
+  }, []);
+
+  const handleLoadedMetadata = useCallback(() => {
+    const a = audioRef.current;
+    if (a && isFinite(a.duration)) {
+      setDuration(a.duration);
+    }
+  }, []);
+
+  const handleDurationChange = useCallback(() => {
+    const a = audioRef.current;
+    if (a && isFinite(a.duration)) {
+      setDuration(a.duration);
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    if (onEndedRef.current) {
+      onEndedRef.current();
+    } else {
+      setSource("none");
+      setTrackNowPlaying(null);
+    }
+  }, []);
+
+  const handleError = useCallback(() => {
+    setIsPlaying(false);
+    setSource("none");
+    setTrackNowPlaying(null);
   }, []);
 
   const value = useMemo<AudioContextValue>(
     () => ({
       source,
       trackNowPlaying,
-      setTrackNowPlaying,
-      notifyTrackWillPlay,
-      notifyTrackDidStop,
-      notifyTrackPaused,
       playLive,
       stopLive,
-      setLiveVolume,
+      playTrack,
+      pauseTrack,
+      resumeTrack,
+      seekTrack,
+      stopAll,
+      isPlaying,
+      progress,
+      duration,
+      setVolume,
+      onEndedRef,
     }),
-    [source, trackNowPlaying, notifyTrackWillPlay, notifyTrackDidStop, notifyTrackPaused, playLive, stopLive, setLiveVolume]
+    [source, trackNowPlaying, playLive, stopLive, playTrack, pauseTrack, resumeTrack, seekTrack, stopAll, isPlaying, progress, duration, setVolume]
   );
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={value}>
+      <audio
+        ref={audioRef}
+        preload="none"
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onDurationChange={handleDurationChange}
+        onEnded={handleEnded}
+        onError={handleError}
+      />
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useAudio() {

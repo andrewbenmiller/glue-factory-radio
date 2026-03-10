@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Howl, Howler } from 'howler';
 import { useAudio } from '../audio/AudioProvider';
 import { useLiveStatus } from '../hooks/useLiveStatus';
 import { useMediaSession } from '../hooks/useMediaSession';
@@ -47,16 +46,7 @@ export default function MiniPlayer() {
   const [showIndex, setShowIndex] = useState(0);
   const [trackIndex, setTrackIndex] = useState(0);
 
-  // Howler state
-  const howlsRef = useRef<Howl[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const playGenRef = useRef(0);
   const prevTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Progress
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const progressRef = useRef<number>();
 
   // Volume
   const [volume, setVolume] = useState(1);
@@ -72,6 +62,11 @@ export default function MiniPlayer() {
   }, [shows, showIndex]);
 
   const currentShowName = shows[showIndex] ? getShowDisplayName(shows[showIndex]) : '';
+
+  // Derive playback state from AudioProvider
+  const isPlaying = audio.isPlaying && audio.source === 'track';
+  const progress = audio.progress;
+  const duration = audio.duration;
 
   // ─── Fetch shows ───
   useEffect(() => {
@@ -107,10 +102,8 @@ export default function MiniPlayer() {
     bc.onmessage = (e) => {
       if (e.data?.type === 'playing') {
         // Main site started playing — stop miniplayer audio
-        Howler.stop();
-        setIsPlaying(false);
+        audio.stopAll();
         if (isLiveMode) {
-          audio.stopLive();
           setIsLiveMode(false);
         }
       }
@@ -143,34 +136,13 @@ export default function MiniPlayer() {
     return () => window.removeEventListener('resize', enforceMinSize);
   }, []);
 
-  // ─── Build Howls when tracks change ───
+  // ─── Reset track index when tracks change ───
   useEffect(() => {
-    Howler.stop();
-    setIsPlaying(false);
-
-    howlsRef.current.forEach(h => { try { h.unload(); } catch {} });
-
-    howlsRef.current = tracks.map(t => new Howl({
-      src: [t.src],
-      html5: true,
-      preload: false,
-      onplay: () => setIsPlaying(true),
-      onpause: () => setIsPlaying(false),
-      onstop: () => setIsPlaying(false),
-    }));
-
     const clamped = Math.min(Math.max(trackIndex, 0), Math.max(tracks.length - 1, 0));
     setTrackIndex(clamped);
-    setIsPlaying(false);
-    setProgress(0);
-    setDuration(0);
 
     return () => {
-      Howler.stop();
-      setIsPlaying(false);
       if (prevTimerRef.current) clearTimeout(prevTimerRef.current);
-      howlsRef.current.forEach(h => { try { h.unload(); } catch {} });
-      howlsRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks.map(t => t.src).join('|')]);
@@ -178,144 +150,73 @@ export default function MiniPlayer() {
   // ─── Volume sync ───
   useEffect(() => {
     const v = muted ? 0 : volume;
-    Howler.volume(v);
-    audio.setLiveVolume(v);
+    audio.setVolume(v);
   }, [volume, muted, audio]);
 
-  // ─── Progress polling ───
-  useEffect(() => {
-    if (!isPlaying || isLiveMode) {
-      if (progressRef.current) cancelAnimationFrame(progressRef.current);
-      return;
-    }
-
-    const poll = () => {
-      const h = howlsRef.current[trackIndex];
-      if (h && h.state() === 'loaded') {
-        const seek = h.seek() as number;
-        const dur = h.duration();
-        setProgress(seek);
-        setDuration(dur);
-      }
-      progressRef.current = requestAnimationFrame(poll);
-    };
-    progressRef.current = requestAnimationFrame(poll);
-
-    return () => {
-      if (progressRef.current) cancelAnimationFrame(progressRef.current);
-    };
-  }, [isPlaying, trackIndex, isLiveMode]);
-
   // ─── Playback functions ───
-  const startTrack = useCallback((targetIndex: number, retries = 3) => {
-    if (!howlsRef.current.length) {
-      if (retries > 0) setTimeout(() => startTrack(targetIndex, retries - 1), 50);
-      return;
-    }
-    if (targetIndex < 0 || targetIndex >= howlsRef.current.length) return;
+  const startTrack = useCallback((targetIndex: number) => {
+    if (targetIndex < 0 || targetIndex >= tracks.length) return;
 
-    playGenRef.current += 1;
-    const token = playGenRef.current;
-
-    Howler.stop();
-    setIsPlaying(false);
-    audio.notifyTrackWillPlay();
     setTrackIndex(targetIndex);
     setIsLiveMode(false);
     bcRef.current?.postMessage({ type: 'playing' });
 
     const t = tracks[targetIndex];
-    audio.setTrackNowPlaying(t?.title ?? `Track ${targetIndex + 1}`);
-
-    const h = howlsRef.current[targetIndex];
-    if (!h) return;
-
-    const doPlay = () => {
-      if (token !== playGenRef.current) return;
-      try { h.stop(); } catch {}
-      h.seek(0);
-      setIsPlaying(true);
-
-      h.once('end', () => {
-        if (token !== playGenRef.current) return;
-        if (targetIndex >= howlsRef.current.length - 1) {
-          setIsPlaying(false);
-          audio.setTrackNowPlaying(null);
-          audio.notifyTrackDidStop();
-          return;
-        }
-        startTrack(targetIndex + 1);
-      });
-
-      h.play();
-    };
-
-    if (h.state() === 'loaded') {
-      doPlay();
-    } else {
-      h.once('load', () => {
-        if (token !== playGenRef.current) return;
-        doPlay();
-      });
-      h.once('loaderror', (_id: any, error: any) => {
-        console.error('MiniPlayer: load error', targetIndex, error);
-        if (token !== playGenRef.current) return;
-        setIsPlaying(false);
-      });
-      h.load();
-    }
-
-    try {
-      const ctx = (Howler as any).ctx;
-      if (ctx && ctx.state === 'suspended') ctx.resume();
-    } catch {}
+    audio.playTrack(t.src, t?.title ?? `Track ${targetIndex + 1}`);
   }, [tracks, audio]);
 
   const pauseTrack = useCallback(() => {
-    const h = howlsRef.current[trackIndex];
-    if (h) h.pause();
-    setIsPlaying(false);
-    audio.notifyTrackPaused?.();
-  }, [trackIndex, audio]);
+    audio.pauseTrack();
+  }, [audio]);
 
   const resumeOrStart = useCallback(() => {
-    const h = howlsRef.current[trackIndex];
-    if (!h) return;
-
-    if (h.state() === 'loaded' && ((h.seek() as number) || 0) > 0) {
-      if (audio.source !== 'track') audio.notifyTrackWillPlay();
-      h.play();
-      setIsPlaying(true);
+    if (audio.progress > 0 && audio.source === 'none') {
+      audio.resumeTrack();
     } else {
       startTrack(trackIndex);
     }
-  }, [trackIndex, startTrack, audio]);
+  }, [audio, startTrack, trackIndex]);
 
   const nextTrack = useCallback(() => {
-    if (!howlsRef.current.length) return;
-    startTrack((trackIndex + 1) % howlsRef.current.length);
-  }, [trackIndex, startTrack]);
+    if (!tracks.length) return;
+    startTrack((trackIndex + 1) % tracks.length);
+  }, [trackIndex, tracks.length, startTrack]);
 
   const prevTrack = useCallback(() => {
-    if (!howlsRef.current.length) return;
+    if (!tracks.length) return;
 
     if (prevTimerRef.current !== null) {
       clearTimeout(prevTimerRef.current);
       prevTimerRef.current = null;
-      startTrack((trackIndex - 1 + howlsRef.current.length) % howlsRef.current.length);
+      startTrack((trackIndex - 1 + tracks.length) % tracks.length);
     } else {
       prevTimerRef.current = setTimeout(() => {
         prevTimerRef.current = null;
-        const h = howlsRef.current[trackIndex];
-        if (h && h.state() === 'loaded') {
-          h.seek(0);
-          if (!isPlaying) resumeOrStart();
-        } else {
-          startTrack(trackIndex);
-        }
+        audio.seekTrack(0);
+        if (!isPlaying) resumeOrStart();
       }, 300);
     }
-  }, [trackIndex, startTrack, isPlaying, resumeOrStart]);
+  }, [trackIndex, tracks.length, startTrack, isPlaying, audio, resumeOrStart]);
+
+  // ─── Auto-advance callback ───
+  useEffect(() => {
+    audio.onEndedRef.current = () => {
+      if (trackIndex >= tracks.length - 1) {
+        audio.stopAll();
+        return;
+      }
+      const nextIndex = trackIndex + 1;
+      setTrackIndex(nextIndex);
+      const t = tracks[nextIndex];
+      if (t) {
+        audio.playTrack(t.src, t.title ?? `Track ${nextIndex + 1}`);
+      }
+    };
+
+    return () => {
+      audio.onEndedRef.current = null;
+    };
+  }, [trackIndex, tracks, audio]);
 
   // ─── Live stream ───
   const toggleLive = useCallback(() => {
@@ -323,8 +224,6 @@ export default function MiniPlayer() {
       audio.stopLive();
       setIsLiveMode(false);
     } else {
-      Howler.stop();
-      setIsPlaying(false);
       audio.playLive(streamUrl);
       setIsLiveMode(true);
       bcRef.current?.postMessage({ type: 'playing' });
@@ -351,12 +250,8 @@ export default function MiniPlayer() {
     const idx = parseInt(e.target.value, 10);
     setShowIndex(idx);
     setTrackIndex(0);
-    setProgress(0);
-    setDuration(0);
     // Stop current playback when switching shows
-    Howler.stop();
-    setIsPlaying(false);
-    audio.notifyTrackDidStop();
+    audio.stopAll();
     setIsLiveMode(false);
   }, [audio]);
 
