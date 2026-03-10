@@ -497,7 +497,7 @@ function App() {
             <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900">
               <textPath href="#topArc" startOffset="50%" textAnchor="middle">POP-OUT</textPath>
             </text>
-            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900" dominantBaseline="hanging">
+            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900" dy="9">
               <textPath href="#bottomArc" startOffset="50%" textAnchor="middle">PLAYER</textPath>
             </text>
           </g>
