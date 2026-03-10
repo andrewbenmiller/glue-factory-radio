@@ -235,15 +235,26 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setTrackNowPlaying(null);
   }, []);
 
-  // --- Remote Playback API ---
+  // --- Remote Playback: AirPlay (Safari) + Google Cast (Chrome) ---
+  //
+  // Strategy:
+  // - Safari: Use Remote Playback API (detects AirPlay devices)
+  // - Chrome: Use Google Cast SDK (detects Chromecast devices)
+  // Both surface through the same remotePlaybackAvailable / promptRemotePlayback API.
 
+  const castBackendRef = useRef<"remote-playback" | "cast" | null>(null);
+
+  // Safari: Remote Playback API
   useEffect(() => {
     const a = audioRef.current;
     if (!a || !("remote" in a)) return;
 
+    // If Cast SDK is available, prefer it (Chrome supports both but Cast is better)
+    if (window.cast?.framework) return;
+
+    castBackendRef.current = "remote-playback";
     const remote = (a as any).remote;
 
-    // Watch for device availability
     let cancelId: number | undefined;
     try {
       remote.watchAvailability((available: boolean) => {
@@ -251,16 +262,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       }).then((id: number) => {
         cancelId = id;
       }).catch(() => {
-        // watchAvailability not supported — fall back to assuming available
-        // (Safari may not support watchAvailability but still supports prompt)
         setRemotePlaybackAvailable(true);
       });
     } catch {
-      // Remote Playback API exists but watchAvailability throws
       setRemotePlaybackAvailable(true);
     }
 
-    // Track connection state changes
     const onConnecting = () => setRemotePlaybackState("connecting");
     const onConnect = () => setRemotePlaybackState("connected");
     const onDisconnect = () => setRemotePlaybackState("disconnected");
@@ -279,18 +286,123 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const promptRemotePlayback = useCallback(() => {
-    const a = audioRef.current;
-    if (!a || !("remote" in a)) return;
-    try {
-      (a as any).remote.prompt().catch((err: any) => {
-        // User cancelled or no devices — not an error
-        if (err.name !== "NotAllowedError" && err.name !== "InvalidStateError") {
-          console.warn("Remote playback prompt failed:", err);
+  // Chrome: Google Cast SDK
+  useEffect(() => {
+    const initCast = () => {
+      if (!window.cast?.framework) return;
+
+      castBackendRef.current = "cast";
+      const ctx = cast.framework.CastContext.getInstance();
+
+      ctx.setOptions({
+        receiverApplicationId: "CC1AD845", // Google Default Media Receiver
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+      });
+
+      const handleCastState = (e: any) => {
+        const state = e.castState;
+        if (state === cast.framework.CastState.NO_DEVICES_AVAILABLE) {
+          setRemotePlaybackAvailable(false);
+          setRemotePlaybackState("disconnected");
+        } else if (state === cast.framework.CastState.CONNECTED) {
+          setRemotePlaybackAvailable(true);
+          setRemotePlaybackState("connected");
+        } else if (state === cast.framework.CastState.CONNECTING) {
+          setRemotePlaybackAvailable(true);
+          setRemotePlaybackState("connecting");
+        } else {
+          // NOT_CONNECTED — devices available but not connected
+          setRemotePlaybackAvailable(true);
+          setRemotePlaybackState("disconnected");
         }
+      };
+
+      ctx.addEventListener(
+        cast.framework.CastContextEventType.CAST_STATE_CHANGED,
+        handleCastState
+      );
+    };
+
+    // Cast SDK loads async — use the callback if it's not ready yet
+    if (window.cast?.framework) {
+      initCast();
+    } else {
+      window.__onGCastApiAvailable = (isAvailable: boolean) => {
+        if (isAvailable) initCast();
+      };
+    }
+  }, []);
+
+  // Load media onto Cast device when source changes
+  const loadCastMedia = useCallback((url: string, title: string, isLiveStream: boolean) => {
+    if (castBackendRef.current !== "cast") return;
+    try {
+      const ctx = cast.framework.CastContext.getInstance();
+      const session = ctx.getCurrentSession();
+      if (!session) return;
+
+      const mediaInfo = new chrome.cast.media.MediaInfo(url, "audio/mpeg");
+      mediaInfo.streamType = isLiveStream
+        ? chrome.cast.media.StreamType.LIVE
+        : chrome.cast.media.StreamType.BUFFERED;
+
+      const metadata = new chrome.cast.media.MusicTrackMediaMetadata();
+      metadata.title = title;
+      metadata.artist = "Glue Factory Radio";
+      metadata.images = [new chrome.cast.Image(window.location.origin + "/web-app-manifest-512x512.png")];
+      mediaInfo.metadata = metadata;
+
+      const request = new chrome.cast.media.LoadRequest(mediaInfo);
+      request.autoplay = true;
+
+      session.loadMedia(request).catch((err: any) => {
+        console.warn("Cast loadMedia failed:", err);
       });
     } catch {}
   }, []);
+
+  const promptRemotePlayback = useCallback(() => {
+    if (castBackendRef.current === "cast") {
+      try {
+        cast.framework.CastContext.getInstance().requestSession().catch((err: any) => {
+          // User cancelled — not an error
+          if (err !== "cancel") {
+            console.warn("Cast requestSession failed:", err);
+          }
+        });
+      } catch {}
+    } else {
+      // Remote Playback API (Safari AirPlay)
+      const a = audioRef.current;
+      if (!a || !("remote" in a)) return;
+      try {
+        (a as any).remote.prompt().catch((err: any) => {
+          if (err.name !== "NotAllowedError" && err.name !== "InvalidStateError") {
+            console.warn("Remote playback prompt failed:", err);
+          }
+        });
+      } catch {}
+    }
+  }, []);
+
+  // Sync media to Cast device when source changes and session is connected
+  const lastCastUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (castBackendRef.current !== "cast" || remotePlaybackState !== "connected") return;
+
+    const a = audioRef.current;
+    const url = a?.src || null;
+
+    // Avoid re-loading the same URL
+    if (!url || url === lastCastUrlRef.current) return;
+    lastCastUrlRef.current = url;
+
+    if (source === "live") {
+      loadCastMedia(url, "Live Stream", true);
+    } else if (source === "track" && trackNowPlaying) {
+      loadCastMedia(url, trackNowPlaying, false);
+    }
+  }, [source, trackNowPlaying, remotePlaybackState, loadCastMedia]);
 
   const value = useMemo<AudioContextValue>(
     () => ({
