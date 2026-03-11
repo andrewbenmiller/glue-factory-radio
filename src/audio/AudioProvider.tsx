@@ -288,18 +288,45 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     let cancelId: number | undefined;
     if (isSafari) {
       setRemotePlaybackAvailable(true);
-    } else {
-      try {
-        remote.watchAvailability((available: boolean) => {
-          setRemotePlaybackAvailable(available);
-        }).then((id: number) => {
-          cancelId = id;
-        }).catch(() => {
-          setRemotePlaybackAvailable(true);
-        });
-      } catch {
+
+      // macOS Safari requires this event listener to be registered before
+      // webkitShowPlaybackTargetPicker() will work. Without it, the picker
+      // silently does nothing. iOS doesn't need this but it's harmless there.
+      const onTargetAvailability = (e: any) => {
+        // e.availability is "available" or "not-available"
+        // We always show the button on Safari, so just log for debugging
+        console.log("[AirPlay] target availability:", e.availability);
+      };
+      a.addEventListener("webkitplaybacktargetavailabilitychanged", onTargetAvailability);
+
+      // Also listen for when the playback target changes (connected/disconnected)
+      const onTargetChanged = () => {
+        // When AirPlay device connects/disconnects, the audio element's
+        // webkitCurrentPlaybackTargetIsWireless property reflects the state
+        if ((a as any).webkitCurrentPlaybackTargetIsWireless) {
+          setRemotePlaybackState("connected");
+        } else {
+          setRemotePlaybackState("disconnected");
+        }
+      };
+      a.addEventListener("webkitcurrentplaybacktargetiswirelesschanged", onTargetChanged);
+
+      return () => {
+        a.removeEventListener("webkitplaybacktargetavailabilitychanged", onTargetAvailability);
+        a.removeEventListener("webkitcurrentplaybacktargetiswirelesschanged", onTargetChanged);
+      };
+    }
+
+    try {
+      remote.watchAvailability((available: boolean) => {
+        setRemotePlaybackAvailable(available);
+      }).then((id: number) => {
+        cancelId = id;
+      }).catch(() => {
         setRemotePlaybackAvailable(true);
-      }
+      });
+    } catch {
+      setRemotePlaybackAvailable(true);
     }
 
     const onConnecting = () => setRemotePlaybackState("connecting");
