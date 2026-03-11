@@ -55,6 +55,9 @@ export default function MiniPlayer() {
   // Live mode
   const [isLiveMode, setIsLiveMode] = useState(false);
 
+  // Admin live label
+  const [liveLabel, setLiveLabel] = useState('LIVE NOW');
+
   // Current tracks
   const tracks = useMemo(() => {
     if (!shows[showIndex]) return [];
@@ -73,6 +76,10 @@ export default function MiniPlayer() {
     const params = new URLSearchParams(window.location.search);
     const showParam = params.get('show');
     const trackParam = params.get('track');
+
+    apiService.getPageContent('live_label').then(page => {
+      if (page?.content) setLiveLabel(page.content);
+    }).catch(() => {});
 
     apiService.getShows().then(fetched => {
       const activeShows = fetched.filter(s => s.is_active);
@@ -300,12 +307,12 @@ export default function MiniPlayer() {
         <div className="mini-live-banner">
           {audio.source === 'live' ? (
             <div className="mini-live-banner-scroll">
-              <span className="mini-live-banner-text">Streaming live now: {nowPlaying || showTitle || 'Live Stream'}</span>
-              <span className="mini-live-banner-text">Streaming live now: {nowPlaying || showTitle || 'Live Stream'}</span>
+              <span className="mini-live-banner-text">{nowPlaying && !liveLabel.includes(nowPlaying) ? `${liveLabel}: ${nowPlaying}` : liveLabel}</span>
+              <span className="mini-live-banner-text">{nowPlaying && !liveLabel.includes(nowPlaying) ? `${liveLabel}: ${nowPlaying}` : liveLabel}</span>
             </div>
           ) : (
             <span className="mini-live-banner-text">
-              {isLive ? `Streaming live now: ${nowPlaying || showTitle || 'Live Stream'}` : 'Glue Factory Radio'}
+              {isLive ? (nowPlaying && !liveLabel.includes(nowPlaying) ? `${liveLabel}: ${nowPlaying}` : liveLabel) : 'Glue Factory Radio'}
             </span>
           )}
         </div>
