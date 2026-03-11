@@ -204,6 +204,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .mini-transport {
@@ -262,7 +265,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .mini-volume-icon {
@@ -275,7 +279,9 @@
 
 .mini-volume-slider {
   width: 50px;
+  min-width: 30px;
   height: 4px;
+  flex-shrink: 1;
   -webkit-appearance: none;
   appearance: none;
   background: rgba(255, 25, 0, 0.2);
