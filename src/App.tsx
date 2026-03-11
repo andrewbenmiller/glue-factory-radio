@@ -482,7 +482,7 @@ function App() {
         onClick={() => {
           const currentShow = shows[validShowIndex];
           const params = currentShow ? `?show=${currentShow.id}&track=${currentTrackIndex}` : '';
-          window.open(`/mini${params}`, 'gfr-mini', 'width=221,height=300,resizable=yes');
+          window.open(`/mini${params}`, 'gfr-mini', 'width=280,height=300,resizable=yes');
         }}
         title="Pop out mini player"
       >
