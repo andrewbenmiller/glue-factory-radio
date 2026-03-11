@@ -281,17 +281,25 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     castBackendRef.current = "remote-playback";
     const remote = (a as any).remote;
 
+    // On Safari (macOS + iOS), AirPlay is always available via the system picker
+    // even if watchAvailability reports no devices. Always show the button.
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
     let cancelId: number | undefined;
-    try {
-      remote.watchAvailability((available: boolean) => {
-        setRemotePlaybackAvailable(available);
-      }).then((id: number) => {
-        cancelId = id;
-      }).catch(() => {
-        setRemotePlaybackAvailable(true);
-      });
-    } catch {
+    if (isSafari) {
       setRemotePlaybackAvailable(true);
+    } else {
+      try {
+        remote.watchAvailability((available: boolean) => {
+          setRemotePlaybackAvailable(available);
+        }).then((id: number) => {
+          cancelId = id;
+        }).catch(() => {
+          setRemotePlaybackAvailable(true);
+        });
+      } catch {
+        setRemotePlaybackAvailable(true);
+      }
     }
 
     const onConnecting = () => setRemotePlaybackState("connecting");
