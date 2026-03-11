@@ -235,6 +235,32 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setTrackNowPlaying(null);
   }, []);
 
+  // Safety net: recover playback if it stalled while the tab was in the background.
+  // When the user returns to the tab, if React state says we should be playing but the
+  // audio element is actually paused, nudge it back to life.
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      const a = audioRef.current;
+      if (!a) return;
+
+      // Only recover if we think we should be playing
+      if (source !== "none" && a.paused && a.src) {
+        a.play().then(() => {
+          setIsPlaying(true);
+        }).catch(() => {
+          // If play fails (e.g. track actually ended), trigger ended handler
+          if (a.ended && onEndedRef.current) {
+            onEndedRef.current();
+          }
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [source]);
+
   // --- Remote Playback: AirPlay (Safari) + Google Cast (Chrome) ---
   //
   // Strategy:
