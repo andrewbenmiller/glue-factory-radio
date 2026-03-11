@@ -8,20 +8,12 @@
 }
 
 
-/* Pop-out group: popout button + stream icon */
-.popout-group {
+/* Pop-out mini player button */
+.popout-btn {
   position: fixed;
   top: 70px;
   right: 30px;
   z-index: 99;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.popout-btn {
-  position: relative;
   background: none;
   border: none;
   border-radius: 50%;
@@ -46,11 +38,11 @@
   transition: opacity 0.25s ease;
 }
 
-.popout-group:hover .popout-star {
+.popout-btn:hover .popout-star {
   opacity: 0;
 }
 
-.popout-group:hover .popout-hover-svg {
+.popout-btn:hover .popout-hover-svg {
   opacity: 1;
 }
 
@@ -109,38 +101,9 @@
 }
 
 
-/* Stream-to-device button (AirPlay / Cast) - inside popout group */
-.stream-fixed-btn {
-  background: none;
-  border: none;
-  width: 25px;
-  height: 25px;
-  margin-top: 5px;
-  padding: 0;
-  cursor: pointer;
-  color: #ff1900;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-/* Reveal on group hover — always full red */
-.popout-group:hover .stream-fixed-btn {
-  opacity: 1;
-}
-
-/* Always visible when actively streaming */
-.stream-fixed-btn-active {
-  opacity: 1;
-}
-
-.stream-fixed-btn svg {
-  width: 100%;
-  height: 100%;
-}
-
-/* Mobile: hide popout group entirely (stream icon is in archive header instead) */
+/* Mobile: hide popout button (stream icon is in archive header instead) */
 @media (max-width: 768px) {
-  .popout-group {
+  .popout-btn {
     display: none;
   }
 

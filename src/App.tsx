@@ -476,49 +476,33 @@ function App() {
         isEmpty={tickerIsEmpty}
       />
 
-      {/* Pop-out mini player button + stream icon group */}
-      <div className="popout-group">
-        <button
-          className="popout-btn"
-          onClick={() => {
-            const currentShow = shows[validShowIndex];
-            const params = currentShow ? `?show=${currentShow.id}&track=${currentTrackIndex}` : '';
-            window.open(`/mini${params}`, 'gfr-mini', 'width=280,height=300,resizable=yes');
-          }}
-          title="Pop out mini player"
-        >
-          <img className="popout-star" src={popoutStar} alt="" width="55" height="55" />
-          <svg className="popout-hover-svg" viewBox="0 0 50 50" width="55" height="55">
-            <defs>
-              <path id="topArc" d="M 11,25 A 14,14 0 0,1 39,25" fill="none" />
-              <path id="bottomArc" d="M 12,25 A 13,13 0 0,0 38,25" fill="none" />
-            </defs>
-            <circle cx="25" cy="25" r="24" fill="none" stroke="none" />
-            <g transform="rotate(-45, 25, 25)">
-              <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900">
-                <textPath href="#topArc" startOffset="50%" textAnchor="middle">POP-OUT</textPath>
-              </text>
-              <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900" dy="9">
-                <textPath href="#bottomArc" startOffset="50%" textAnchor="middle">PLAYER</textPath>
-              </text>
-            </g>
-          </svg>
-        </button>
-
-        {/* Stream to device button (AirPlay / Cast) — revealed on hover */}
-        {remotePlaybackAvailable && (
-          <button
-            className={`stream-fixed-btn ${remotePlaybackState !== 'disconnected' ? 'stream-fixed-btn-active' : ''}`}
-            onClick={() => promptRemotePlayback()}
-            title={remotePlaybackState === 'connected' ? 'Streaming (tap to change)' : 'Stream to device'}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
-              <line x1="2" y1="20" x2="2.01" y2="20" />
-            </svg>
-          </button>
-        )}
-      </div>
+      {/* Pop-out mini player button */}
+      <button
+        className="popout-btn"
+        onClick={() => {
+          const currentShow = shows[validShowIndex];
+          const params = currentShow ? `?show=${currentShow.id}&track=${currentTrackIndex}` : '';
+          window.open(`/mini${params}`, 'gfr-mini', 'width=280,height=300,resizable=yes');
+        }}
+        title="Pop out mini player"
+      >
+        <img className="popout-star" src={popoutStar} alt="" width="55" height="55" />
+        <svg className="popout-hover-svg" viewBox="0 0 50 50" width="55" height="55">
+          <defs>
+            <path id="topArc" d="M 11,25 A 14,14 0 0,1 39,25" fill="none" />
+            <path id="bottomArc" d="M 12,25 A 13,13 0 0,0 38,25" fill="none" />
+          </defs>
+          <circle cx="25" cy="25" r="24" fill="none" stroke="none" />
+          <g transform="rotate(-45, 25, 25)">
+            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900">
+              <textPath href="#topArc" startOffset="50%" textAnchor="middle">POP-OUT</textPath>
+            </text>
+            <text fontFamily="'Roboto Mono', monospace" fontSize="9" fontWeight="700" fill="#ff1900" dy="9">
+              <textPath href="#bottomArc" startOffset="50%" textAnchor="middle">PLAYER</textPath>
+            </text>
+          </g>
+        </svg>
+      </button>
 
       {/* Logo at center top */}
       <div className="logo-container">
