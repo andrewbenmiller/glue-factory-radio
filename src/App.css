@@ -101,11 +101,11 @@
 }
 
 
-/* Fixed stream-to-device button (AirPlay / Cast) - upper left */
+/* Fixed stream-to-device button (AirPlay / Cast) - below popout on right */
 .stream-fixed-btn {
   position: fixed;
-  top: 80px;
-  left: 30px;
+  top: 135px;
+  right: 41px;
   z-index: 99;
   background: none;
   border: none;
@@ -139,7 +139,7 @@
 
   .stream-fixed-btn {
     top: 75px;
-    left: 20px;
+    right: 20px;
     width: 28px;
     height: 28px;
   }
