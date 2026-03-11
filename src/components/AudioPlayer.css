@@ -91,9 +91,11 @@
   letter-spacing: 0.5px;
 }
 
-/* Stream button in archive header — mobile only */
+/* Stream button in archive header */
 .archive-header-stream-btn {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   width: 22px;
@@ -284,12 +286,6 @@
 
   .archive-header-row {
     padding: 0 max(15px, calc(50vw - 700px));
-  }
-
-  .archive-header-stream-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .archive-header-text {
