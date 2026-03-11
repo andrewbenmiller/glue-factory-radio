@@ -406,16 +406,29 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         });
       } catch {}
     } else {
-      // Remote Playback API (Safari AirPlay)
       const a = audioRef.current;
-      if (!a || !("remote" in a)) return;
-      try {
-        (a as any).remote.prompt().catch((err: any) => {
-          if (err.name !== "NotAllowedError" && err.name !== "InvalidStateError") {
-            console.warn("Remote playback prompt failed:", err);
-          }
-        });
-      } catch {}
+      if (!a) return;
+
+      // Safari/iOS: prefer webkitShowPlaybackTargetPicker (reliable, works even without media loaded)
+      if (typeof (a as any).webkitShowPlaybackTargetPicker === "function") {
+        try {
+          (a as any).webkitShowPlaybackTargetPicker();
+        } catch (err: any) {
+          console.warn("webkitShowPlaybackTargetPicker failed:", err);
+        }
+        return;
+      }
+
+      // Fallback: Remote Playback API
+      if ("remote" in a) {
+        try {
+          (a as any).remote.prompt().catch((err: any) => {
+            if (err.name !== "NotAllowedError" && err.name !== "InvalidStateError") {
+              console.warn("Remote playback prompt failed:", err);
+            }
+          });
+        } catch {}
+      }
     }
   }, []);
 
