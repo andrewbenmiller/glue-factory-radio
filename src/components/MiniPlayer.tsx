@@ -125,7 +125,7 @@ export default function MiniPlayer() {
   // ─── Enforce minimum window size ───
   useEffect(() => {
     const MIN_W = 280;
-    const MIN_H = 300;
+    const MIN_H = 340;
     const enforceMinSize = () => {
       const w = window.outerWidth;
       const h = window.outerHeight;
