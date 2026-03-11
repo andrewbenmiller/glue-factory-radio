@@ -124,14 +124,17 @@ export default function MiniPlayer() {
 
   // ─── Enforce minimum window size ───
   useEffect(() => {
-    const MIN_SIZE = 280;
+    const MIN_W = 280;
+    const MIN_H = 300;
     const enforceMinSize = () => {
       const w = window.outerWidth;
       const h = window.outerHeight;
-      if (w < MIN_SIZE || h < MIN_SIZE) {
-        window.resizeTo(Math.max(w, MIN_SIZE), Math.max(h, MIN_SIZE));
+      if (w < MIN_W || h < MIN_H) {
+        window.resizeTo(Math.max(w, MIN_W), Math.max(h, MIN_H));
       }
     };
+    // Correct size on initial load in case the browser ignored window.open dimensions
+    enforceMinSize();
     window.addEventListener('resize', enforceMinSize);
     return () => window.removeEventListener('resize', enforceMinSize);
   }, []);
