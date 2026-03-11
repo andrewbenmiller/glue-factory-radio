@@ -31,6 +31,7 @@
 
 /* Header row */
 .archive-header-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,6 +89,25 @@
   color: #ff1900;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Stream button in archive header — mobile only */
+.archive-header-stream-btn {
+  display: none;
+  background: none;
+  border: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  cursor: pointer;
+  color: #ff1900;
+  position: absolute;
+  right: 20px;
+}
+
+.archive-header-stream-btn svg {
+  width: 100%;
+  height: 100%;
 }
 
 .archive-arrow {
@@ -264,6 +284,12 @@
 
   .archive-header-row {
     padding: 0 max(15px, calc(50vw - 700px));
+  }
+
+  .archive-header-stream-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .archive-header-text {

@@ -137,20 +137,10 @@
   height: 100%;
 }
 
-/* Mobile: hide popout, show stream icon standalone */
+/* Mobile: hide popout group entirely (stream icon is in archive header instead) */
 @media (max-width: 768px) {
   .popout-group {
-    top: 75px;
-    right: 20px;
-  }
-
-  .popout-btn {
     display: none;
-  }
-
-  /* On mobile, always show stream icon (no hover needed) */
-  .stream-fixed-btn {
-    opacity: 0.7;
   }
 
   .archive-info-controls .stream-btn {
