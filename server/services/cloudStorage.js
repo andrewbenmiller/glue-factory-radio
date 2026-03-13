@@ -5,23 +5,42 @@ const fs = require('fs');
 class CloudStorageService {
   constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
-    
+
     // Optional key prefix for environment isolation (e.g., "staging/" keeps staging files separate)
     this.keyPrefix = process.env.R2_KEY_PREFIX || '';
 
     if (this.isProduction) {
-      // Production: Use Cloudflare R2 or AWS S3
-      this.s3Client = new S3Client({
-        region: process.env.S3_REGION || 'auto',
-        endpoint: process.env.S3_ENDPOINT, // For Cloudflare R2: https://account-id.r2.cloudflarestorage.com
-        credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID,
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-        },
-        forcePathStyle: true, // Required for some S3-compatible services
-      });
-
+      this._createS3Client();
       this.bucketName = process.env.S3_BUCKET_NAME;
+    }
+  }
+
+  // Create a fresh S3 client (called on init and after connection failures)
+  _createS3Client() {
+    this.s3Client = new S3Client({
+      region: process.env.S3_REGION || 'auto',
+      endpoint: process.env.S3_ENDPOINT,
+      credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY_ID,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+      },
+      forcePathStyle: true,
+    });
+  }
+
+  // Send an S3 command with a timeout; recreate the client on failure
+  async _send(command, timeoutMs = 15000) {
+    try {
+      return await this.s3Client.send(command, {
+        abortSignal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (err) {
+      // Recreate client on timeout/network errors to clear stale connections
+      if (err.name === 'TimeoutError' || err.name === 'AbortError' || err.code === 'ECONNRESET') {
+        console.warn('S3 connection error, recreating client:', err.message);
+        this._createS3Client();
+      }
+      throw err;
     }
   }
 
@@ -49,7 +68,7 @@ class CloudStorageService {
         ACL: 'public-read', // Make file publicly accessible
       };
 
-      await this.s3Client.send(new PutObjectCommand(uploadParams));
+      await this._send(new PutObjectCommand(uploadParams), 60000);
 
       // Generate public URL
       const publicUrl = `${process.env.S3_PUBLIC_URL}/${key}`;
@@ -102,7 +121,7 @@ class CloudStorageService {
     }
 
     try {
-      await this.s3Client.send(new DeleteObjectCommand({
+      await this._send(new DeleteObjectCommand({
         Bucket: this.bucketName,
         Key: key,
       }));

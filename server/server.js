@@ -116,19 +116,21 @@ app.get("/api/images/:filename", async (req, res) => {
       Key: key,
     });
     
-    const response = await cloudStorage.s3Client.send(command);
-    
+    const response = await cloudStorage._send(command);
+
     // Set appropriate headers for images
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Content-Length', response.ContentLength);
     res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    
+
     // Stream the image data
     response.Body.pipe(res);
-    
+
   } catch (error) {
     console.error('Error serving image from R2:', error);
-    res.status(404).json({ error: 'Image not found' });
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Failed to load image' });
+    }
   }
 });
 
@@ -152,7 +154,7 @@ app.get("/api/audio/:filename", async (req, res) => {
     // We need the true total size for Content-Range math.
     // R2/S3 doesn't always include ContentLength on ranged GetObject the way you want,
     // so do a HEAD once.
-    const head = await cloudStorage.s3Client.send(
+    const head = await cloudStorage._send(
       new HeadObjectCommand({ Bucket, Key })
     );
 
@@ -168,7 +170,7 @@ app.get("/api/audio/:filename", async (req, res) => {
       res.setHeader("Content-Length", total);
       res.setHeader("Accept-Ranges", "bytes");
 
-      const obj = await cloudStorage.s3Client.send(
+      const obj = await cloudStorage._send(
         new GetObjectCommand({ Bucket, Key })
       );
 
@@ -202,8 +204,7 @@ app.get("/api/audio/:filename", async (req, res) => {
     res.setHeader("Content-Range", `bytes ${start}-${end}/${total}`);
     res.setHeader("Content-Length", chunkSize);
 
-    // ✅ Critical: request the *range* from R2/S3
-    const obj = await cloudStorage.s3Client.send(
+    const obj = await cloudStorage._send(
       new GetObjectCommand({
         Bucket,
         Key,
@@ -214,7 +215,9 @@ app.get("/api/audio/:filename", async (req, res) => {
     return obj.Body.pipe(res);
   } catch (error) {
     console.error("Error streaming audio file:", error);
-    res.status(404).json({ error: "Audio file not found" });
+    if (!res.headersSent) {
+      res.status(502).json({ error: "Failed to stream audio file" });
+    }
   }
 });
 
