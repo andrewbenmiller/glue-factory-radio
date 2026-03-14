@@ -276,14 +276,19 @@
 
 /* Search bar row */
 .search-bar-row {
+  position: relative;
   display: flex;
+  justify-content: center;
   align-items: center;
   padding: 10px max(20px, calc(50vw - 700px));
   background: white;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   box-sizing: border-box;
-  gap: 12px;
+}
+
+.search-bar-row .autoplay-toggle {
+  margin-right: 12px;
 }
 
 .search-bar-field {
@@ -292,8 +297,8 @@
   gap: 10px;
   padding: 10px 20px;
   border: 1px solid #ff1900;
-  flex: 1;
-  max-width: 534px;
+  width: 534px;
+  max-width: 100%;
   box-sizing: border-box;
   transition: border-color 0.2s, background 0.2s;
   border-radius: 24px;
@@ -467,7 +472,10 @@
 
   .search-bar-row {
     padding: 8px max(10px, calc(50vw - 700px));
-    gap: 8px;
+  }
+
+  .search-bar-row .autoplay-toggle {
+    margin-right: 8px;
   }
 
   .search-bar-field {
