@@ -112,6 +112,18 @@
   height: 100%;
 }
 
+/* Auto-play row (below info row) */
+.autoplay-row {
+  display: flex;
+  justify-content: center;
+  padding: 8px max(20px, calc(50vw - 700px));
+  background: white;
+  border-bottom: 1px solid rgba(255, 25, 0, 0.25);
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
+}
+
 /* Auto-play toggle (three-state: OFF / SEQ / MATCH) */
 .autoplay-toggle {
   position: relative;
