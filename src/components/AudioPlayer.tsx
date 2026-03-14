@@ -5,7 +5,6 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useCallback,
-  useMemo,
 } from "react";
 import { useAudio } from "../audio/AudioProvider";
 import "./AudioPlayer.css";
