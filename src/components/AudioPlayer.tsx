@@ -227,7 +227,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                     className="autoplay-info-btn"
                     onClick={() => setAutoPlayInfoOpen(v => !v)}
                     onMouseEnter={() => {
-                      hoverTimerRef.current = setTimeout(() => setAutoPlayInfoOpen(true), 2000);
+                      hoverTimerRef.current = setTimeout(() => setAutoPlayInfoOpen(true), 1000);
                     }}
                     onMouseLeave={() => {
                       if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
