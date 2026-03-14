@@ -238,8 +238,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                 </div>
                 {autoPlayInfoOpen && (
                   <div className="autoplay-info-box" onClick={() => setAutoPlayInfoOpen(false)} onMouseLeave={() => setAutoPlayInfoOpen(false)}>
-                    <p><strong>SEQ</strong> — Plays the next show in order when the current one ends.</p>
-                    <p><strong>MATCH</strong> — Plays the show with the most similar tags to the one you selected.</p>
+                    <p><strong>SEQ</strong> — Next episode plays in chronological order</p>
+                    <p><strong>MATCH</strong> — Next episode plays based on similarity</p>
                   </div>
                 )}
               </div>
