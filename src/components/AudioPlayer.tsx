@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useCallback,
+  useMemo,
 } from "react";
 import { useAudio } from "../audio/AudioProvider";
 import "./AudioPlayer.css";
@@ -46,6 +47,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   ref
 ) {
   const audio = useAudio();
+  const [autoPlayInfoOpen, setAutoPlayInfoOpen] = useState(false);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [index, setIndex] = useState(
     Math.min(Math.max(initialIndex, 0), Math.max(tracks.length - 1, 0))
   );
@@ -219,7 +222,27 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                     MATCH
                   </button>
                 </div>
-                <span className="autoplay-label">AUTO-PLAY</span>
+                <div className="autoplay-label-row">
+                  <span className="autoplay-label">AUTO-PLAY</span>
+                  <span
+                    className="autoplay-info-btn"
+                    onClick={() => setAutoPlayInfoOpen(v => !v)}
+                    onMouseEnter={() => {
+                      hoverTimerRef.current = setTimeout(() => setAutoPlayInfoOpen(true), 2000);
+                    }}
+                    onMouseLeave={() => {
+                      if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+                    }}
+                  >
+                    i
+                  </span>
+                </div>
+                {autoPlayInfoOpen && (
+                  <div className="autoplay-info-box" onClick={() => setAutoPlayInfoOpen(false)}>
+                    <p><strong>SEQ</strong> — Plays the next show in order when the current one ends.</p>
+                    <p><strong>MATCH</strong> — Plays the show with the most similar tags to the one you selected. Ties are broken by newest first.</p>
+                  </div>
+                )}
               </div>
             </div>
 
