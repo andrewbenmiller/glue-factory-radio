@@ -131,7 +131,8 @@
 
 .autoplay-track {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   background: #fff5f3;
   border: 1px solid rgba(255, 25, 0, 0.25);
   border-radius: 100px;
@@ -158,7 +159,7 @@
   z-index: 1;
   background: none;
   border: none;
-  padding: 6px 10px;
+  padding: 6px 0;
   font-size: 10px;
   font-weight: 700;
   font-family: 'Roboto Mono', monospace;
@@ -170,7 +171,7 @@
   -moz-appearance: none;
   appearance: none;
   text-align: center;
-  min-width: 40px;
+  width: 50px;
 }
 
 .autoplay-option.active {
@@ -412,8 +413,8 @@
 
   .autoplay-option {
     font-size: 9px;
-    padding: 4px 6px;
-    min-width: 34px;
+    padding: 4px 0;
+    width: 42px;
   }
 
   .autoplay-label {
