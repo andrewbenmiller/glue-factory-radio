@@ -116,9 +116,8 @@
 .autoplay-row {
   display: flex;
   justify-content: center;
-  padding: 8px max(20px, calc(50vw - 700px));
+  padding: 8px max(20px, calc(50vw - 700px)) 0;
   background: white;
-  border-bottom: 1px solid rgba(255, 25, 0, 0.25);
   width: 100vw;
   margin-left: calc(50% - 50vw);
   box-sizing: border-box;
@@ -482,13 +481,19 @@
   }
 
   .autoplay-option {
-    font-size: 9px;
-    padding: 4px 0;
-    width: 42px;
+    font-size: 12px;
+    padding: 7px 0;
+    width: 60px;
   }
 
   .autoplay-label {
-    font-size: 9px;
+    font-size: 12px;
+  }
+
+  .autoplay-info-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
   }
 
   .archive-header-text {
