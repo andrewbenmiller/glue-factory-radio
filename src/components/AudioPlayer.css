@@ -115,8 +115,18 @@
 /* Auto-play toggle (three-state: OFF / SEQ / MATCH) */
 .autoplay-toggle {
   display: flex;
+  flex-direction: column;
   align-items: center;
   flex-shrink: 0;
+  gap: 4px;
+}
+
+.autoplay-label {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Roboto Mono', monospace;
+  letter-spacing: 0.5px;
+  color: #ff1900;
 }
 
 .autoplay-track {
@@ -404,6 +414,10 @@
     font-size: 9px;
     padding: 4px 6px;
     min-width: 34px;
+  }
+
+  .autoplay-label {
+    font-size: 9px;
   }
 
   .archive-header-text {

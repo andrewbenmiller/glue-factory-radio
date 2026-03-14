@@ -219,6 +219,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                     MATCH
                   </button>
                 </div>
+                <span className="autoplay-label">AUTO-PLAY</span>
               </div>
             </div>
 
