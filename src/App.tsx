@@ -44,7 +44,9 @@ function App() {
   const [pageCache, setPageCache] = useState<Record<string, PageContent>>({});
   const [contactCopied, setContactCopied] = useState(false);
   const [contactHovered, setContactHovered] = useState(false);
-  // const [autoPlay, setAutoPlay] = useState(true); // Currently unused but kept for future use
+  const [autoPlayMode, setAutoPlayMode] = useState<'off' | 'sequential' | 'match'>('off');
+  const [masterShowIndex, setMasterShowIndex] = useState(0);
+  const [playedShowIds, setPlayedShowIds] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -254,6 +256,10 @@ function App() {
       return newShowIndex;
     });
 
+    // User explicitly selected — becomes tag-match master
+    setMasterShowIndex(newShowIndex);
+    setPlayedShowIds(new Set());
+
     // Signal ShowList to expand + scroll to this show
     setShowSelectionVersion(v => v + 1);
 
@@ -297,7 +303,12 @@ function App() {
     console.log('App: Previous state - Show:', currentShowIndex, 'Track:', currentTrackIndex);
 
     // 1) Switch show/track state so UI reflects selection
-    if (showIndex !== currentShowIndex) setCurrentShowIndex(showIndex);
+    if (showIndex !== currentShowIndex) {
+      setCurrentShowIndex(showIndex);
+      // User manually picked a new show — it becomes the tag-match master
+      setMasterShowIndex(showIndex);
+      setPlayedShowIds(new Set());
+    }
     setCurrentTrackIndex(trackIndex);
 
     // Never auto-scroll on track clicks — preserve the user's scroll position.
@@ -417,10 +428,81 @@ function App() {
   //   setCurrentTrackIndex(newTrackIndex);
   // };
   
-  // Handle auto-play toggle (currently unused but kept for future use)
-  // const handleAutoPlayToggle = () => {
-  //   setAutoPlay(!autoPlay);
-  // };
+  // Auto-play: pick next show when current show's last track ends
+  const handleShowEnded = useCallback(() => {
+    if (autoPlayMode === 'off') return;
+
+    const currentShow = shows[currentShowIndex];
+    if (!currentShow) return;
+
+    // Track what we've played
+    const newPlayed = new Set(playedShowIds);
+    newPlayed.add(currentShow.id);
+
+    let nextIndex = -1;
+
+    if (autoPlayMode === 'sequential') {
+      // Next show in list order (shows are newest-first)
+      for (let i = currentShowIndex + 1; i < shows.length; i++) {
+        if (!newPlayed.has(shows[i].id)) {
+          nextIndex = i;
+          break;
+        }
+      }
+      // Wrap around
+      if (nextIndex === -1) {
+        for (let i = 0; i < currentShowIndex; i++) {
+          if (!newPlayed.has(shows[i].id)) {
+            nextIndex = i;
+            break;
+          }
+        }
+      }
+    } else if (autoPlayMode === 'match') {
+      // Tag-match: compare against master show's tags
+      const masterShow = shows[masterShowIndex] ?? currentShow;
+      const masterTags = new Set(masterShow.tags ?? []);
+
+      if (masterTags.size === 0) {
+        // No tags on master — fall back to sequential
+        for (let i = currentShowIndex + 1; i < shows.length; i++) {
+          if (!newPlayed.has(shows[i].id)) {
+            nextIndex = i;
+            break;
+          }
+        }
+      } else {
+        // Score all unplayed shows by tag similarity to master
+        const candidates = shows
+          .map((show, idx) => {
+            if (idx === currentShowIndex || newPlayed.has(show.id)) return null;
+            const showTags = show.tags ?? [];
+            const similarity = showTags.filter(t => masterTags.has(t)).length;
+            return { idx, similarity, date: new Date(show.created_date).getTime() };
+          })
+          .filter((c): c is { idx: number; similarity: number; date: number } => c !== null);
+
+        // Sort: highest similarity first, then newest first
+        candidates.sort((a, b) => {
+          if (b.similarity !== a.similarity) return b.similarity - a.similarity;
+          return b.date - a.date;
+        });
+
+        if (candidates.length > 0) {
+          nextIndex = candidates[0].idx;
+        }
+      }
+    }
+
+    if (nextIndex === -1) {
+      // All shows played — reset and stop
+      setPlayedShowIds(new Set());
+      return;
+    }
+
+    setPlayedShowIds(newPlayed);
+    handleShowLoad(nextIndex);
+  }, [autoPlayMode, shows, currentShowIndex, masterShowIndex, playedShowIds, handleShowLoad]);
   
   // Loading state - render blank page to avoid flash of text
   if (isLoading) {
@@ -534,6 +616,32 @@ function App() {
             className="archive-header-row clickable"
             onClick={() => { setArchiveExpanded(!archiveExpanded); if (archiveExpanded) { setActivePage(null); closeSearch(); } }}
           >
+            {/* Auto-play three-state toggle */}
+            <div className="autoplay-toggle" onClick={(e) => e.stopPropagation()}>
+              <div className="autoplay-track">
+                <div
+                  className={`autoplay-thumb ${autoPlayMode === 'off' ? 'pos-off' : autoPlayMode === 'sequential' ? 'pos-seq' : 'pos-match'}`}
+                />
+                <button
+                  className={`autoplay-option ${autoPlayMode === 'off' ? 'active' : ''}`}
+                  onClick={() => setAutoPlayMode('off')}
+                >
+                  OFF
+                </button>
+                <button
+                  className={`autoplay-option ${autoPlayMode === 'sequential' ? 'active' : ''}`}
+                  onClick={() => setAutoPlayMode('sequential')}
+                >
+                  SEQ
+                </button>
+                <button
+                  className={`autoplay-option ${autoPlayMode === 'match' ? 'active' : ''}`}
+                  onClick={() => setAutoPlayMode('match')}
+                >
+                  MATCH
+                </button>
+              </div>
+            </div>
             <span className="archive-header-text">{archiveExpanded ? 'CLOSE THE ARCHIVE' : 'OPEN THE ARCHIVE'}</span>
             {remotePlaybackAvailable && (
               <button
@@ -571,6 +679,7 @@ function App() {
             onSearchOpen={openSearch}
             onPlay={() => { bcRef.current?.postMessage({ type: 'playing' }); if (shows[validShowIndex]) updateShowUrl(shows[validShowIndex]); }}
             onShowNavigate={() => { setShowSelectionVersion(v => v + 1); }}
+            onShowEnded={autoPlayMode !== 'off' ? handleShowEnded : undefined}
           />
         </div>
 

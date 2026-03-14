@@ -34,10 +34,11 @@ type Props = {
   onSearchOpen?: () => void;
   onPlay?: () => void;
   onShowNavigate?: () => void;
+  onShowEnded?: () => void;
 };
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
-  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay, onShowNavigate },
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay, onShowNavigate, onShowEnded },
   ref
 ) {
   const audio = useAudio();
@@ -106,9 +107,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
   // Register auto-advance callback
   useEffect(() => {
     audio.onEndedRef.current = () => {
-      // Stop after the last track (NO looping)
+      // Last track: delegate to parent (auto-play) or stop
       if (index >= tracks.length - 1) {
-        audio.stopAll();
+        if (onShowEnded) {
+          onShowEnded();
+        } else {
+          audio.stopAll();
+        }
         return;
       }
       // Otherwise advance to the next track
@@ -123,7 +128,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
     return () => {
       audio.onEndedRef.current = null;
     };
-  }, [index, tracks, audio]);
+  }, [index, tracks, audio, onShowEnded]);
 
   // Reset index when track list changes
   useEffect(() => {
