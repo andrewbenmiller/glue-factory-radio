@@ -199,8 +199,8 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
               </div>
             </div>
 
-            {/* Auto-play toggle */}
-            <div className="autoplay-row">
+            {/* Auto-play toggle (desktop only) */}
+            <div className="autoplay-row autoplay-desktop">
               <div className="autoplay-toggle" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} onMouseLeave={() => { setAutoPlayInfoOpen(false); if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; } }}>
                 <div className="autoplay-track">
                   <div
@@ -284,6 +284,53 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                       <line x1="2" y1="20" x2="2.01" y2="20" />
                     </svg>
                   </button>
+                )}
+              </div>
+              {/* Auto-play toggle (mobile only) */}
+              <div className="autoplay-toggle autoplay-mobile" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} onMouseLeave={() => { setAutoPlayInfoOpen(false); if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; } }}>
+                <div className="autoplay-track">
+                  <div
+                    className={`autoplay-thumb ${autoPlayMode === 'off' ? 'pos-off' : autoPlayMode === 'sequential' ? 'pos-seq' : 'pos-match'}`}
+                  />
+                  <button
+                    className={`autoplay-option ${autoPlayMode === 'off' ? 'active' : ''}`}
+                    onClick={() => onAutoPlayChange?.('off')}
+                  >
+                    OFF
+                  </button>
+                  <button
+                    className={`autoplay-option ${autoPlayMode === 'sequential' ? 'active' : ''}`}
+                    onClick={() => onAutoPlayChange?.('sequential')}
+                  >
+                    SEQ
+                  </button>
+                  <button
+                    className={`autoplay-option ${autoPlayMode === 'match' ? 'active' : ''}`}
+                    onClick={() => onAutoPlayChange?.('match')}
+                  >
+                    MATCH
+                  </button>
+                </div>
+                <div className="autoplay-label-row">
+                  <span className="autoplay-label">AUTO-PLAY</span>
+                  <span
+                    className="autoplay-info-btn"
+                    onClick={() => setAutoPlayInfoOpen(v => !v)}
+                    onMouseEnter={() => {
+                      hoverTimerRef.current = setTimeout(() => setAutoPlayInfoOpen(true), 1000);
+                    }}
+                    onMouseLeave={() => {
+                      if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+                    }}
+                  >
+                    i
+                  </span>
+                </div>
+                {autoPlayInfoOpen && (
+                  <div className="autoplay-info-box" onClick={() => setAutoPlayInfoOpen(false)} onMouseLeave={() => setAutoPlayInfoOpen(false)}>
+                    <p><strong>SEQ</strong> — Next episode plays in chronological order</p>
+                    <p><strong>MATCH</strong> — Next episode plays based on similarity</p>
+                  </div>
                 )}
               </div>
               <span className="archive-info-show" onClick={onShowNavigate} style={{ cursor: onShowNavigate ? 'pointer' : undefined }}>

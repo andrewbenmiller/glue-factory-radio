@@ -400,6 +400,11 @@
   opacity: 0.5;
 }
 
+/* Desktop/mobile toggle visibility */
+.autoplay-mobile {
+  display: none;
+}
+
 /* Show desktop icons by default, hide mobile icons */
 .desktop-icon {
   display: inline;
@@ -471,6 +476,15 @@
 }
 
 @media (max-width: 480px) {
+  .autoplay-desktop {
+    display: none;
+  }
+
+  .autoplay-mobile {
+    display: flex;
+    padding-bottom: 20px;
+  }
+
   .audio-player {
     padding: 0 10px;
     margin: 0 auto;
