@@ -197,7 +197,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
                 </svg>
                 <span className="search-bar-placeholder">Search shows...</span>
               </div>
-              <div className="autoplay-toggle" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+              <div className="autoplay-toggle" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} onMouseLeave={() => { setAutoPlayInfoOpen(false); if (hoverTimerRef.current) { clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; } }}>
                 <div className="autoplay-track">
                   <div
                     className={`autoplay-thumb ${autoPlayMode === 'off' ? 'pos-off' : autoPlayMode === 'sequential' ? 'pos-seq' : 'pos-match'}`}
