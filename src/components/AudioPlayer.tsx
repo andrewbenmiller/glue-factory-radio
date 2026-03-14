@@ -24,12 +24,16 @@ export type AudioPlayerHandle = {
   resumeOrStart: () => void;
 };
 
+export type AutoPlayMode = 'off' | 'sequential' | 'match';
+
 type Props = {
   tracks: Track[];
   initialIndex?: number;
   className?: string;
   showName?: string;
   archiveExpanded?: boolean;
+  autoPlayMode?: AutoPlayMode;
+  onAutoPlayChange?: (mode: AutoPlayMode) => void;
   onArchiveToggle?: () => void;
   onSearchOpen?: () => void;
   onPlay?: () => void;
@@ -38,7 +42,7 @@ type Props = {
 };
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
-  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, onArchiveToggle, onSearchOpen, onPlay, onShowNavigate, onShowEnded },
+  { tracks, initialIndex = 0, className = "", showName = "CD Mode", archiveExpanded = false, autoPlayMode = 'off', onAutoPlayChange, onArchiveToggle, onSearchOpen, onPlay, onShowNavigate, onShowEnded },
   ref
 ) {
   const audio = useAudio();
@@ -182,9 +186,34 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, Props>(function AudioPlayer(
         {/* Expanded content - header is now rendered in App.tsx */}
         {archiveExpanded && (
           <>
-            {/* Search bar row */}
-            <div className="search-bar-row" onClick={onSearchOpen} onTouchEnd={(e) => { e.preventDefault(); onSearchOpen?.(); }}>
-              <div className="search-bar-field">
+            {/* Search bar row with auto-play toggle */}
+            <div className="search-bar-row">
+              <div className="autoplay-toggle" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+                <div className="autoplay-track">
+                  <div
+                    className={`autoplay-thumb ${autoPlayMode === 'off' ? 'pos-off' : autoPlayMode === 'sequential' ? 'pos-seq' : 'pos-match'}`}
+                  />
+                  <button
+                    className={`autoplay-option ${autoPlayMode === 'off' ? 'active' : ''}`}
+                    onClick={() => onAutoPlayChange?.('off')}
+                  >
+                    OFF
+                  </button>
+                  <button
+                    className={`autoplay-option ${autoPlayMode === 'sequential' ? 'active' : ''}`}
+                    onClick={() => onAutoPlayChange?.('sequential')}
+                  >
+                    SEQ
+                  </button>
+                  <button
+                    className={`autoplay-option ${autoPlayMode === 'match' ? 'active' : ''}`}
+                    onClick={() => onAutoPlayChange?.('match')}
+                  >
+                    MATCH
+                  </button>
+                </div>
+              </div>
+              <div className="search-bar-field" onClick={onSearchOpen} onTouchEnd={(e) => { e.preventDefault(); onSearchOpen?.(); }}>
                 <svg className="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />

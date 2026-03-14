@@ -114,10 +114,9 @@
 
 /* Auto-play toggle (three-state: OFF / SEQ / MATCH) */
 .autoplay-toggle {
-  position: absolute;
-  left: max(20px, calc(50vw - 700px));
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .autoplay-track {
@@ -125,7 +124,7 @@
   display: flex;
   background: #fff5f3;
   border: 1px solid rgba(255, 25, 0, 0.25);
-  border-radius: 3px;
+  border-radius: 100px;
   overflow: hidden;
 }
 
@@ -135,7 +134,7 @@
   bottom: 0;
   width: 33.33%;
   background: #ff1900;
-  border-radius: 2px;
+  border-radius: 100px;
   transition: left 0.2s ease;
   z-index: 0;
 }
@@ -149,7 +148,7 @@
   z-index: 1;
   background: none;
   border: none;
-  padding: 4px 8px;
+  padding: 6px 10px;
   font-size: 10px;
   font-weight: 700;
   font-family: 'Roboto Mono', monospace;
@@ -160,6 +159,8 @@
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+  text-align: center;
+  min-width: 40px;
 }
 
 .autoplay-option.active {
@@ -276,14 +277,13 @@
 /* Search bar row */
 .search-bar-row {
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 0 max(20px, calc(50vw - 700px)) 0;
+  padding: 10px max(20px, calc(50vw - 700px));
   background: white;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   box-sizing: border-box;
-  cursor: pointer;
+  gap: 12px;
 }
 
 .search-bar-field {
@@ -292,15 +292,15 @@
   gap: 10px;
   padding: 10px 20px;
   border: 1px solid #ff1900;
-  /* Match transport controls: 3 × 170px buttons + 2 × 12px gaps = 534px */
-  width: 534px;
-  max-width: 100%;
+  flex: 1;
+  max-width: 534px;
   box-sizing: border-box;
   transition: border-color 0.2s, background 0.2s;
   border-radius: 24px;
+  cursor: pointer;
 }
 
-.search-bar-row:hover .search-bar-field {
+.search-bar-field:hover {
   border-color: #ff1900;
   background: #fff5f3;
 }
@@ -342,10 +342,6 @@
     padding: 0 max(15px, calc(50vw - 700px));
   }
 
-  .autoplay-toggle {
-    left: max(15px, calc(50vw - 700px));
-  }
-
   .archive-header-text {
     font-size: 16px;
   }
@@ -385,7 +381,7 @@
   }
 
   .search-bar-row {
-    padding: 0 max(15px, calc(50vw - 700px)) 0;
+    padding: 10px max(15px, calc(50vw - 700px));
   }
 
   .search-bar-placeholder {
@@ -403,13 +399,10 @@
     padding: 0 max(10px, calc(50vw - 700px));
   }
 
-  .autoplay-toggle {
-    left: max(10px, calc(50vw - 700px));
-  }
-
   .autoplay-option {
     font-size: 9px;
-    padding: 3px 5px;
+    padding: 4px 6px;
+    min-width: 34px;
   }
 
   .archive-header-text {
@@ -473,12 +466,11 @@
   }
 
   .search-bar-row {
-    padding: 0 max(10px, calc(50vw - 700px)) 0;
+    padding: 8px max(10px, calc(50vw - 700px));
+    gap: 8px;
   }
 
   .search-bar-field {
-    /* Match transport: 3 × 100px + 2 × 8px = 316px */
-    width: 316px;
     padding: 8px 14px;
     gap: 8px;
   }

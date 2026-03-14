@@ -616,32 +616,6 @@ function App() {
             className="archive-header-row clickable"
             onClick={() => { setArchiveExpanded(!archiveExpanded); if (archiveExpanded) { setActivePage(null); closeSearch(); } }}
           >
-            {/* Auto-play three-state toggle */}
-            <div className="autoplay-toggle" onClick={(e) => e.stopPropagation()}>
-              <div className="autoplay-track">
-                <div
-                  className={`autoplay-thumb ${autoPlayMode === 'off' ? 'pos-off' : autoPlayMode === 'sequential' ? 'pos-seq' : 'pos-match'}`}
-                />
-                <button
-                  className={`autoplay-option ${autoPlayMode === 'off' ? 'active' : ''}`}
-                  onClick={() => setAutoPlayMode('off')}
-                >
-                  OFF
-                </button>
-                <button
-                  className={`autoplay-option ${autoPlayMode === 'sequential' ? 'active' : ''}`}
-                  onClick={() => setAutoPlayMode('sequential')}
-                >
-                  SEQ
-                </button>
-                <button
-                  className={`autoplay-option ${autoPlayMode === 'match' ? 'active' : ''}`}
-                  onClick={() => setAutoPlayMode('match')}
-                >
-                  MATCH
-                </button>
-              </div>
-            </div>
             <span className="archive-header-text">{archiveExpanded ? 'CLOSE THE ARCHIVE' : 'OPEN THE ARCHIVE'}</span>
             {remotePlaybackAvailable && (
               <button
@@ -677,6 +651,8 @@ function App() {
             archiveExpanded={archiveExpanded}
             onArchiveToggle={() => setArchiveExpanded(!archiveExpanded)}
             onSearchOpen={openSearch}
+            autoPlayMode={autoPlayMode}
+            onAutoPlayChange={setAutoPlayMode}
             onPlay={() => { bcRef.current?.postMessage({ type: 'playing' }); if (shows[validShowIndex]) updateShowUrl(shows[validShowIndex]); }}
             onShowNavigate={() => { setShowSelectionVersion(v => v + 1); }}
             onShowEnded={autoPlayMode !== 'off' ? handleShowEnded : undefined}
