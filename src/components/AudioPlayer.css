@@ -482,7 +482,8 @@
 
   .autoplay-mobile {
     display: flex;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
+    transform: scale(0.9);
   }
 
   .audio-player {
@@ -532,14 +533,14 @@
 
   .archive-info-row {
     min-height: auto;
-    padding: 15px max(10px, calc(50vw - 700px)) 10px;
+    padding: 10px max(10px, calc(50vw - 700px)) 10px;
     flex-direction: column;
     align-items: center;
   }
 
   .archive-info-controls {
     gap: 8px;
-    padding: 0 0 15px 0;
+    padding: 0 0 10px 0;
     justify-content: center;
   }
 
@@ -571,7 +572,7 @@
   }
 
   .search-bar-row {
-    padding: 8px max(10px, calc(50vw - 700px));
+    padding: 0 max(10px, calc(50vw - 700px));
     gap: 6px;
   }
 
