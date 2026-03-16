@@ -321,7 +321,23 @@ export default function MiniPlayer() {
     const idx = parseInt(e.target.value, 10);
     setShowIndex(idx);
     setTrackIndex(0);
-  }, []);
+
+    // Auto-play first track of new show if audio is currently active
+    if (audio.source !== 'none') {
+      const show = shows[idx];
+      if (show) {
+        const newTracks = convertShowToTracks(show);
+        if (newTracks.length > 0) {
+          if (isLiveMode) {
+            audio.stopLive();
+            setIsLiveMode(false);
+          }
+          bcRef.current?.postMessage({ type: 'playing' });
+          audio.playTrack(newTracks[0].src, newTracks[0].title ?? 'Track 1');
+        }
+      }
+    }
+  }, [audio, shows, isLiveMode]);
 
   // ─── Expand to full site ───
   const expandToFull = () => {
