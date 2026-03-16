@@ -73,6 +73,10 @@ export default function MiniPlayer() {
 
   // ─── Fetch shows & auto-play handoff ───
   const autoplayHandled = useRef(false);
+  // When true, defer the 'opened' broadcast so main app keeps playing until handoff
+  const autoplayPending = useRef(
+    new URLSearchParams(window.location.search).has('autoplay')
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -106,34 +110,39 @@ export default function MiniPlayer() {
       setShowIndex(targetShowIdx);
       setTrackIndex(targetTrackIdx);
 
-      // Auto-start playback to seamlessly continue from main app
+      // Auto-start playback to seamlessly continue from main app.
+      // The main app keeps playing until our audio actually starts producing sound,
+      // then we send the 'playing' message to stop the main app.
       if (autoplayParam && !autoplayHandled.current) {
         autoplayHandled.current = true;
 
+        // Get the underlying <audio> element to listen for actual playback start
+        const audioEl = document.querySelector('audio');
+        const signalHandoff = () => {
+          autoplayPending.current = false;
+          bcRef.current?.postMessage({ type: 'playing' });
+        };
+
         if (autoplayParam === 'live') {
-          // Resume live stream
           setIsLiveMode(true);
-          // Small delay to let BroadcastChannel 'opened' message stop main app first
-          setTimeout(() => {
-            audio.playLive(streamUrl);
-            bcRef.current?.postMessage({ type: 'playing' });
-          }, 100);
+          if (audioEl) {
+            audioEl.addEventListener('playing', signalHandoff, { once: true });
+          }
+          audio.playLive(streamUrl);
         } else if (autoplayParam === 'track') {
-          // Resume archive track
           const show = activeShows[targetShowIdx];
           if (show) {
             const tracks = convertShowToTracks(show);
             const t = tracks[targetTrackIdx];
             if (t) {
               const seekTime = timeParam ? parseInt(timeParam, 10) : 0;
-              setTimeout(() => {
-                audio.playTrack(t.src, t.title ?? `Track ${targetTrackIdx + 1}`);
-                if (seekTime > 0) {
-                  // Seek after audio starts loading
-                  setTimeout(() => audio.seekTrack(seekTime), 200);
-                }
-                bcRef.current?.postMessage({ type: 'playing' });
-              }, 100);
+              if (audioEl) {
+                audioEl.addEventListener('playing', () => {
+                  if (seekTime > 0) audio.seekTrack(seekTime);
+                  signalHandoff();
+                }, { once: true });
+              }
+              audio.playTrack(t.src, t.title ?? `Track ${targetTrackIdx + 1}`);
             }
           }
         }
@@ -148,7 +157,10 @@ export default function MiniPlayer() {
   useEffect(() => {
     const bc = new BroadcastChannel('gfr-miniplayer');
     bcRef.current = bc;
-    bc.postMessage({ type: 'opened' });
+    // Skip 'opened' when autoplay is pending — main app keeps playing until handoff
+    if (!autoplayPending.current) {
+      bc.postMessage({ type: 'opened' });
+    }
 
     bc.onmessage = (e) => {
       if (e.data?.type === 'playing') {
