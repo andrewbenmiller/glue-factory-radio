@@ -601,7 +601,18 @@ function App() {
 
       {/* Logo at center top */}
       <div className="logo-container">
-        <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
+        <a
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            window.history.replaceState(null, '', '/');
+            setArchiveExpanded(false);
+            setActivePage(null);
+            closeSearch();
+          }}
+        >
+          <img src={logo} alt="Glue Factory Radio Logo" className="logo-image" />
+        </a>
       </div>
 
       {/* LIVE NOW button - fixed at true center of viewport */}

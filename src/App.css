@@ -54,6 +54,11 @@
   z-index: 98;
 }
 
+.logo-container a {
+  display: block;
+  line-height: 0;
+}
+
 .logo-image-container {
   margin: 0;
   padding: 0;
