@@ -290,10 +290,12 @@ function App() {
       updateShowUrl(shows[newShowIndex]);
     }
 
-    requestAnimationFrame(() => {
+    // Use setTimeout instead of requestAnimationFrame so playback starts
+    // even when the tab is hidden (rAF is suspended in background tabs).
+    setTimeout(() => {
       bcRef.current?.postMessage({ type: 'playing' });
       playerRef.current?.playFromUI(0);
-    });
+    }, 0);
   }, [shows, updateShowUrl]);
   
   // Handle track selection from ShowList

@@ -540,7 +540,7 @@
 
   .archive-info-controls {
     gap: 8px;
-    padding: 0 0 10px 0;
+    padding: 3px 0 10px 0;
     justify-content: center;
   }
 
@@ -577,6 +577,7 @@
   }
 
   .search-bar-field {
+    width: 316px;
     padding: 8px 14px;
     gap: 8px;
   }
