@@ -121,6 +121,9 @@ html:has(.mini-player) {
   overflow: hidden;
   white-space: nowrap;
   -webkit-app-region: no-drag;
+  height: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .mini-live-banner-text {
@@ -129,6 +132,7 @@ html:has(.mini-player) {
   font-weight: 700;
   color: #ff1900;
   white-space: nowrap;
+  line-height: 20px;
 }
 
 .mini-live-banner-scroll {
