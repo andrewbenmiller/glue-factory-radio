@@ -185,10 +185,17 @@ export default function MiniPlayer() {
     };
   }, [audio, isLiveMode]);
 
-  // ─── Enforce minimum window size ───
+  // ─── Fit window to content on load, enforce minimum on resize ───
   useEffect(() => {
     const MIN_W = 280;
-    const MIN_H = 340;
+    const MIN_H = 200;
+    const fitToContent = () => {
+      const contentHeight = document.documentElement.scrollHeight;
+      const chrome = window.outerHeight - window.innerHeight;
+      window.resizeTo(Math.max(MIN_W, window.outerWidth), contentHeight + chrome);
+    };
+    // Fit to content on initial load
+    setTimeout(fitToContent, 50);
     const enforceMinSize = () => {
       const w = window.outerWidth;
       const h = window.outerHeight;
@@ -196,8 +203,6 @@ export default function MiniPlayer() {
         window.resizeTo(Math.max(w, MIN_W), Math.max(h, MIN_H));
       }
     };
-    // Correct size on initial load in case the browser ignored window.open dimensions
-    enforceMinSize();
     window.addEventListener('resize', enforceMinSize);
     return () => window.removeEventListener('resize', enforceMinSize);
   }, []);
@@ -316,10 +321,7 @@ export default function MiniPlayer() {
     const idx = parseInt(e.target.value, 10);
     setShowIndex(idx);
     setTrackIndex(0);
-    // Stop current playback when switching shows
-    audio.stopAll();
-    setIsLiveMode(false);
-  }, [audio]);
+  }, []);
 
   // ─── Expand to full site ───
   const expandToFull = () => {
@@ -360,6 +362,22 @@ export default function MiniPlayer() {
     <div className="mini-player">
       {/* Header */}
       <div className={`mini-header ${audio.source === 'live' ? 'mini-header-streaming' : ''}`}>
+        <button
+          className={`mini-play-btn ${audio.source === 'live' ? 'mini-play-btn-playing' : ''}`}
+          onClick={toggleLive}
+          title={audio.source === 'live' ? 'Stop live stream' : 'Play live stream'}
+        >
+          <span className="mini-play-icon" aria-hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="4,2 4,22 22,12" />
+            </svg>
+          </span>
+          <span className="mini-stop-icon" aria-hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="18" height="18" />
+            </svg>
+          </span>
+        </button>
         <div className="mini-live-banner">
           {audio.source === 'live' ? (
             <div className="mini-live-banner-scroll">
@@ -383,30 +401,14 @@ export default function MiniPlayer() {
         </div>
       </div>
 
-      {/* Body - live stream play/stop */}
-      <div className="mini-body">
-        <div className="mini-body-center">
-          <button
-            className={`mini-play-btn ${audio.source === 'live' ? 'mini-play-btn-playing' : ''}`}
-            onClick={toggleLive}
-            title={audio.source === 'live' ? 'Stop live stream' : 'Play live stream'}
-          >
-            <span className="mini-play-icon" aria-hidden>
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="4,2 4,22 22,12" />
-              </svg>
-            </span>
-            <span className="mini-stop-icon" aria-hidden>
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <rect x="3" y="3" width="18" height="18" />
-              </svg>
-            </span>
-          </button>
-        </div>
-      </div>
-
       {/* Bottom group: transport + footer, pinned to bottom */}
       <div className="mini-bottom">
+        {/* Archive label bar */}
+        <div className="mini-archive-bar">
+          <span className="mini-archive-arrow">&#x25BC;</span>
+          <span className="mini-archive-bar-text">ARCHIVE</span>
+          <span className="mini-archive-arrow">&#x25BC;</span>
+        </div>
         {/* Transport section */}
         <div className="mini-transport-section">
             <div className="mini-controls-row">

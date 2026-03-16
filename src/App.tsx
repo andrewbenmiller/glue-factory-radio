@@ -577,7 +577,7 @@ function App() {
             searchParams.set('time', String(Math.floor(audioProgress)));
           }
           const params = searchParams.toString() ? `?${searchParams.toString()}` : '';
-          window.open(`/mini${params}`, 'gfr-mini', 'width=280,height=340,resizable=yes');
+          window.open(`/mini${params}`, 'gfr-mini', 'width=280,height=203,resizable=yes');
         }}
         title="Pop out mini player"
       >
