@@ -71,11 +71,15 @@ export default function MiniPlayer() {
   const progress = audio.progress;
   const duration = audio.duration;
 
-  // ─── Fetch shows ───
+  // ─── Fetch shows & auto-play handoff ───
+  const autoplayHandled = useRef(false);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const showParam = params.get('show');
     const trackParam = params.get('track');
+    const autoplayParam = params.get('autoplay');
+    const timeParam = params.get('time');
 
     apiService.getPageContent('live_label').then(page => {
       if (page?.content) setLiveLabel(page.content);
@@ -85,17 +89,57 @@ export default function MiniPlayer() {
       const activeShows = fetched.filter(s => s.is_active);
       setShows(activeShows);
 
+      let targetShowIdx = 0;
+      let targetTrackIdx = 0;
+
       if (showParam) {
         const id = parseInt(showParam, 10);
         const idx = activeShows.findIndex(s => s.id === id);
         if (idx >= 0) {
-          setShowIndex(idx);
+          targetShowIdx = idx;
           if (trackParam) {
-            setTrackIndex(parseInt(trackParam, 10));
+            targetTrackIdx = parseInt(trackParam, 10);
+          }
+        }
+      }
+
+      setShowIndex(targetShowIdx);
+      setTrackIndex(targetTrackIdx);
+
+      // Auto-start playback to seamlessly continue from main app
+      if (autoplayParam && !autoplayHandled.current) {
+        autoplayHandled.current = true;
+
+        if (autoplayParam === 'live') {
+          // Resume live stream
+          setIsLiveMode(true);
+          // Small delay to let BroadcastChannel 'opened' message stop main app first
+          setTimeout(() => {
+            audio.playLive(streamUrl);
+            bcRef.current?.postMessage({ type: 'playing' });
+          }, 100);
+        } else if (autoplayParam === 'track') {
+          // Resume archive track
+          const show = activeShows[targetShowIdx];
+          if (show) {
+            const tracks = convertShowToTracks(show);
+            const t = tracks[targetTrackIdx];
+            if (t) {
+              const seekTime = timeParam ? parseInt(timeParam, 10) : 0;
+              setTimeout(() => {
+                audio.playTrack(t.src, t.title ?? `Track ${targetTrackIdx + 1}`);
+                if (seekTime > 0) {
+                  // Seek after audio starts loading
+                  setTimeout(() => audio.seekTrack(seekTime), 200);
+                }
+                bcRef.current?.postMessage({ type: 'playing' });
+              }, 100);
+            }
           }
         }
       }
     }).catch(err => console.error('MiniPlayer: failed to fetch shows', err));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── BroadcastChannel: coordinate with main window ───

@@ -57,7 +57,7 @@ function App() {
 
   // Live stream status and audio context
   const { isLive, nowPlaying, showTitle, streamUrl } = useLiveStatus();
-  const { source, playLive, stopLive, trackNowPlaying, remotePlaybackAvailable, remotePlaybackState, promptRemotePlayback } = useAudio();
+  const { source, playLive, stopLive, trackNowPlaying, progress: audioProgress, remotePlaybackAvailable, remotePlaybackState, promptRemotePlayback } = useAudio();
   const livePlaying = source === "live";
 
   // Media Session API — lock screen controls, AirPlay Now Playing, hardware keys
@@ -565,7 +565,18 @@ function App() {
         className="popout-btn"
         onClick={() => {
           const currentShow = shows[validShowIndex];
-          const params = currentShow ? `?show=${currentShow.id}&track=${currentTrackIndex}` : '';
+          const searchParams = new URLSearchParams();
+          if (currentShow) {
+            searchParams.set('show', String(currentShow.id));
+            searchParams.set('track', String(currentTrackIndex));
+          }
+          if (source === 'live') {
+            searchParams.set('autoplay', 'live');
+          } else if (source === 'track') {
+            searchParams.set('autoplay', 'track');
+            searchParams.set('time', String(Math.floor(audioProgress)));
+          }
+          const params = searchParams.toString() ? `?${searchParams.toString()}` : '';
           window.open(`/mini${params}`, 'gfr-mini', 'width=280,height=340,resizable=yes');
         }}
         title="Pop out mini player"
