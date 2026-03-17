@@ -55,6 +55,10 @@ export default function MiniPlayer() {
   // Live mode
   const [isLiveMode, setIsLiveMode] = useState(false);
 
+  // Autoplay blocked (Safari) — show tap-to-play overlay
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+  const blockedPlaybackRef = useRef<{ type: 'live' | 'track'; seekTime?: number } | null>(null);
+
   // Admin live label
   const [liveLabel, setLiveLabel] = useState('LIVE NOW');
 
@@ -118,17 +122,39 @@ export default function MiniPlayer() {
 
         // Get the underlying <audio> element to listen for actual playback start
         const audioEl = document.querySelector('audio');
+        let handoffDone = false;
         const signalHandoff = () => {
+          if (handoffDone) return;
+          handoffDone = true;
           autoplayPending.current = false;
           bcRef.current?.postMessage({ type: 'playing' });
+        };
+
+        // Fallback: if 'playing' event doesn't fire (Firefox/Safari quirks),
+        // signal handoff after timeout so the main app stops regardless.
+        const handoffTimeout = setTimeout(signalHandoff, 800);
+
+        const onPlayingEvent = (extra?: () => void) => {
+          clearTimeout(handoffTimeout);
+          extra?.();
+          signalHandoff();
+        };
+
+        // Helper: detect autoplay rejection (Safari) and show tap-to-play overlay
+        const handleAutoplayError = (playbackType: 'live' | 'track', seekTime?: number) => {
+          clearTimeout(handoffTimeout);
+          // Autoplay was blocked — tell main app to stop (we'll take over on tap)
+          signalHandoff();
+          blockedPlaybackRef.current = { type: playbackType, seekTime };
+          setAutoplayBlocked(true);
         };
 
         if (autoplayParam === 'live') {
           setIsLiveMode(true);
           if (audioEl) {
-            audioEl.addEventListener('playing', signalHandoff, { once: true });
+            audioEl.addEventListener('playing', () => onPlayingEvent(), { once: true });
           }
-          audio.playLive(streamUrl);
+          audio.playLive(streamUrl).catch(() => handleAutoplayError('live'));
         } else if (autoplayParam === 'track') {
           const show = activeShows[targetShowIdx];
           if (show) {
@@ -138,11 +164,13 @@ export default function MiniPlayer() {
               const seekTime = timeParam ? parseInt(timeParam, 10) : 0;
               if (audioEl) {
                 audioEl.addEventListener('playing', () => {
+                  clearTimeout(handoffTimeout);
                   if (seekTime > 0) audio.seekTrack(seekTime);
                   signalHandoff();
                 }, { once: true });
               }
-              audio.playTrack(t.src, t.title ?? `Track ${targetTrackIdx + 1}`);
+              audio.playTrack(t.src, t.title ?? `Track ${targetTrackIdx + 1}`)
+                .catch(() => handleAutoplayError('track', seekTime));
             }
           }
         }
@@ -163,8 +191,10 @@ export default function MiniPlayer() {
     }
 
     bc.onmessage = (e) => {
+      console.log('[HANDOFF] mini BC received:', e.data?.type);
       if (e.data?.type === 'playing') {
         // Main site started playing — stop miniplayer audio
+        console.log('[HANDOFF] mini player stopping audio due to BC playing message');
         audio.stopAll();
         if (isLiveMode) {
           setIsLiveMode(false);
@@ -374,8 +404,38 @@ export default function MiniPlayer() {
     }
   }, [isLiveMode, isPlaying, trackIndex, tracks, nowPlaying, audio.source]);
 
+  // Handle tap-to-play when autoplay was blocked
+  const handleAutoplayRetry = useCallback(() => {
+    const pending = blockedPlaybackRef.current;
+    if (!pending) return;
+    setAutoplayBlocked(false);
+    blockedPlaybackRef.current = null;
+    if (pending.type === 'live') {
+      audio.playLive(streamUrl);
+    } else {
+      // For tracks, the src was already set by the initial playTrack() call.
+      // Safari requires play() to be synchronous in the user gesture stack.
+      // resumeTrack() calls play() without resetting src, so Safari allows it.
+      audio.resumeTrack();
+      if (pending.seekTime && pending.seekTime > 0) {
+        setTimeout(() => audio.seekTrack(pending.seekTime!), 200);
+      }
+    }
+  }, [audio, streamUrl]);
+
   return (
     <div className="mini-player">
+      {/* Autoplay blocked overlay (Safari) */}
+      {autoplayBlocked && (
+        <div className="mini-autoplay-overlay" onClick={handleAutoplayRetry}>
+          <div className="mini-autoplay-prompt">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
+              <polygon points="4,2 4,22 22,12" />
+            </svg>
+            <span>Tap to continue playback</span>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className={`mini-header ${audio.source === 'live' ? 'mini-header-streaming' : ''}`}>
         <button

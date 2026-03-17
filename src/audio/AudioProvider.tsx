@@ -23,7 +23,7 @@ type AudioContextValue = {
   stopLive: () => void;
 
   // Track playback (replaces Howler)
-  playTrack: (url: string, title: string) => void;
+  playTrack: (url: string, title: string) => Promise<void>;
   pauseTrack: () => void;
   resumeTrack: () => void;
   seekTrack: (time: number) => void;
@@ -128,7 +128,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const playTrack = useCallback((url: string, title: string) => {
+  const playTrack = useCallback(async (url: string, title: string) => {
     genRef.current += 1;
     const myGen = genRef.current;
 
@@ -146,11 +146,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     a.src = url;
     a.currentTime = 0;
 
-    a.play().then(() => {
+    try {
+      await a.play();
       if (genRef.current === myGen) {
         setIsPlaying(true);
       }
-    }).catch((error: any) => {
+    } catch (error: any) {
       if (error?.name === "AbortError" || String(error?.message || "").includes("interrupted")) {
         return;
       }
@@ -158,7 +159,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         console.error("playTrack error:", error);
         setIsPlaying(false);
       }
-    });
+      throw error;
+    }
   }, []);
 
   const pauseTrack = useCallback(() => {

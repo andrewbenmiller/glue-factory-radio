@@ -446,3 +446,37 @@ html:has(.mini-player) {
   text-transform: uppercase;
   font-weight: 700;
 }
+
+/* Autoplay blocked overlay */
+.mini-autoplay-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.mini-autoplay-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #ff1900;
+}
+
+.mini-autoplay-prompt svg {
+  width: 48px;
+  height: 48px;
+}
+
+.mini-autoplay-prompt span {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
