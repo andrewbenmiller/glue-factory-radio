@@ -11,14 +11,12 @@
       "has": [{ "type": "header", "key": "host", "value": "www.radio.gluefactorymusic.com" }],
       "destination": "https://gluefactoryradio.com/:path*",
       "permanent": true
-    },
-    {
-      "source": "/:path((?:[Pp][Rr][Ii][Vv][Aa][Cc][Yy]))",
-      "destination": "/privacy"
     }
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/Privacy", "destination": "/privacy.html" },
+    { "source": "/PRIVACY", "destination": "/privacy.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
