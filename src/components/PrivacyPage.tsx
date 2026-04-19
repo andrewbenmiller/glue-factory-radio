@@ -1,0 +1,45 @@
+import React from 'react';
+import './PrivacyPage.css';
+
+function PrivacyPage() {
+  return (
+    <div className="privacy-page">
+      <h1>Privacy Policy</h1>
+      <p><strong>Glue Factory Radio</strong></p>
+      <p>Last updated: April 18, 2026</p>
+      <h2>Overview</h2>
+      <p>Glue Factory Radio is a free internet radio app. We respect your privacy and are committed to transparency about our data practices.</p>
+      <h2>Data We Collect</h2>
+      <p>We do not collect, store, or share any personal data. Specifically:</p>
+      <ul>
+        <li>No user accounts or login required</li>
+        <li>No analytics or usage tracking</li>
+        <li>No advertising or ad networks</li>
+        <li>No cookies or device identifiers</li>
+        <li>No location data</li>
+        <li>No access to contacts, camera, microphone, or other device sensors</li>
+      </ul>
+      <h2>Network Requests</h2>
+      <p>The app connects to Glue Factory Radio servers solely to:</p>
+      <ul>
+        <li>Stream live audio</li>
+        <li>Load show and episode metadata (titles, descriptions, track listings)</li>
+        <li>Load page content (e.g., the About page)</li>
+      </ul>
+      <p>These requests do not include any personal or device-identifying information.</p>
+      <h2>Caching</h2>
+      <p>The app caches audio and images locally on your device to improve performance. This data is stored only on your device and is not transmitted to any server.</p>
+      <h2>Third-Party Services</h2>
+      <p>The app does not integrate any third-party analytics, advertising, or tracking services.</p>
+      <h2>Children's Privacy</h2>
+      <p>The app does not knowingly collect any information from children under 13.</p>
+      <h2>Changes to This Policy</h2>
+      <p>If we make changes to this privacy policy, we will update this page and the "last updated" date above.</p>
+      <h2>Contact</h2>
+      <p>If you have questions about this privacy policy, contact us at:</p>
+      <p>hello@gluefactoryradio.com</p>
+    </div>
+  );
+}
+
+export default PrivacyPage;
