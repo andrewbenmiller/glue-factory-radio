@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import MiniPlayer from './components/MiniPlayer';
-import PrivacyPage from './components/PrivacyPage';
 import { AudioProvider } from './audio/AudioProvider';
 import reportWebVitals from './reportWebVitals';
 
@@ -16,7 +15,6 @@ root.render(
     <BrowserRouter>
       <Routes>
         <Route path="/mini" element={<AudioProvider><MiniPlayer /></AudioProvider>} />
-        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/*" element={<AudioProvider><App /></AudioProvider>} />
       </Routes>
     </BrowserRouter>
